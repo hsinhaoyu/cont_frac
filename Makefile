@@ -1,0 +1,10 @@
+tangle: org/cont_frac.org
+	find src/ ! -name 'zz*.py' -type f -maxdepth 1 -exec rm -f {} +
+	./tangle.sh org/cont_frac.org
+	yapf --in-place --recursive src/
+
+typing: tangle
+	mypy src/cont_frac.py
+
+html: tangle
+	./org2html.sh org/*.org

@@ -1,0 +1,28 @@
+\begin{equation*}
+\frac{254}{100}
+= 2 + \frac{54}{100}
+= 2 + \frac{1}{\frac{100}{54}}
+= 2 + \frac{1}{1 + \frac{46}{54}}
+= 2 + \frac{1}{1 + \frac{1}{\frac{46}{54}}}
+\end{equation*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

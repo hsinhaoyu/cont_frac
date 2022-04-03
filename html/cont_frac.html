@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2022-04-03 Sun 23:19 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>&lrm;</title>
+<meta name="author" content="Hsin-Hao Yu" />
+<meta name="generator" content="Org Mode" />
+<style>
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "left",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<div id="content" class="content">
+<div id="outline-container-org678399e" class="outline-2">
+<h2 id="org678399e"><span class="section-number-2">1.</span> Continued fraction representations of rational numbers</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Since we'll use rational numbers a lot, let's define a class:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;IMPORTS&gt;&gt;
+<span class="org-comment-delimiter"># </span><span class="org-comment">Rational(a, b) = a/b</span>
+<span class="org-keyword">class</span> <span class="org-type">Rational</span>(NamedTuple(<span class="org-string">'Rational'</span>, [(<span class="org-string">'a'</span>, <span class="org-builtin">int</span>), (<span class="org-string">'b'</span>, <span class="org-builtin">int</span>)])):
+    <span class="org-keyword">def</span> <span class="org-function-name">__repr__</span>(<span class="org-keyword">self</span>):
+        <span class="org-keyword">return</span> f<span class="org-string">'{self.a}/{self.b}'</span>
+</pre>
+</div>
+
+<p>
+How to convert a rational number to a continued fraction? Observing that
+</p>
+
+<p>
+\[
+\frac{254}{100}
+= 2 + \frac{54}{100}
+= 2 + \frac{1}{\frac{100}{54}}
+= 2 + \frac{1}{1 + \frac{46}{54}}
+= 2 + \frac{1}{1 + \frac{1}{\frac{46}{54}}}
+\]
+</p>
+
+<p>
+it should be obvious that it can be done in a process that is similar to the Euclidean algorithm for finding the greatest common divider:
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">euclid</span>(a: <span class="org-builtin">int</span>, b: <span class="org-builtin">int</span>) -&gt; Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]:
+    <span class="org-doc">"""a = b * q + r"""</span>
+    <span class="org-variable-name">q</span> = math.floor(a / b)
+    <span class="org-variable-name">r</span> = a - b * q
+    <span class="org-keyword">return</span> (q, r)
+
+<span class="org-keyword">def</span> <span class="org-function-name">r2cf_</span>(rn: Rational) -&gt; Iterator[Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]]:
+    <span class="org-variable-name">a</span>, <span class="org-variable-name">b</span> = rn    
+    <span class="org-variable-name">r</span> = 1000
+    <span class="org-keyword">while</span> r != 0:
+        <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = euclid(a, b)
+        <span class="org-keyword">yield</span> b, q
+        <span class="org-variable-name">a</span> = b
+        <span class="org-variable-name">b</span> = r
+
+<span class="org-keyword">def</span> <span class="org-function-name">r2cf</span>(rn: Rational) -&gt; Iterator[<span class="org-builtin">int</span>]:
+    <span class="org-keyword">def</span> <span class="org-function-name">second</span>(x: <span class="org-builtin">tuple</span>):
+        <span class="org-keyword">return</span> x[1]
+    <span class="org-keyword">return</span> <span class="org-builtin">map</span>(second, r2cf_(rn))
+</pre>
+</div>
+
+<p>
+Now we can use <code>r2cf</code> to calculate the coefficients. I use a generator to represent the returned coefficients, because continued fractions can have infinite number of terms. However, the continuous fraction representations of rational numbers are always finite.
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-variable-name">nc</span> = r2cf(Rational(254, 100))
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(nc))
+</pre>
+</div>
+
+<pre class="example">
+[2, 1, 1, 5, 1, 3]
+</pre>
+
+
+<p>
+This means that
+\[
+\frac{ 254 }{ 100 }=
+2+\frac{1}{1+\frac{1}{1+\frac{1}{5+\frac{1}{1+\frac{1}{3}}}}}
+\]
+</p>
+
+<p>
+We can display the process in a tabular format. For example:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+&lt;&lt;TAB_UTILS&gt;&gt;
+<span class="org-keyword">print</span>(r2cf_tab(Rational(254, 100)))
+</pre>
+</div>
+
+<pre class="example">
+254
+100   2   
+ 54   1   
+ 46   1   
+  8   5   
+  6   1   
+  2   3   
+  0
+
+</pre>
+
+
+<p>
+Interestingly, the reciprocal of \(\frac{254}{100}\) (that is, \(\frac{100}{254}\)) is represented by the following as a continued fraction:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-variable-name">nc</span> = r2cf(Rational(100, 254))
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(nc))
+</pre>
+</div>
+
+<pre class="example">
+[0, 2, 1, 1, 5, 1, 3]
+</pre>
+
+
+<p>
+It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the <code>r2cf</code> process.
+</p>
+
+<p>
+However, it's not obvious how to perform algebraically meaningful transformations. For example, if we multiple the rational number by two, the continued fraction series appear to be quite different. It's not clear how we get [0, 1, 3, 1, 2, 2, 1, 2] from [0, 2, 1, 1, 5, 1, 3]. We'll come back to this question a little bit later. 
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(r2cf(Rational(200, 254))))
+</pre>
+</div>
+
+<pre class="example">
+[0, 1, 3, 1, 2, 2, 1, 2]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgca8047f" class="outline-2">
+<h2 id="orgca8047f"><span class="section-number-2">2.</span> Convergents</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Given the coefficients of a continued fraction, how do we calculate the value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to approximate the value as more coefficients are received. It's not difficult to show that it can be approximated by a series of rational numbers:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent0</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
+    <span class="org-variable-name">p1</span>, <span class="org-variable-name">p0</span> = 1, 0
+    <span class="org-variable-name">q1</span>, <span class="org-variable-name">q0</span> = 0, 1
+
+    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cf:
+        <span class="org-variable-name">p</span> = a * p1 + p0
+        <span class="org-variable-name">q</span> = a * q1 + q0
+        <span class="org-keyword">yield</span> Rational(p, q)
+
+        <span class="org-variable-name">p0</span>, <span class="org-variable-name">p1</span> = p1, p
+        <span class="org-variable-name">q0</span>, <span class="org-variable-name">q1</span> = q1, q
+</pre>
+</div>
+
+<p>
+For example, for the sequence \(2, 1, 1, 5, 1, 3\), we get
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(cf_convergent0(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))))
+</pre>
+</div>
+
+<pre class="example">
+[2/1, 3/1, 5/2, 28/11, 33/13, 127/50]
+</pre>
+
+
+<p>
+In other words, 
+\(2+\frac{1}{1+\frac{1}{1+\frac{1}{5+\frac{1}{1+\frac{1}{3}}}}}\)
+can be approximated with
+\(\frac{2}{1}\),\(\frac{3}{1}\),\(\frac{5}{2}\),\(\frac{28}{11}\),\(\frac{33}{13}\),\(\frac{127}{50}\)
+.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org105c6e5" class="outline-2">
+<h2 id="org105c6e5"><span class="section-number-2">3.</span> Convergents: matrix formulation</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+The first step towards Gosper arithmetics is to rewrite the formula in <code>cf_convergence0</code> as matrix multiplications. Begin with
+\(\begin{bmatrix}
+1 & 0 \\
+0 & 1
+\end{bmatrix}\), with each new coefficient \(a\) in continued fraction series, we right-multiply the matrix
+\(\begin{bmatrix}
+a & 1 \\
+1 & 0
+\end{bmatrix}\), and output the first column as the next rational number approximation.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">h</span>(a):
+    <span class="org-keyword">return</span> np.array([[a, 1], [1,0]])
+
+<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_</span>(cdf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator:
+    <span class="org-variable-name">res</span> = np.array([[1, 0], [0, 1]])
+    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cdf:
+        <span class="org-variable-name">res</span> = np.matmul(res, h(a))
+        <span class="org-keyword">yield</span> res
+
+<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1</span>(cdf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
+    <span class="org-variable-name">mLst</span> = cf_convergent1_(cdf)
+    <span class="org-keyword">for</span> m <span class="org-keyword">in</span> mLst:
+        <span class="org-keyword">yield</span> Rational(m[0, 0], m[1, 0])
+</pre>
+</div>
+
+<p>
+All we have done is expressing the same computation slightly differently. We should get the same series as the previous section.
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(cf_convergent1(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))))
+</pre>
+</div>
+
+<pre class="example">
+[2/1, 3/1, 5/2, 28/11, 33/13, 127/50]
+</pre>
+
+
+<p>
+Gosper uses a compact tabulated format to visualize the computation. It's unnecessary, but I think it looks pretty cool:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+&lt;&lt;TAB_UTILS&gt;&gt;
+cf_convergent1_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))
+</pre>
+</div>
+
+<pre class="example">
+    2   1   1   5   1   3
+0   1   2   3   5  28  33 127
+1   0   1   1   2  11  13  50
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org6223d30" class="outline-2">
+<h2 id="org6223d30"><span class="section-number-2">4.</span> Appendix: Tabulated displays</h2>
+<div class="outline-text-2" id="text-4">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">r2cf_tab</span>(rn: Rational):
+    <span class="org-keyword">def</span> <span class="org-function-name">row</span>(st: <span class="org-builtin">str</span>, x: <span class="org-builtin">tuple</span>):
+        <span class="org-variable-name">b</span>, <span class="org-variable-name">q</span> = x
+        <span class="org-keyword">return</span> st + f<span class="org-string">"{b : &gt; 5}  {q : &lt; 5}\n"</span>
+    <span class="org-variable-name">str0</span> = f<span class="org-string">"{rn.a : &gt; 5}\n"</span>
+    <span class="org-keyword">return</span> <span class="org-builtin">reduce</span>(row, r2cf_(rn), str0) + f<span class="org-string">"{0 : &gt; 5}\n"</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_tab</span>(cdf: Iterator[<span class="org-builtin">int</span>]):
+    <span class="org-keyword">def</span> <span class="org-function-name">f_</span>(item):
+        <span class="org-keyword">if</span> item == <span class="org-string">""</span>:
+            <span class="org-keyword">return</span> f<span class="org-string">"{'': &gt;4}"</span>
+        <span class="org-keyword">else</span>:
+            <span class="org-keyword">return</span> f<span class="org-string">"{item: &gt;4}"</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">push_</span>(item1, item2, item3):
+        lines[0].append(f_(item1))
+        lines[1].append(f_(item2))
+        lines[2].append(f_(item3))
+
+    <span class="org-variable-name">res</span> = np.array([[1, 0], [0, 1]])        
+    <span class="org-variable-name">lines</span> = [[f_(<span class="org-string">""</span>)], [f_(0), f_(1)], [f_(1), f_(0)]]
+    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cdf:
+        <span class="org-variable-name">res</span> = np.matmul(res, h(a))
+        push_(a, res[0][0], res[1][0])
+
+    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, lines[0], <span class="org-string">""</span>))
+    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, lines[1], <span class="org-string">""</span>))
+    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, lines[2], <span class="org-string">""</span>))
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3db8426" class="outline-2">
+<h2 id="org3db8426"><span class="section-number-2">5.</span> Appendix: LaTeX utilities</h2>
+<div class="outline-text-2" id="text-5">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">latex_cf</span>(lst: <span class="org-builtin">list</span>):
+    <span class="org-keyword">if</span> <span class="org-builtin">len</span>(lst) == 1:
+        <span class="org-keyword">return</span> <span class="org-builtin">str</span>(lst[0])
+    <span class="org-keyword">else</span>:
+        <span class="org-variable-name">x</span> = <span class="org-builtin">str</span>(lst[0]) + <span class="org-string">"+"</span>
+        <span class="org-variable-name">x</span> = x + r<span class="org-string">"\frac{1}{"</span> + latex_cf(lst[1:]) + <span class="org-string">"}"</span>
+        <span class="org-keyword">return</span> x
+
+<span class="org-keyword">def</span> <span class="org-function-name">latex_rational</span>(r: Rational):
+    <span class="org-keyword">return</span> r<span class="org-string">"\frac{"</span> + <span class="org-builtin">str</span>(r.a) + <span class="org-string">"}{"</span> + <span class="org-builtin">str</span>(r.b) + <span class="org-string">"}"</span>
+
+<span class="org-keyword">def</span> <span class="org-function-name">show_cf_expansion</span>(r: Rational):
+    <span class="org-keyword">print</span>(r<span class="org-string">"\["</span>)
+    <span class="org-keyword">print</span>(r<span class="org-string">"\frac{"</span>, r.a, <span class="org-string">"}{"</span>, r.b, <span class="org-string">"}="</span>)
+    <span class="org-variable-name">nc</span> = <span class="org-builtin">list</span>(r2cf(r))
+    <span class="org-keyword">print</span>(latex_cf(nc))
+    <span class="org-keyword">print</span>(r<span class="org-string">"\]"</span>)
+
+<span class="org-keyword">def</span> <span class="org-function-name">show_rational_series</span>(itr: Iterator[<span class="org-builtin">int</span>]):
+    <span class="org-variable-name">rLst</span> = <span class="org-builtin">list</span>(cf_convergent0(itr))
+    <span class="org-variable-name">s</span> = <span class="org-string">""</span>
+    <span class="org-keyword">for</span> r <span class="org-keyword">in</span> rLst:
+        <span class="org-variable-name">s</span> = s + <span class="org-string">"$"</span> + latex_rational(r) + <span class="org-string">"$"</span> + <span class="org-string">","</span>
+
+    <span class="org-keyword">print</span>(s[:-1])
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org7d28b6c" class="outline-2">
+<h2 id="org7d28b6c"><span class="section-number-2">6.</span> Appendix: imports</h2>
+<div class="outline-text-2" id="text-6">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> math
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">from</span> typing <span class="org-keyword">import</span> NamedTuple, Iterator, Tuple
+<span class="org-keyword">from</span> functools <span class="org-keyword">import</span> <span class="org-builtin">reduce</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">from</span> cont_frac <span class="org-keyword">import</span> *
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Hsin-Hao Yu</p>
+<p class="date">Created: 2022-04-03 Sun 23:19</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
