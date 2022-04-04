@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-04-03 Sun 23:19 -->
+<!-- 2022-04-05 Tue 07:03 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
@@ -193,6 +193,12 @@
     { background-color: #ffff00; color: #000000; font-weight: bold; }
   .org-svg { width: 90%; }
 </style>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
 <script type="text/x-mathjax-config">
     MathJax.Hub.Config({
         displayAlign: "left",
@@ -217,8 +223,23 @@
 </head>
 <body>
 <div id="content" class="content">
-<div id="outline-container-org678399e" class="outline-2">
-<h2 id="org678399e"><span class="section-number-2">1.</span> Continued fraction representations of rational numbers</h2>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org59256f9">1. Continued fraction representations of rational numbers</a></li>
+<li><a href="#org490ffc0">2. Convergents</a></li>
+<li><a href="#org2091432">3. Continued fraction approximation as function compositions</a></li>
+<li><a href="#org093e82d">4. Convergents: matrix formulation</a></li>
+<li><a href="#orgef041e4">5. Simple transformations of continued fractions</a></li>
+<li><a href="#orgdd9bb3d">6. Appendix: Tabulated displays</a></li>
+<li><a href="#org6f1292d">7. Appendix: LaTeX utilities</a></li>
+<li><a href="#org46cc4e8">8. Appendix: imports</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org59256f9" class="outline-2">
+<h2 id="org59256f9"><span class="section-number-2">1.</span> Continued fraction representations of rational numbers</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Since we'll use rational numbers a lot, let's define a class:
@@ -233,7 +254,7 @@ Since we'll use rational numbers a lot, let's define a class:
 </div>
 
 <p>
-How to convert a rational number to a continued fraction? Observing that
+How to convert a rational number to a continued fraction? Observe that
 </p>
 
 <p>
@@ -247,7 +268,7 @@ How to convert a rational number to a continued fraction? Observing that
 </p>
 
 <p>
-it should be obvious that it can be done in a process that is similar to the Euclidean algorithm for finding the greatest common divider:
+It should be obvious that the solution is similar to the Euclidean algorithm for finding the greatest common divider:
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">euclid</span>(a: <span class="org-builtin">int</span>, b: <span class="org-builtin">int</span>) -&gt; Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]:
@@ -300,7 +321,6 @@ We can display the process in a tabular format. For example:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
-&lt;&lt;TAB_UTILS&gt;&gt;
 <span class="org-keyword">print</span>(r2cf_tab(Rational(254, 100)))
 </pre>
 </div>
@@ -321,7 +341,6 @@ We can display the process in a tabular format. For example:
 <p>
 Interestingly, the reciprocal of \(\frac{254}{100}\) (that is, \(\frac{100}{254}\)) is represented by the following as a continued fraction:
 </p>
-
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
 <span class="org-variable-name">nc</span> = r2cf(Rational(100, 254))
@@ -353,13 +372,16 @@ However, it's not obvious how to perform algebraically meaningful transformation
 </div>
 </div>
 
-<div id="outline-container-orgca8047f" class="outline-2">
-<h2 id="orgca8047f"><span class="section-number-2">2.</span> Convergents</h2>
+<div id="outline-container-org490ffc0" class="outline-2">
+<h2 id="org490ffc0"><span class="section-number-2">2.</span> Convergents</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-Given the coefficients of a continued fraction, how do we calculate the value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to approximate the value as more coefficients are received. It's not difficult to show that it can be approximated by a series of rational numbers:
+Given a continued fraction, how do we calculate the value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
 </p>
 
+<p>
+This question has an easy solution if we use rational numbers in the approximation. Such a series is called a convergent. The formula can be easily derived with mathematical induction, and it is implemented below. For the moment, we'll see it just a convenience to get the job done. We'll get deeper into its meaning in the next section.
+</p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent0</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
     <span class="org-variable-name">p1</span>, <span class="org-variable-name">p0</span> = 1, 0
@@ -376,7 +398,7 @@ Given the coefficients of a continued fraction, how do we calculate the value? I
 </div>
 
 <p>
-For example, for the sequence \(2, 1, 1, 5, 1, 3\), we get
+For example, for the continued fraction \(2, 1, 1, 5, 1, 3\), we get
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
@@ -399,21 +421,190 @@ can be approximated with
 </div>
 </div>
 
-<div id="outline-container-org105c6e5" class="outline-2">
-<h2 id="org105c6e5"><span class="section-number-2">3.</span> Convergents: matrix formulation</h2>
+<div id="outline-container-org2091432" class="outline-2">
+<h2 id="org2091432"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
 <div class="outline-text-2" id="text-3">
 <p>
-The first step towards Gosper arithmetics is to rewrite the formula in <code>cf_convergence0</code> as matrix multiplications. Begin with
-\(\begin{bmatrix}
-1 & 0 \\
-0 & 1
-\end{bmatrix}\), with each new coefficient \(a\) in continued fraction series, we right-multiply the matrix
-\(\begin{bmatrix}
-a & 1 \\
-1 & 0
-\end{bmatrix}\), and output the first column as the next rational number approximation.
+Given the first 3 terms in a continued fraction [5, 1, 4&#x2026;], let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
 </p>
 
+\begin{equation*}
+    f_1(x) = 5 + \frac{1}{x}
+\end{equation*}
+
+\begin{equation*}
+    f_2(x) = 5 + \frac{1}{1 + \frac{1}{x}} = f_1(1 + \frac{1}{x})
+\end{equation*}
+
+\begin{equation*}
+    f_3(x) = 5 + \frac{1}{1 + \frac{1}{4 + \frac{1}{x}}} = f_1(f_2(4 + \frac{1}{x}))
+\end{equation*}
+
+<p>
+Or more compactly, let
+</p>
+\begin{equation*}
+    h(a, x) = a + \frac{1}{x}
+\end{equation*}
+
+<p>
+then
+</p>
+\begin{equation*}
+    f_1(x) = h(5, x)
+\end{equation*}
+
+\begin{equation*}
+    f_2(x) = h(5, h(1, x))
+\end{equation*}
+
+\begin{equation*}
+    f_3(x) = h(5, h(1, h(4, x))) 
+\end{equation*}
+
+<p>
+This way, we express the approximation as a recursive process. If the continued fraction stops at the third term, its value is \(h_3(\infty) = h(5, h(1, h(4, \infty)))\). Infinity might seem odd, but remember that \(x\) is the reciprocal of the rest of the sequence. So it just means that the rest of the sequence evaluates to 0.
+</p>
+
+<p>
+Before we rush to translate this into code, but let's dig deeper. If we use column vectors to represent rational numbers:
+</p>
+
+\begin{equation*}
+    \begin{bmatrix}
+           p \\
+           q
+    \end{bmatrix} = \frac{p}{q}
+\end{equation*}
+
+<p>
+Then we can turn everything into linear algebra:
+</p>
+
+\begin{equation*}
+    h(a, x) = a + \frac{1}{x} = \frac{ax + 1}{x} =
+
+    \begin{bmatrix}
+        ax + 1 \\
+        x
+    \end{bmatrix}
+
+    =
+
+    \begin{bmatrix}
+        a & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix}
+\end{equation*}
+
+<p>
+Furthermore, 
+</p>
+
+\begin{equation*}
+    f_3(x) = h(5, h(1, h(4, x))) =
+
+    \begin{bmatrix}
+        5 & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        1 & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        4 & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix}
+
+    = 
+
+    \begin{bmatrix}
+        29 & 6 \\
+        5 & 1
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix}
+
+\end{equation*}
+
+<p>
+So, the 2-by-2 matrix
+</p>
+
+<p>
+\(\begin{bmatrix}
+    29 & 6 \\
+     5 & 1
+\end{bmatrix}\)
+</p>
+
+<p>
+is a function that represents an approximation of a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If continued fractions has only 3 terms, we terminate the process by evaluating
+</p>
+
+\begin{equation*}
+    f_3(
+        \begin{bmatrix}
+            1 \\
+            0
+        \end{bmatrix}
+    ) = 
+
+    \begin{bmatrix}
+        29 & 6 \\
+         5 & 1
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        1 \\
+        0 
+    \end{bmatrix}
+
+    = 
+
+    \begin{bmatrix}
+        29 \\
+         5
+    \end{bmatrix}
+
+    = \frac{29}{5}
+\end{equation*}
+<p>
+.
+</p>
+
+<p>
+Applying \(f_3(x)\) to
+\(\begin{bmatrix}
+    1 \\
+    0 
+\end{bmatrix}\) turns the function into a rational value, by taking the first column of the matrix.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org093e82d" class="outline-2">
+<h2 id="org093e82d"><span class="section-number-2">4.</span> Convergents: matrix formulation</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Now, we are ready to rewrite the formula in <code>cf_convergence0</code> as matrix multiplications:
+</p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">h</span>(a):
     <span class="org-keyword">return</span> np.array([[a, 1], [1,0]])
@@ -432,7 +623,21 @@ a & 1 \\
 </div>
 
 <p>
-All we have done is expressing the same computation slightly differently. We should get the same series as the previous section.
+Let's try it on the example given in the previous section:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(cf_convergent1(<span class="org-builtin">iter</span>([5, 1, 4]))))
+</pre>
+</div>
+
+<pre class="example">
+[5/1, 6/1, 29/5]
+</pre>
+
+
+<p>
+Here's a longer sequence that we used previously:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
@@ -446,26 +651,125 @@ All we have done is expressing the same computation slightly differently. We sho
 
 
 <p>
-Gosper uses a compact tabulated format to visualize the computation. It's unnecessary, but I think it looks pretty cool:
+A very charming thing that Gosper did was that he used a compact tabulated format to illustrate the process. It's unnecessary for the computation, but I think it looks pretty cool:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
-&lt;&lt;TAB_UTILS&gt;&gt;
+cf_convergent1_tab(<span class="org-builtin">iter</span>([5, 1, 4]))
+</pre>
+</div>
+
+<pre class="example">
+     4   1   5
+29   6   5   1   0
+ 5   1   1   0   1
+</pre>
+
+
+
+<p>
+This table is read from the right to the left. The direction is unnatural, but it's needed to preserve the normal representation of matrices. The first row represents the continued fraction.
+</p>
+
+<p>
+We can calculate the matrices for each addition term in the continued fraction:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-variable-name">itr</span> = cf_convergent1_(<span class="org-builtin">iter</span>([5, 1, 4]))
+<span class="org-keyword">print</span>(<span class="org-builtin">next</span>(itr),<span class="org-string">"\n"</span>)
+<span class="org-keyword">print</span>(<span class="org-builtin">next</span>(itr),<span class="org-string">"\n"</span>)
+<span class="org-keyword">print</span>(<span class="org-builtin">next</span>(itr))
+</pre>
+</div>
+
+<pre class="example">
+[[5 1]
+ [1 0]] 
+
+[[6 5]
+ [1 1]] 
+
+[[29  6]
+ [ 5  1]]
+</pre>
+
+
+<p>
+We can see that the matrices shift leftwards in the table above. Interpreting columns as rational numbers, we can read the convergent one by one off the table: \(\frac{5}{1}\), \(\frac{6}{1}\), and \(\frac{29}{5}\).
+</p>
+
+<p>
+Here's a longer example:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
 cf_convergent1_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))
 </pre>
 </div>
 
 <pre class="example">
-    2   1   1   5   1   3
-0   1   2   3   5  28  33 127
-1   0   1   1   2  11  13  50
+      3   1   5   1   1   2
+127  33  28   5   3   2   1   0
+ 50  13  11   2   1   1   0   1
 </pre>
 </div>
 </div>
 
-<div id="outline-container-org6223d30" class="outline-2">
-<h2 id="org6223d30"><span class="section-number-2">4.</span> Appendix: Tabulated displays</h2>
-<div class="outline-text-2" id="text-4">
+<div id="outline-container-orgef041e4" class="outline-2">
+<h2 id="orgef041e4"><span class="section-number-2">5.</span> Simple transformations of continued fractions</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Recall that we started this article by describing a recursive algorithm for converting a rational number into a continued fraction. Then we developed a recursive algorithm for approximating a continued fraction by a series of rational numbers. Now, we'll combine these two ideas.
+</p>
+
+<p>
+Recall that in a previous example, we express the third term in the convergent of [5, 1, 4&#x2026;] as
+</p>
+
+\begin{equation*}
+    f_3(x) =
+    \begin{bmatrix}
+        29 & 6 \\
+        5 & 1
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix} =
+    \frac{29x + 6}{5x + 1}
+\end{equation*}
+
+<p>
+Observe that
+</p>
+\begin{equation*}
+    f_3(x) =
+    \begin{bmatrix}
+        29 & 6 \\
+        5 & 1
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix} =
+    \frac{29x + 6}{5x + 1}
+\end{equation*}
+
+
+
+
+<p>
+In the previous section, we start with a continued fraction \(a\) represented as \([a_1, a_2, ...]\), and use matrix multiplication to calculate an rational series to approximate it. What if \(a\) is embedded in another expression? Let \(b=2a\). 
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdd9bb3d" class="outline-2">
+<h2 id="orgdd9bb3d"><span class="section-number-2">6.</span> Appendix: Tabulated displays</h2>
+<div class="outline-text-2" id="text-6">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">r2cf_tab</span>(rn: Rational):
     <span class="org-keyword">def</span> <span class="org-function-name">row</span>(st: <span class="org-builtin">str</span>, x: <span class="org-builtin">tuple</span>):
@@ -477,34 +781,42 @@ cf_convergent1_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_tab</span>(cdf: Iterator[<span class="org-builtin">int</span>]):
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_tab_pp</span>(row1, row2, row3):
     <span class="org-keyword">def</span> <span class="org-function-name">f_</span>(item):
-        <span class="org-keyword">if</span> item == <span class="org-string">""</span>:
+        <span class="org-keyword">if</span> item <span class="org-keyword">is</span> <span class="org-constant">None</span>:
             <span class="org-keyword">return</span> f<span class="org-string">"{'': &gt;4}"</span>
         <span class="org-keyword">else</span>:
             <span class="org-keyword">return</span> f<span class="org-string">"{item: &gt;4}"</span>
-    <span class="org-keyword">def</span> <span class="org-function-name">push_</span>(item1, item2, item3):
-        lines[0].append(f_(item1))
-        lines[1].append(f_(item2))
-        lines[2].append(f_(item3))
 
-    <span class="org-variable-name">res</span> = np.array([[1, 0], [0, 1]])        
-    <span class="org-variable-name">lines</span> = [[f_(<span class="org-string">""</span>)], [f_(0), f_(1)], [f_(1), f_(0)]]
-    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cdf:
-        <span class="org-variable-name">res</span> = np.matmul(res, h(a))
-        push_(a, res[0][0], res[1][0])
+    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, <span class="org-builtin">map</span>(f_, row1), <span class="org-string">""</span>))
+    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, <span class="org-builtin">map</span>(f_, row2), <span class="org-string">""</span>))
+    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, <span class="org-builtin">map</span>(f_, row3), <span class="org-string">""</span>))    
 
-    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, lines[0], <span class="org-string">""</span>))
-    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, lines[1], <span class="org-string">""</span>))
-    <span class="org-keyword">print</span>(<span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> a, b: a + b, lines[2], <span class="org-string">""</span>))
+<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_tab</span>(cf: Iterator[<span class="org-builtin">int</span>]):
+    <span class="org-variable-name">row1</span>, <span class="org-variable-name">row2</span>, <span class="org-variable-name">row3</span> = [], [], []
+    <span class="org-variable-name">row2</span> = [0, 1]
+    <span class="org-variable-name">row3</span> = [1, 0]
+
+    (cf1, cf2) = tee(cf)
+    <span class="org-keyword">for</span> (mat, a) <span class="org-keyword">in</span> <span class="org-builtin">zip</span>(cf_convergent1_(cf1), cf2):
+        row1.append(a)
+        row2.append(mat[0][0])
+        row3.append(mat[1][0])
+
+    row1.reverse()
+    row2.reverse()
+    row3.reverse()
+
+    <span class="org-variable-name">row1</span> = [<span class="org-constant">None</span>] + row1
+    cf_convergent1_tab_pp(row1, row2, row3)
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org3db8426" class="outline-2">
-<h2 id="org3db8426"><span class="section-number-2">5.</span> Appendix: LaTeX utilities</h2>
-<div class="outline-text-2" id="text-5">
+<div id="outline-container-org6f1292d" class="outline-2">
+<h2 id="org6f1292d"><span class="section-number-2">7.</span> Appendix: LaTeX utilities</h2>
+<div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">latex_cf</span>(lst: <span class="org-builtin">list</span>):
     <span class="org-keyword">if</span> <span class="org-builtin">len</span>(lst) == 1:
@@ -536,14 +848,15 @@ cf_convergent1_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))
 </div>
 </div>
 
-<div id="outline-container-org7d28b6c" class="outline-2">
-<h2 id="org7d28b6c"><span class="section-number-2">6.</span> Appendix: imports</h2>
-<div class="outline-text-2" id="text-6">
+<div id="outline-container-org46cc4e8" class="outline-2">
+<h2 id="org46cc4e8"><span class="section-number-2">8.</span> Appendix: imports</h2>
+<div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> math
 <span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
 <span class="org-keyword">from</span> typing <span class="org-keyword">import</span> NamedTuple, Iterator, Tuple
 <span class="org-keyword">from</span> functools <span class="org-keyword">import</span> <span class="org-builtin">reduce</span>
+<span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> tee
 </pre>
 </div>
 
@@ -556,7 +869,7 @@ cf_convergent1_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Hsin-Hao Yu</p>
-<p class="date">Created: 2022-04-03 Sun 23:19</p>
+<p class="date">Created: 2022-04-05 Tue 07:03</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
