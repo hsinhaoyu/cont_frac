@@ -3,6 +3,9 @@ tangle: org/cont_frac.org
 	./tangle.sh org/cont_frac.org
 	yapf --in-place --recursive src/
 
+test: tangle
+	pytest -s src/
+
 typing: tangle
 	mypy src/cont_frac.py
 

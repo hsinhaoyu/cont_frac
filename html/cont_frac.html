@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-04-05 Tue 07:03 -->
+<!-- 2022-04-08 Fri 21:24 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
@@ -204,14 +204,14 @@
         displayAlign: "left",
         displayIndent: "0em",
 
-        "HTML-CSS": { scale: 100,
+        "HTML-CSS": { scale: 85,
                         linebreaks: { automatic: "false" },
                         webFont: "TeX"
                        },
-        SVG: {scale: 100,
+        SVG: {scale: 85,
               linebreaks: { automatic: "false" },
               font: "TeX"},
-        NativeMML: {scale: 100},
+        NativeMML: {scale: 85},
         TeX: { equationNumbers: {autoNumber: "AMS"},
                MultLineWidth: "85%",
                TagSide: "right",
@@ -227,19 +227,22 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org59256f9">1. Continued fraction representations of rational numbers</a></li>
-<li><a href="#org490ffc0">2. Convergents</a></li>
-<li><a href="#org2091432">3. Continued fraction approximation as function compositions</a></li>
-<li><a href="#org093e82d">4. Convergents: matrix formulation</a></li>
-<li><a href="#orgef041e4">5. Simple transformations of continued fractions</a></li>
-<li><a href="#orgdd9bb3d">6. Appendix: Tabulated displays</a></li>
-<li><a href="#org6f1292d">7. Appendix: LaTeX utilities</a></li>
-<li><a href="#org46cc4e8">8. Appendix: imports</a></li>
+<li><a href="#org3c11747">1. Continued fraction representations of rational numbers</a></li>
+<li><a href="#org2689817">2. Convergents</a></li>
+<li><a href="#orgfc627df">3. Continued fraction approximation as function compositions</a></li>
+<li><a href="#org7c76581">4. Calculating convergents using the matrix notation</a></li>
+<li><a href="#orgd1fc721">5. Turning convergents into continued fractions</a></li>
+<li><a href="#org5d3d954">6. Simple transformations of continued fractions</a></li>
+<li><a href="#org4a9619e">7. Appendix 1: Calculating the quotient and the reminder of a convergent in matrix form</a></li>
+<li><a href="#org9e833ae">8. Appendix: Tests</a></li>
+<li><a href="#org2a90679">9. Appendix: Tabulated displays</a></li>
+<li><a href="#org1fe67cf">10. Appendix: LaTeX utilities</a></li>
+<li><a href="#org7a188c8">11. Appendix: imports</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org59256f9" class="outline-2">
-<h2 id="org59256f9"><span class="section-number-2">1.</span> Continued fraction representations of rational numbers</h2>
+<div id="outline-container-org3c11747" class="outline-2">
+<h2 id="org3c11747"><span class="section-number-2">1.</span> Continued fraction representations of rational numbers</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Since we'll use rational numbers a lot, let's define a class:
@@ -254,7 +257,7 @@ Since we'll use rational numbers a lot, let's define a class:
 </div>
 
 <p>
-How to convert a rational number to a continued fraction? Observe that
+How to convert a rational number to a continued fraction? Observing that
 </p>
 
 <p>
@@ -268,37 +271,37 @@ How to convert a rational number to a continued fraction? Observe that
 </p>
 
 <p>
-It should be obvious that the solution is similar to the Euclidean algorithm for finding the greatest common divider:
+it should be obvious that the solution is just the <a href="https://en.wikipedia.org/wiki/Euclidean_algorithm">Euclidean algorithm</a> for finding the greatest common divider:
 </p>
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">euclid</span>(a: <span class="org-builtin">int</span>, b: <span class="org-builtin">int</span>) -&gt; Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]:
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">qr</span>(a: <span class="org-builtin">int</span>, b: <span class="org-builtin">int</span>) -&gt; Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]:
     <span class="org-doc">"""a = b * q + r"""</span>
-    <span class="org-variable-name">q</span> = math.floor(a / b)
-    <span class="org-variable-name">r</span> = a - b * q
+    <span class="org-variable-name">q</span> = math.floor(a / b)  <span class="org-comment-delimiter"># </span><span class="org-comment">the quotion</span>
+    <span class="org-variable-name">r</span> = a - b * q          <span class="org-comment-delimiter"># </span><span class="org-comment">the reminder</span>
     <span class="org-keyword">return</span> (q, r)
 
-<span class="org-keyword">def</span> <span class="org-function-name">r2cf_</span>(rn: Rational) -&gt; Iterator[Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]]:
+<span class="org-keyword">def</span> <span class="org-function-name">euclid_</span>(rn: Rational) -&gt; Iterator[Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]]:
     <span class="org-variable-name">a</span>, <span class="org-variable-name">b</span> = rn    
-    <span class="org-variable-name">r</span> = 1000
-    <span class="org-keyword">while</span> r != 0:
-        <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = euclid(a, b)
+    <span class="org-keyword">while</span> <span class="org-constant">True</span>:
+        <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = qr(a, b)
         <span class="org-keyword">yield</span> b, q
-        <span class="org-variable-name">a</span> = b
-        <span class="org-variable-name">b</span> = r
+        <span class="org-keyword">if</span> r == 0:
+            <span class="org-keyword">break</span>
+        <span class="org-variable-name">a</span>, <span class="org-variable-name">b</span> = b, r
 
-<span class="org-keyword">def</span> <span class="org-function-name">r2cf</span>(rn: Rational) -&gt; Iterator[<span class="org-builtin">int</span>]:
+<span class="org-keyword">def</span> <span class="org-function-name">euclid</span>(rn: Rational) -&gt; Iterator[<span class="org-builtin">int</span>]:
     <span class="org-keyword">def</span> <span class="org-function-name">second</span>(x: <span class="org-builtin">tuple</span>):
         <span class="org-keyword">return</span> x[1]
-    <span class="org-keyword">return</span> <span class="org-builtin">map</span>(second, r2cf_(rn))
+    <span class="org-keyword">return</span> <span class="org-builtin">map</span>(second, euclid_(rn))
 </pre>
 </div>
 
 <p>
-Now we can use <code>r2cf</code> to calculate the coefficients. I use a generator to represent the returned coefficients, because continued fractions can have infinite number of terms. However, the continuous fraction representations of rational numbers are always finite.
+Now we can use <code>euclid</code> to calculate the coefficients. I use a Python generator to represent the returned coefficients, because continued fractions can have infinite number of coefficients. However, the continuous fraction representations of rational numbers are always finite.
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
-<span class="org-variable-name">nc</span> = r2cf(Rational(254, 100))
+<span class="org-variable-name">nc</span> = euclid(Rational(254, 100))
 <span class="org-keyword">print</span>(<span class="org-builtin">list</span>(nc))
 </pre>
 </div>
@@ -321,7 +324,7 @@ We can display the process in a tabular format. For example:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
-<span class="org-keyword">print</span>(r2cf_tab(Rational(254, 100)))
+<span class="org-keyword">print</span>(euclid_tab(Rational(254, 100)))
 </pre>
 </div>
 
@@ -339,11 +342,15 @@ We can display the process in a tabular format. For example:
 
 
 <p>
+This table shows that 2 (the penultimate row) is the greatest common divider of 254 and 100. The byproduct of this process, the quotients displayed on the right, are the coefficients.
+</p>
+
+<p>
 Interestingly, the reciprocal of \(\frac{254}{100}\) (that is, \(\frac{100}{254}\)) is represented by the following as a continued fraction:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
-<span class="org-variable-name">nc</span> = r2cf(Rational(100, 254))
+<span class="org-variable-name">nc</span> = euclid(Rational(100, 254))
 <span class="org-keyword">print</span>(<span class="org-builtin">list</span>(nc))
 </pre>
 </div>
@@ -354,33 +361,38 @@ Interestingly, the reciprocal of \(\frac{254}{100}\) (that is, \(\frac{100}{254}
 
 
 <p>
-It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the <code>r2cf</code> process.
+It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the <code>euclid</code> process.
 </p>
 
 <p>
-However, it's not obvious how to perform algebraically meaningful transformations. For example, if we multiple the rational number by two, the continued fraction series appear to be quite different. It's not clear how we get [0, 1, 3, 1, 2, 2, 1, 2] from [0, 2, 1, 1, 5, 1, 3]. We'll come back to this question a little bit later. 
+However, it's not obvious how to perform algebraically meaningful transformations. For example, if we multiple the rational number by 2, the continued fraction series appear to be quite different.
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
-<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(r2cf(Rational(200, 254))))
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(euclid(Rational(200, 254))))
 </pre>
 </div>
 
 <pre class="example">
 [0, 1, 3, 1, 2, 2, 1, 2]
 </pre>
+
+
+<p>
+It's not clear how we get \([0, 1, 3, 1, 2, 2, 1, 2]\) from \([0, 2, 1, 1, 5, 1, 3]\). We'll come back to this question a little bit later. 
+</p>
 </div>
 </div>
 
-<div id="outline-container-org490ffc0" class="outline-2">
-<h2 id="org490ffc0"><span class="section-number-2">2.</span> Convergents</h2>
+<div id="outline-container-org2689817" class="outline-2">
+<h2 id="org2689817"><span class="section-number-2">2.</span> Convergents</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Given a continued fraction, how do we calculate the value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
 </p>
 
 <p>
-This question has an easy solution if we use rational numbers in the approximation. Such a series is called a convergent. The formula can be easily derived with mathematical induction, and it is implemented below. For the moment, we'll see it just a convenience to get the job done. We'll get deeper into its meaning in the next section.
+This question has an easy solution if we use rational numbers in the approximation. Each approximation in the series is called a convergent. The formula for the convergents can be derived easily with mathematical induction, and it is implemented below. For the moment, we'll see it just a convenience to get the job done. We'll get deeper into its meaning in the next section.
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent0</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
@@ -398,7 +410,7 @@ This question has an easy solution if we use rational numbers in the approximati
 </div>
 
 <p>
-For example, for the continued fraction \(2, 1, 1, 5, 1, 3\), we get
+For example, for the continued fraction \([2, 1, 1, 5, 1, 3]\), we get
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
@@ -421,11 +433,11 @@ can be approximated with
 </div>
 </div>
 
-<div id="outline-container-org2091432" class="outline-2">
-<h2 id="org2091432"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
+<div id="outline-container-orgfc627df" class="outline-2">
+<h2 id="orgfc627df"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
 <div class="outline-text-2" id="text-3">
 <p>
-Given the first 3 terms in a continued fraction [5, 1, 4&#x2026;], let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
+Given the first 3 terms in a continued fraction \([5, 1, 4...]\), let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
 </p>
 
 \begin{equation*}
@@ -463,11 +475,11 @@ then
 \end{equation*}
 
 <p>
-This way, we express the approximation as a recursive process. If the continued fraction stops at the third term, its value is \(h_3(\infty) = h(5, h(1, h(4, \infty)))\). Infinity might seem odd, but remember that \(x\) is the reciprocal of the rest of the sequence. So it just means that the rest of the sequence evaluates to 0.
+This way, we express the approximation as a recursive process. If the continued fraction stops at the third term, its value is \(h_3(\infty) = h(5, h(1, h(4, \infty)))\). Infinity might seem odd here, but remember that \(x\) is the reciprocal of the rest of the sequence. So it just means that the rest of the sequence evaluates to 0.
 </p>
 
 <p>
-Before we rush to translate this into code, but let's dig deeper. If we use column vectors to represent rational numbers:
+Before we rush to translate this into code, let's dig deeper. If we use column vectors to represent rational numbers:
 </p>
 
 \begin{equation*}
@@ -482,7 +494,14 @@ Then we can turn everything into linear algebra:
 </p>
 
 \begin{equation*}
-    h(a, x) = a + \frac{1}{x} = \frac{ax + 1}{x} =
+    h(a, x) = a + \frac{1}{x} = \frac{ax + 1}{x}
+\end{equation*}
+
+<p>
+can be written in our matrix notation as
+</p>
+
+\begin{equation*}
 
     \begin{bmatrix}
         ax + 1 \\
@@ -507,7 +526,14 @@ Furthermore,
 </p>
 
 \begin{equation*}
-    f_3(x) = h(5, h(1, h(4, x))) =
+    f_3(x) = h(5, h(1, h(4, x)))
+\end{equation*}
+
+<p>
+can be written as
+</p>
+
+\begin{equation*}
 
     \begin{bmatrix}
         5 & 1 \\
@@ -555,16 +581,10 @@ So, the 2-by-2 matrix
 </p>
 
 <p>
-is a function that represents an approximation of a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If continued fractions has only 3 terms, we terminate the process by evaluating
+represents a function that approximates a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If the continued fractions has only 3 terms, we terminate the process by evaluating
 </p>
 
 \begin{equation*}
-    f_3(
-        \begin{bmatrix}
-            1 \\
-            0
-        \end{bmatrix}
-    ) = 
 
     \begin{bmatrix}
         29 & 6 \\
@@ -585,22 +605,19 @@ is a function that represents an approximation of a continued fraction with more
 
     = \frac{29}{5}
 \end{equation*}
-<p>
-.
-</p>
 
 <p>
-Applying \(f_3(x)\) to
+Multiplying the matrix with
 \(\begin{bmatrix}
     1 \\
     0 
-\end{bmatrix}\) turns the function into a rational value, by taking the first column of the matrix.
+\end{bmatrix}\) turns the function into a rational value, which is the first column of the matrix.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org093e82d" class="outline-2">
-<h2 id="org093e82d"><span class="section-number-2">4.</span> Convergents: matrix formulation</h2>
+<div id="outline-container-org7c76581" class="outline-2">
+<h2 id="org7c76581"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Now, we are ready to rewrite the formula in <code>cf_convergence0</code> as matrix multiplications:
@@ -609,14 +626,14 @@ Now, we are ready to rewrite the formula in <code>cf_convergence0</code> as matr
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">h</span>(a):
     <span class="org-keyword">return</span> np.array([[a, 1], [1,0]])
 
-<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_</span>(cdf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator:
+<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1_</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator:
     <span class="org-variable-name">res</span> = np.array([[1, 0], [0, 1]])
-    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cdf:
+    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cf:
         <span class="org-variable-name">res</span> = np.matmul(res, h(a))
         <span class="org-keyword">yield</span> res
 
-<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1</span>(cdf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
-    <span class="org-variable-name">mLst</span> = cf_convergent1_(cdf)
+<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent1</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
+    <span class="org-variable-name">mLst</span> = cf_convergent1_(cf)
     <span class="org-keyword">for</span> m <span class="org-keyword">in</span> mLst:
         <span class="org-keyword">yield</span> Rational(m[0, 0], m[1, 0])
 </pre>
@@ -668,11 +685,11 @@ cf_convergent1_tab(<span class="org-builtin">iter</span>([5, 1, 4]))
 
 
 <p>
-This table is read from the right to the left. The direction is unnatural, but it's needed to preserve the normal representation of matrices. The first row represents the continued fraction.
+This table is read from the right to the left. The right-to-left direction takes some getting used to, but it's needed to preserve the normal representation of matrices.
 </p>
 
 <p>
-We can calculate the matrices for each addition term in the continued fraction:
+The first row represents the coefficients of the continued fraction. To understand the other numbers, we calculate the matrices for each additional coefficient in the continued fraction:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
@@ -696,11 +713,33 @@ We can calculate the matrices for each addition term in the continued fraction:
 
 
 <p>
-We can see that the matrices shift leftwards in the table above. Interpreting columns as rational numbers, we can read the convergent one by one off the table: \(\frac{5}{1}\), \(\frac{6}{1}\), and \(\frac{29}{5}\).
+You can see these matrices shift leftwards in the tabular representation, with adjacent matrices sharing a column. To see why, suppose that the current matrix is
+\(\begin{bmatrix}
+    x_{11} & x_{12} \\
+    x_{21} & x_{22}
+\end{bmatrix}\), and we have to update it with a new term \(a\) in the continued fraction. The updated matrix is
+</p>
+\begin{equation*}
+    \begin{bmatrix}
+        x_{11} & x_{12} \\
+        x_{21} & x_{22}
+    \end{bmatrix}
+    \begin{bmatrix}
+        a & 1 \\
+        1 & 0
+    \end{bmatrix} =
+    \begin{bmatrix}
+        ax_{11} & x_{11} \\
+        ax_{21} & x_{21}
+    \end{bmatrix}
+\end{equation*}
+
+<p>
+This explains the shift, and we have recovered the formula in <code>cf_convergent0</code>.
 </p>
 
 <p>
-Here's a longer example:
+Here's a longer series:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
@@ -716,67 +755,360 @@ cf_convergent1_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))
 </div>
 </div>
 
-<div id="outline-container-orgef041e4" class="outline-2">
-<h2 id="orgef041e4"><span class="section-number-2">5.</span> Simple transformations of continued fractions</h2>
+
+
+<div id="outline-container-orgd1fc721" class="outline-2">
+<h2 id="orgd1fc721"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
 <div class="outline-text-2" id="text-5">
 <p>
-Recall that we started this article by describing a recursive algorithm for converting a rational number into a continued fraction. Then we developed a recursive algorithm for approximating a continued fraction by a series of rational numbers. Now, we'll combine these two ideas.
+What if we want to calculate the convergents using the same process in <code>cf_convergent1</code>, but we want the output to be in the form of a continued fraction? At this point, this seems to be a pointless exercise, because a continued fraction is what we start with! But it will become useful in the coming sections.
 </p>
 
 <p>
-Recall that in a previous example, we express the third term in the convergent of [5, 1, 4&#x2026;] as
+Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? Remember that the third convergent of the infinite series \([5, 1, 4... ]\) is
+\(\begin{bmatrix}
+    29 & 6 \\
+     5 & 1
+\end{bmatrix}\), which represents the function \(\frac{29x + 6}{5x + 1}\). This is not the same as the third convergent of the finite series \([5, 1, 4]\), which is the rational number \(\frac{29}{5}\).
 </p>
-
-\begin{equation*}
-    f_3(x) =
-    \begin{bmatrix}
-        29 & 6 \\
-        5 & 1
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        x \\
-        1 
-    \end{bmatrix} =
-    \frac{29x + 6}{5x + 1}
-\end{equation*}
 
 <p>
-Observe that
+So what do we do? It's still the Euclidean algorithm, but have to use it symbolically rather than numerically.
 </p>
-\begin{equation*}
-    f_3(x) =
-    \begin{bmatrix}
-        29 & 6 \\
-        5 & 1
-    \end{bmatrix}
 
-    \begin{bmatrix}
-        x \\
-        1 
-    \end{bmatrix} =
-    \frac{29x + 6}{5x + 1}
-\end{equation*}
+<p>
+The most important step in the Euclidean algorithm is to express a number in terms of the quotient and the reminder of another number (see <code>qr()</code> in <code>euclid_</code>). I implemented the symbolic version of this operation in a function called <code>qr_matrix</code> in the Appendix. Consider the second convergent of \([5, 1, 4...]\), we use <code>qr_matrix</code> to calculate the quotient and the reminder:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(qr_matrix(np.array([[6, 5], [1, 1]])))
+</pre>
+</div>
+
+<pre class="example">
+(5, array([[1, 1],
+       [1, 0]]))
+</pre>
 
 
+<p>
+This means that \(f_2(x) = \frac{6x+5}{1x+1} = 5 + \frac{1}{\frac{1x + 1}{x}}\). Sine \(\lim_{x \to 0} f_2(x) = 5\) and \(\lim_{x \to \infty} f_2(x) = 6\), the function is bounded by \(5 \leq f_2(x) < 6\). The quotient has to be 5, because the function is 6 only at infinity. 
+</p>
+
+<p>
+Let's try another example: The 3rd convergent of the series is
+\(\begin{bmatrix}
+    29 & 6 \\
+     5 & 1
+\end{bmatrix}\).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(qr_matrix(np.array([[29, 6], [5, 1]])))
+</pre>
+</div>
+
+<pre class="example">
+None
+</pre>
 
 
+<p>
+Why does <code>qr_matrix</code> returns None? Calculus shows that the function is bounded \(5.8 < f_3(x) \leq 6\). It's similar to the previous example, but in this case, the bounds are not tight enough to decide if the quotient is 5 or 6. That's why <code>qr_matrix</code> returns <code>None</code>, indicating that we have to wait for further information to resolve the quotient.
+</p>
+
+<p>
+Note that we can't pick the smaller number 5, and pass the error to the next term. This is because for any rational number, the coefficients of the corresponding continued fraction is unique. We therefore have to get the coefficient 100% right before we move on to the next one.
+</p>
+
+<p>
+Now we are ready to implement the symbolic form of the Euclidean algorithm:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;QR_MATRIX&gt;&gt;
+
+<span class="org-keyword">def</span> <span class="org-function-name">euclid_matrix_</span>(m):
+    <span class="org-keyword">while</span> <span class="org-constant">True</span>:
+        <span class="org-variable-name">res</span> = qr_matrix(m)
+        <span class="org-keyword">if</span> res:
+            <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = res
+            <span class="org-keyword">yield</span> q, r
+            <span class="org-variable-name">m</span> = r
+        <span class="org-keyword">else</span>:
+            <span class="org-keyword">break</span>
+</pre>
+</div>
+
+<p>
+Let's try it on
+\(\begin{bmatrix}
+    70 & 29 \\
+    12 & 5
+\end{bmatrix}\)
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-variable-name">q</span> = euclid_matrix_(np.array([[70, 29], [12, 5]]))
+<span class="org-keyword">for</span> (r, m) <span class="org-keyword">in</span> q:
+    <span class="org-keyword">print</span>(r, m)
+</pre>
+</div>
+
+<pre class="example">
+5 [[12  5]
+ [10  4]]
+1 [[10  4]
+ [ 2  1]]
+4 [[2 1]
+ [2 0]]
+</pre>
+
+
+<p>
+So there is enough information in \(\frac{70x+29}{12x+5}\) to precisely determine 3 coefficients. 
+</p>
+
+<p>
+As before, Gospher stacked the matrices in a compact format to illustrate the process:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-variable-name">q</span> = euclid_matrix_tab(np.array([[70, 29], [12, 5]]))
+<span class="org-keyword">print</span>(q)
+</pre>
+</div>
+
+<pre class="example">
+70  29
+12   5  5
+10   4  1
+ 2   1  4
+ 2   0
+
+</pre>
+
+
+<p>
+Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent2_</span>(cf: Iterator[<span class="org-builtin">int</span>], m0 = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator:
+    <span class="org-variable-name">m</span> = m0
+    <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cf:
+        <span class="org-variable-name">m</span> = np.matmul(m, h(a))
+        <span class="org-variable-name">q</span> = -1
+        <span class="org-keyword">for</span> (q, r) <span class="org-keyword">in</span> euclid_matrix_(m):
+            <span class="org-keyword">yield</span> q, r, m
+            <span class="org-variable-name">m</span> = r
+        <span class="org-keyword">if</span> q == -1:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">for this coefficient a, the convergent cannot be turned into cont. frac. form</span>
+            <span class="org-keyword">yield</span> (<span class="org-constant">None</span>, <span class="org-constant">None</span>, m)
+
+    <span class="org-comment-delimiter"># </span><span class="org-comment">we will only reach this point if the series is finite</span>
+    <span class="org-keyword">for</span> s <span class="org-keyword">in</span> euclid(Rational(m[0][0], m[0][1])):
+        <span class="org-keyword">yield</span> s, <span class="org-constant">None</span>, m
+
+<span class="org-keyword">def</span> <span class="org-function-name">cf_convergent2</span>(cf: Iterator[<span class="org-builtin">int</span>], m0 = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator:
+    <span class="org-keyword">for</span> res <span class="org-keyword">in</span> cf_convergent2_(cf, m0):
+        <span class="org-keyword">if</span> res:
+            (q, r, m) = res
+            <span class="org-keyword">yield</span> q
+</pre>
+</div>
+
+<p>
+Indeed, this code just returns the same sequence:
+</p>
+<div class="org-src-container">
+<pre class="src src-python">&lt;&lt;DEMO_IMPORTS&gt;&gt;
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(cf_convergent2(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]))))
+</pre>
+</div>
+
+<pre class="example">
+[None, 2, 1, 1, 5, 1, 3]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org5d3d954" class="outline-2">
+<h2 id="org5d3d954"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
+<div class="outline-text-2" id="text-6">
 <p>
 In the previous section, we start with a continued fraction \(a\) represented as \([a_1, a_2, ...]\), and use matrix multiplication to calculate an rational series to approximate it. What if \(a\) is embedded in another expression? Let \(b=2a\). 
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgdd9bb3d" class="outline-2">
-<h2 id="orgdd9bb3d"><span class="section-number-2">6.</span> Appendix: Tabulated displays</h2>
-<div class="outline-text-2" id="text-6">
+<div id="outline-container-org4a9619e" class="outline-2">
+<h2 id="org4a9619e"><span class="section-number-2">7.</span> Appendix 1: Calculating the quotient and the reminder of a convergent in matrix form</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+This is just calculus
+</p>
+
+
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">r2cf_tab</span>(rn: Rational):
+<pre class="src src-python"><span class="org-variable-name">flip_m</span> = np.array([[0, 1], [1, 0]])
+
+<span class="org-keyword">def</span> <span class="org-function-name">qr_matrix</span>(m):
+    <span class="org-variable-name">m2</span> = m.copy()
+
+    <span class="org-keyword">if</span> m2[1][0] !=0 <span class="org-keyword">and</span> m2[1][1] !=0:
+        <span class="org-variable-name">d0</span> = math.floor(m[0][0] / m[1][0])
+        <span class="org-variable-name">d1</span> = math.floor(m[0][1] / m[1][1])
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient is between d0 and d1 (inclusive)</span>
+        (d0, d1) = <span class="org-builtin">sorted</span>([d0, d1])
+        <span class="org-keyword">if</span> d0 == d1:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">if d1 and d2 are the same, the coefficient is determined</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">calculate the remain, and flip the matrix</span>
+            <span class="org-variable-name">r</span> = m2[0] - m2[1] * d0
+            <span class="org-variable-name">m2</span>[0] = r
+            <span class="org-variable-name">m2</span> = np.matmul(flip_m, m2)
+            <span class="org-keyword">return</span> d1, m2
+        <span class="org-keyword">elif</span> d1 == d0 + 1:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">if d1 is d0 + 1, there is a situation where coefficient can be determined</span>
+            <span class="org-variable-name">r</span> = m2[0] - m2[1] * d1
+            <span class="org-keyword">if</span> r[1] &lt; 0:
+                <span class="org-comment-delimiter"># </span><span class="org-comment">this means d1 doesn't work, try d0</span>
+                <span class="org-variable-name">r</span> = m2[0] - m2[1] * d0
+                <span class="org-keyword">if</span> r[1] &lt; 0:
+                    <span class="org-comment-delimiter"># </span><span class="org-comment">d0 also does'nt work</span>
+                    <span class="org-keyword">return</span> <span class="org-constant">None</span>
+                <span class="org-keyword">else</span>:
+                    <span class="org-variable-name">m2</span>[0] = r
+                    <span class="org-variable-name">m2</span> = np.matmul(flip_m, m2)
+                    <span class="org-keyword">return</span> d0, m2
+            <span class="org-keyword">else</span>:
+               <span class="org-comment-delimiter"># </span><span class="org-comment">cannot rule out d1</span>
+               <span class="org-keyword">return</span> <span class="org-constant">None</span>
+        <span class="org-keyword">else</span>:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">the range is too big, so the coefficient cannot be determined</span>
+            <span class="org-keyword">return</span> <span class="org-constant">None</span>
+    <span class="org-keyword">else</span>:
+        <span class="org-comment-delimiter"># </span><span class="org-comment">coefficient cannot be determined for unbounded function</span>
+        <span class="org-keyword">return</span> <span class="org-constant">None</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">from</span> cont_frac <span class="org-keyword">import</span> *
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">class</span> <span class="org-type">TestQRMatrix</span>(<span class="org-builtin">object</span>):
+    <span class="org-keyword">def</span> <span class="org-function-name">qr</span>(<span class="org-keyword">self</span>, m):
+        <span class="org-variable-name">res</span> = qr_matrix(np.array(m))
+        <span class="org-keyword">if</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">return</span> <span class="org-constant">None</span>
+        <span class="org-keyword">else</span>:
+            (q, r) = res
+            <span class="org-keyword">return</span> q, r.tolist()
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic1</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(4x+2)/(3x+2) is between 4/2 and 2/2 (1 to 1.33)</span>
+        <span class="org-variable-name">m</span> = [[4, 2], [3, 2]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 1 <span class="org-keyword">and</span> r == [[3, 2], [1, 0]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic2</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(70x + 29)/ (12x + 5) is between 29/5 and 35/6 (5.8 to 5.88)</span>
+        <span class="org-variable-name">m</span> = [[70, 29], [12, 5]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 5 <span class="org-keyword">and</span> r == [[12, 5], [10, 4]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic3</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(12x + 5) / (10 x + 4) is between 6/5 and 5/4 (1.2 to 1.25)</span>
+        <span class="org-variable-name">m</span> = [[12, 5], [10, 4]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 1 <span class="org-keyword">and</span> r == [[10, 4], [2, 1]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_negative1</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(10x + 4) / (2x + 1) is bounded between 4 and 5</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient is 4, because it is 5 only at infinity</span>
+        <span class="org-variable-name">m</span> = [[10, 4], [2, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 4 <span class="org-keyword">and</span> r == [[2, 1], [2, 0]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_negative2</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(8x + 3) / (2x + 1) is bounded between 3 and 4</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">it is only 4 if x is infinity, so the coefficient has to be 3</span>
+        <span class="org-variable-name">m</span> = [[8, 3], [2, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 3 <span class="org-keyword">and</span> r == [[2, 1], [2, 0]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_divergent1</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">4x + 2 is unbounded</span>
+        <span class="org-variable-name">m</span> = [[4, 2], [0, 1]]
+        <span class="org-variable-name">res</span> = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_divergent2</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(4x + 2) / 3 is unbounded</span>
+        <span class="org-variable-name">m</span> = [[4, 2], [3, 0]]
+        <span class="org-variable-name">res</span> = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_zero_coeff</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(1x + 2) / (2x + 3) is bounded between 1/2 and 2/3 (0.5 to 0.666)</span>
+        <span class="org-variable-name">m</span> = [[1, 2], [2, 3]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 0 <span class="org-keyword">and</span> r == [[2, 3], [1, 2]]
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9e833ae" class="outline-2">
+<h2 id="org9e833ae"><span class="section-number-2">8.</span> Appendix: Tests</h2>
+<div class="outline-text-2" id="text-8">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestEuclid</span>(<span class="org-builtin">object</span>):
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic</span>(<span class="org-keyword">self</span>):
+        <span class="org-variable-name">res</span> = euclid(Rational(254, 100))
+        <span class="org-keyword">assert</span> <span class="org-builtin">list</span>(res) == [2, 1, 1, 5, 1, 3]
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org2a90679" class="outline-2">
+<h2 id="org2a90679"><span class="section-number-2">9.</span> Appendix: Tabulated displays</h2>
+<div class="outline-text-2" id="text-9">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">euclid_tab</span>(rn: Rational):
     <span class="org-keyword">def</span> <span class="org-function-name">row</span>(st: <span class="org-builtin">str</span>, x: <span class="org-builtin">tuple</span>):
         <span class="org-variable-name">b</span>, <span class="org-variable-name">q</span> = x
         <span class="org-keyword">return</span> st + f<span class="org-string">"{b : &gt; 5}  {q : &lt; 5}\n"</span>
     <span class="org-variable-name">str0</span> = f<span class="org-string">"{rn.a : &gt; 5}\n"</span>
-    <span class="org-keyword">return</span> <span class="org-builtin">reduce</span>(row, r2cf_(rn), str0) + f<span class="org-string">"{0 : &gt; 5}\n"</span>
+    <span class="org-keyword">return</span> <span class="org-builtin">reduce</span>(row, euclid_(rn), str0) + f<span class="org-string">"{0 : &gt; 5}\n"</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">euclid_matrix_tab</span>(m):
+    <span class="org-keyword">def</span> <span class="org-function-name">get_row</span>(res):
+        <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = res
+        <span class="org-keyword">return</span> (r[0][0], r[0][1], r[1][0], r[1][1], q)
+    <span class="org-keyword">def</span> <span class="org-function-name">row</span>(st, res):
+        (n1, n2, _, _, q) = res
+        <span class="org-variable-name">s</span> = <span class="org-string">""</span>
+        <span class="org-variable-name">s</span> = s + f<span class="org-string">"{n1 : &gt; 4}"</span>
+        <span class="org-variable-name">s</span> = s + f<span class="org-string">"{n2 : &gt; 4}"</span>
+        <span class="org-keyword">if</span> q:
+            <span class="org-variable-name">s</span> = s + f<span class="org-string">"  {q}\n"</span>
+        <span class="org-keyword">else</span>:
+            <span class="org-variable-name">s</span> = s + <span class="org-string">"\n"</span>
+        <span class="org-keyword">return</span> st + s
+    <span class="org-variable-name">st0</span> = f<span class="org-string">"{m[0][0] : &gt; 4}{m[0][1] : &gt; 4}\n"</span>
+    <span class="org-variable-name">res</span> = euclid_matrix_(m)
+    <span class="org-variable-name">res</span> = <span class="org-builtin">list</span>(<span class="org-builtin">map</span>(get_row, res))
+    <span class="org-variable-name">st</span> = <span class="org-builtin">reduce</span>(row, res, st0)
+    <span class="org-variable-name">st</span> = st + f<span class="org-string">"{res[-1][2] : &gt; 4}{res[-1][3] : &gt;4}\n"</span>
+    <span class="org-keyword">return</span> st
 </pre>
 </div>
 
@@ -811,12 +1143,21 @@ In the previous section, we start with a continued fraction \(a\) represented as
     cf_convergent1_tab_pp(row1, row2, row3)
 </pre>
 </div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_convergent2_tab</span>(cf: Iterator[<span class="org-builtin">int</span>], m0 = np.identity(2, <span class="org-builtin">int</span>)):
+    (cf1, cf2) = tee(cf)
+    <span class="org-keyword">for</span> (a, (q, r, m)) <span class="org-keyword">in</span> <span class="org-builtin">zip</span>(cf1, cf_convergent2_(cf2, m0)):
+        <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">pass</span>
+</pre>
+</div>
 </div>
 </div>
 
-<div id="outline-container-org6f1292d" class="outline-2">
-<h2 id="org6f1292d"><span class="section-number-2">7.</span> Appendix: LaTeX utilities</h2>
-<div class="outline-text-2" id="text-7">
+<div id="outline-container-org1fe67cf" class="outline-2">
+<h2 id="org1fe67cf"><span class="section-number-2">10.</span> Appendix: LaTeX utilities</h2>
+<div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">latex_cf</span>(lst: <span class="org-builtin">list</span>):
     <span class="org-keyword">if</span> <span class="org-builtin">len</span>(lst) == 1:
@@ -832,7 +1173,7 @@ In the previous section, we start with a continued fraction \(a\) represented as
 <span class="org-keyword">def</span> <span class="org-function-name">show_cf_expansion</span>(r: Rational):
     <span class="org-keyword">print</span>(r<span class="org-string">"\["</span>)
     <span class="org-keyword">print</span>(r<span class="org-string">"\frac{"</span>, r.a, <span class="org-string">"}{"</span>, r.b, <span class="org-string">"}="</span>)
-    <span class="org-variable-name">nc</span> = <span class="org-builtin">list</span>(r2cf(r))
+    <span class="org-variable-name">nc</span> = <span class="org-builtin">list</span>(euclid(r))
     <span class="org-keyword">print</span>(latex_cf(nc))
     <span class="org-keyword">print</span>(r<span class="org-string">"\]"</span>)
 
@@ -848,9 +1189,9 @@ In the previous section, we start with a continued fraction \(a\) represented as
 </div>
 </div>
 
-<div id="outline-container-org46cc4e8" class="outline-2">
-<h2 id="org46cc4e8"><span class="section-number-2">8.</span> Appendix: imports</h2>
-<div class="outline-text-2" id="text-8">
+<div id="outline-container-org7a188c8" class="outline-2">
+<h2 id="org7a188c8"><span class="section-number-2">11.</span> Appendix: imports</h2>
+<div class="outline-text-2" id="text-11">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> math
 <span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
@@ -869,7 +1210,7 @@ In the previous section, we start with a continued fraction \(a\) represented as
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Hsin-Hao Yu</p>
-<p class="date">Created: 2022-04-05 Tue 07:03</p>
+<p class="date">Created: 2022-04-08 Fri 21:24</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
