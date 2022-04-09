@@ -13,7 +13,7 @@ class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
 
 def qr(a: int, b: int) -> Tuple[int, int]:
     """a = b * q + r"""
-    q = math.floor(a / b)  # the quotion
+    q = math.floor(a / b)  # the quotient
     r = a - b * q  # the reminder
     return (q, r)
 
@@ -128,7 +128,7 @@ def cf_convergent2_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
             yield q, r, m
             m = r
         if q == -1:
-            # for this coefficient a, the convergent cannot be turned into cont. frac. form
+            # for this coefficient a, the convergent cannot be turned into a continued fraction
             yield (None, None, m)
 
     # we will only reach this point if the series is finite
@@ -140,71 +140,10 @@ def cf_convergent2(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
     for res in cf_convergent2_(cf, m0):
         if res:
             (q, r, m) = res
-            yield q
-
-
-def euclid_tab(rn: Rational):
-    def row(st: str, x: tuple):
-        b, q = x
-        return st + f"{b : > 5}  {q : < 5}\n"
-
-    str0 = f"{rn.a : > 5}\n"
-    return reduce(row, euclid_(rn), str0) + f"{0 : > 5}\n"
-
-
-def euclid_matrix_tab(m):
-    def get_row(res):
-        q, r = res
-        return (r[0][0], r[0][1], r[1][0], r[1][1], q)
-
-    def row(st, res):
-        (n1, n2, _, _, q) = res
-        s = ""
-        s = s + f"{n1 : > 4}"
-        s = s + f"{n2 : > 4}"
-        if q:
-            s = s + f"  {q}\n"
-        else:
-            s = s + "\n"
-        return st + s
-
-    st0 = f"{m[0][0] : > 4}{m[0][1] : > 4}\n"
-    res = euclid_matrix_(m)
-    res = list(map(get_row, res))
-    st = reduce(row, res, st0)
-    st = st + f"{res[-1][2] : > 4}{res[-1][3] : >4}\n"
-    return st
-
-
-def cf_convergent1_tab_pp(row1, row2, row3):
-    def f_(item):
-        if item is None:
-            return f"{'': >4}"
-        else:
-            return f"{item: >4}"
-
-    print(reduce(lambda a, b: a + b, map(f_, row1), ""))
-    print(reduce(lambda a, b: a + b, map(f_, row2), ""))
-    print(reduce(lambda a, b: a + b, map(f_, row3), ""))
-
-
-def cf_convergent1_tab(cf: Iterator[int]):
-    row1, row2, row3 = [], [], []
-    row2 = [0, 1]
-    row3 = [1, 0]
-
-    (cf1, cf2) = tee(cf)
-    for (mat, a) in zip(cf_convergent1_(cf1), cf2):
-        row1.append(a)
-        row2.append(mat[0][0])
-        row3.append(mat[1][0])
-
-    row1.reverse()
-    row2.reverse()
-    row3.reverse()
-
-    row1 = [None] + row1
-    cf_convergent1_tab_pp(row1, row2, row3)
+            if q:
+                # cf_convergent2_ can return None to indicate that it needs more coefficients
+                # to continue. It can be ignored
+                yield q
 
 
 def cf_convergent2_tab(cf: Iterator[int], m0=np.identity(2, int)):

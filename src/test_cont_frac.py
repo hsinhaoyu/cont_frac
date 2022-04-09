@@ -66,3 +66,27 @@ class TestEuclid(object):
     def test_basic(self):
         res = euclid(Rational(254, 100))
         assert list(res) == [2, 1, 1, 5, 1, 3]
+
+
+class TestConvergent0(object):
+    def test_basic(self):
+        l = list(cf_convergent0(iter([2, 1, 1, 5, 1, 3])))
+        assert l[0] == Rational(2, 1)
+        assert l[1] == Rational(3, 1)
+        assert l[2] == Rational(5, 2)
+        assert l[3] == Rational(28, 11)
+        assert l[4] == Rational(33, 13)
+        assert l[5] == Rational(127, 50)
+        assert len(l) == 6
+
+
+class TestConvergent1(object):
+    def test_basic(self):
+        l = list(cf_convergent1(iter([2, 1, 1, 5, 1, 3])))
+        assert l[0] == Rational(2, 1)
+        assert l[1] == Rational(3, 1)
+        assert l[2] == Rational(5, 2)
+        assert l[3] == Rational(28, 11)
+        assert l[4] == Rational(33, 13)
+        assert l[5] == Rational(127, 50)
+        assert len(l) == 6

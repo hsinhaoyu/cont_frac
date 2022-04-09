@@ -3,6 +3,7 @@
 #+HTML_MATHJAX: align: left
 #+HTML_MATHJAX: scale: 85
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+TITLE: Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)
 * Continued fraction representations of rational numbers
 Since we'll use rational numbers a lot, let's define a class:
 #+begin_src python :noweb no-export :tangle ../src/cont_frac.py
@@ -27,7 +28,7 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
 #+begin_src python :noweb yes :tangle ../src/cont_frac.py
   def qr(a: int, b: int) -> Tuple[int, int]:
       """a = b * q + r"""
-      q = math.floor(a / b)  # the quotion
+      q = math.floor(a / b)  # the quotient
       r = a - b * q          # the reminder
       return (q, r)
 
@@ -357,7 +358,6 @@ A very charming thing that Gosper did was that he used a compact tabulated forma
 :   29   6   5   1   0
 :    5   1   1   0   1
 
-
 This table is read from the right to the left. The right-to-left direction takes some getting used to, but it's needed to preserve the normal representation of matrices.
 
 The first row represents the coefficients of the continued fraction. To understand the other numbers, we calculate the matrices for each additional coefficient in the continued fraction:
@@ -411,8 +411,6 @@ Here's a longer series:
 :        3   1   5   1   1   2
 :  127  33  28   5   3   2   1   0
 :   50  13  11   2   1   1   0   1
-
-
 
 * Turning convergents into continued fractions
 What if we want to calculate the convergents using the same process in =cf_convergent1=, but we want the output to be in the form of a continued fraction? At this point, this seems to be a pointless exercise, because a continued fraction is what we start with! But it will become useful in the coming sections.
@@ -507,7 +505,7 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 :   10   4  1
 :    2   1  4
 :    2   0
-: 
+:
 
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 #+begin_src python :noweb no-export :tangle ../src/cont_frac.py
@@ -520,7 +518,7 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
               yield q, r, m
               m = r
           if q == -1:
-              # for this coefficient a, the convergent cannot be turned into cont. frac. form
+              # for this coefficient a, the convergent cannot be turned into a continued fraction
               yield (None, None, m)
 
       # we will only reach this point if the series is finite
@@ -531,10 +529,13 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
       for res in cf_convergent2_(cf, m0):
           if res:
               (q, r, m) = res
-              yield q
+              if q:
+                  # cf_convergent2_ can return None to indicate that it needs more coefficients
+                  # to continue. It can be ignored
+                  yield q
 #+end_src
 
-Indeed, this code just returns the same sequence:
+Run it on a sequence, and it just returns the same sequence. 
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergent2(iter([2, 1, 1, 5, 1, 3]))))
@@ -542,6 +543,8 @@ Indeed, this code just returns the same sequence:
 
 #+RESULTS:
 : [2, 1, 1, 5, 1, 3]
+
+That seems to be anti-climatic for quite a bit of work... but here's something cool. Gospher combined the two stacked matrix representations that we have seen already, to illustrate every step in the algorithm. What a fascinating idea...
 
 * Simple transformations of continued fractions
 In the previous section, we start with a continued fraction $a$ represented as $[a_1, a_2, ...]$, and use matrix multiplication to calculate an rational series to approximate it. What if $a$ is embedded in another expression? Let $b=2a$. 
@@ -657,7 +660,7 @@ This is just calculus
           assert q == 0 and r == [[2, 3], [1, 2]]
 #+end_src
 
-* Appendix: Tests
+* Appendix: Additional tests
 #+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
   class TestEuclid(object):
       def test_basic(self):
@@ -665,8 +668,103 @@ This is just calculus
           assert list(res) == [2, 1, 1, 5, 1, 3]
 #+end_src
 
+#+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
+  class TestConvergent0(object):
+      def test_basic(self):
+          l = list(cf_convergent0(iter([2, 1, 1, 5, 1, 3])))
+          assert l[0] == Rational(2, 1)
+          assert l[1] == Rational(3, 1)
+          assert l[2] == Rational(5, 2)
+          assert l[3] == Rational(28, 11)
+          assert l[4] == Rational(33, 13)
+          assert l[5] == Rational(127, 50)
+          assert len(l) == 6
+#+end_src
+
+#+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
+  class TestConvergent1(object):
+      def test_basic(self):
+          l = list(cf_convergent1(iter([2, 1, 1, 5, 1, 3])))
+          assert l[0] == Rational(2, 1)
+          assert l[1] == Rational(3, 1)
+          assert l[2] == Rational(5, 2)
+          assert l[3] == Rational(28, 11)
+          assert l[4] == Rational(33, 13)
+          assert l[5] == Rational(127, 50)
+          assert len(l) == 6
+#+end_src
+
+* Appendix: Display utilities
+#+begin_src python :noweb no-export :tangle ../src/cont_frac_io.py
+  <<IO_IMPORTS>>
+
+  class Chart(object):
+      def __init__(self, m = np.identity(2, int), display_top = True, display_right = True):
+          self.display_top = display_top
+          self.display_right = display_right
+          self.top = [None]
+          self.right = [None]
+          self.board = [[m[0][0], m[0][1]], [m[1][0], m[1][1]]]
+
+      def pp_item(self, item, right = False):
+          if item is None:
+              return " " * 4
+          else:
+              if right:
+                  return f" {item : < 4}"
+              else:
+                  return f"{item : > 4}"
+
+      def pp_row(self, row):
+          return reduce(lambda s, item: s + self.pp_item(item), row, "")
+
+      def last_column(self):
+          return (self.board[-2][0], self.board[-1][0])
+
+      def push_top(self, i):
+          self.top = [i] + self.top
+
+      def push_right(self, i):
+          self.right.append(i)
+
+      def push_column(self, m, a):
+          self.push_top(a)
+          assert self.last_column() == (m[0][1], m[1][1])
+          for i in range(len(self.board)):
+              self.board[i] = [None] + self.board[i]
+          self.board[-2][0] = m[0][0] 
+          self.board[-1][0] = m[1][0] 
+
+      def push_row(self, m, q):
+          #assert self.board[-1][0] == m[0][0]
+          #assert self.board[-1][1] == m[0][1]
+          new_row = [None] * len(self.board[-1])
+          new_row[0] = m[1][0]
+          new_row[1] = m[1][1]
+          self.board.append(new_row)
+          self.right.append(q)
+
+      def __repr__(self):
+          s = ""
+          if self.display_top:
+              s = s + self.pp_row([None] + self.top) + "\n"
+
+          for (i, row) in enumerate(self.board):
+              s = s + self.pp_row(row)
+              try:
+                  if self.display_right:
+                      r = self.pp_item(self.right[i], right = True)
+                  else:
+                      r = ""
+                  s = s + r + "\n"
+              except IndexError:
+                  s = s + "\n"
+          s = s[:-1] # remove the last "\n"
+          return s
+#+end_src
+
 * Appendix: Tabulated displays
-#+begin_src python :tangle ../src/cont_frac.py
+#+begin_src python :tangle ../src/cont_frac_io.py
   def euclid_tab(rn: Rational):
       def row(st: str, x: tuple):
           b, q = x
@@ -675,58 +773,21 @@ This is just calculus
       return reduce(row, euclid_(rn), str0) + f"{0 : > 5}\n"
 #+end_src
 
-#+begin_src python :tangle ../src/cont_frac.py
-  def euclid_matrix_tab(m):
-      def get_row(res):
-          q, r = res
-          return (r[0][0], r[0][1], r[1][0], r[1][1], q)
-      def row(st, res):
-          (n1, n2, _, _, q) = res
-          s = ""
-          s = s + f"{n1 : > 4}"
-          s = s + f"{n2 : > 4}"
-          if q:
-              s = s + f"  {q}\n"
-          else:
-              s = s + "\n"
-          return st + s
-      st0 = f"{m[0][0] : > 4}{m[0][1] : > 4}\n"
-      res = euclid_matrix_(m)
-      res = list(map(get_row, res))
-      st = reduce(row, res, st0)
-      st = st + f"{res[-1][2] : > 4}{res[-1][3] : >4}\n"
-      return st
-#+end_src
-
-#+begin_src python :noweb yes :tangle ../src/cont_frac.py
-  def cf_convergent1_tab_pp(row1, row2, row3):
-      def f_(item):
-          if item is None:
-              return f"{'': >4}"
-          else:
-              return f"{item: >4}"
-
-      print(reduce(lambda a, b: a + b, map(f_, row1), ""))
-      print(reduce(lambda a, b: a + b, map(f_, row2), ""))
-      print(reduce(lambda a, b: a + b, map(f_, row3), ""))    
-
+#+begin_src python :noweb yes :tangle ../src/cont_frac_io.py
   def cf_convergent1_tab(cf: Iterator[int]):
-      row1, row2, row3 = [], [], []
-      row2 = [0, 1]
-      row3 = [1, 0]
-
+      chart = Chart(display_right = False)
       (cf1, cf2) = tee(cf)
       for (mat, a) in zip(cf_convergent1_(cf1), cf2):
-          row1.append(a)
-          row2.append(mat[0][0])
-          row3.append(mat[1][0])
+          chart.push_column(mat, a)
+      print(chart)
+#+end_src
 
-      row1.reverse()
-      row2.reverse()
-      row3.reverse()
-
-      row1 = [None] + row1
-      cf_convergent1_tab_pp(row1, row2, row3)
+#+begin_src python :tangle ../src/cont_frac_io.py
+  def euclid_matrix_tab(m):
+      chart = Chart(m = m, display_top = True)
+      for (q, r) in euclid_matrix_(m):
+          chart.push_row(r, q)
+      print(chart)
 #+end_src
 
 #+begin_src python :noweb yes :tangle ../src/cont_frac.py
@@ -766,7 +827,7 @@ This is just calculus
       print(s[:-1])
 #+end_src
 
-* Appendix: imports
+* Appendix: Imports
 #+begin_src python :tangle no :noweb-ref IMPORTS
   import math
   import numpy as np
@@ -777,4 +838,10 @@ This is just calculus
 
 #+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
   from cont_frac import *
+  from cont_frac_io import *
+#+end_src
+
+#+begin_src python :tangle no :noweb-ref IO_IMPORTS
+  from cont_frac import *
+  from functools import reduce
 #+end_src
