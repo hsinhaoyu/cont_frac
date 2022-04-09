@@ -144,10 +144,3 @@ def cf_convergent2(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
                 # cf_convergent2_ can return None to indicate that it needs more coefficients
                 # to continue. It can be ignored
                 yield q
-
-
-def cf_convergent2_tab(cf: Iterator[int], m0=np.identity(2, int)):
-    (cf1, cf2) = tee(cf)
-    for (a, (q, r, m)) in zip(cf1, cf_convergent2_(cf2, m0)):
-        if q is None:
-            pass

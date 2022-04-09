@@ -7,24 +7,22 @@ class Chart(object):
                  m=np.identity(2, int),
                  display_top=True,
                  display_right=True,
-                 init_matrix=True):
+                 field_width=4):
         self.display_top = display_top
         self.display_right = display_right
         self.top = [None]
         self.right = [None]
-        if init_matrix:
-            self.board = [[m[0][0], m[0][1]], [m[1][0], m[1][1]]]
-        else:
-            self.board = []
+        self.board = [[m[0][0], m[0][1]], [m[1][0], m[1][1]]]
+        self.field_width = field_width
 
     def pp_item(self, item, right=False):
         if item is None:
-            return " " * 4
+            return " " * self.field_width
         else:
             if right:
-                return f" {item : < 4}"
+                return f" {item : < {self.field_width}}"
             else:
-                return f"{item : > 4}"
+                return f"{item : > {self.field_width}}"
 
     def pp_row(self, row):
         return reduce(lambda s, item: s + self.pp_item(item), row, "")
@@ -47,8 +45,8 @@ class Chart(object):
         self.board[-1][0] = m[1][0]
 
     def push_row(self, m, q):
-        #assert self.board[-1][0] == m[0][0]
-        #assert self.board[-1][1] == m[0][1]
+        assert self.board[-1][0] == m[0][0]
+        assert self.board[-1][1] == m[0][1]
         new_row = [None] * len(self.board[-1])
         new_row[0] = m[1][0]
         new_row[1] = m[1][1]
@@ -83,6 +81,14 @@ def euclid_tab(rn: Rational):
     return reduce(row, euclid_(rn), str0) + f"{0 : > 5}\n"
 
 
+def cf_convergent1_tab(cf: Iterator[int]):
+    chart = Chart(display_right=False)
+    (cf1, cf2) = tee(cf)
+    for (mat, a) in zip(cf_convergent1_(cf1), cf2):
+        chart.push_column(mat, a)
+    print(chart)
+
+
 def euclid_matrix_tab(m):
     chart = Chart(m=m, display_top=True)
     for (q, r) in euclid_matrix_(m):
@@ -90,9 +96,15 @@ def euclid_matrix_tab(m):
     print(chart)
 
 
-def cf_convergent1_tab(cf: Iterator[int]):
-    chart = Chart(display_right=False)
+def cf_convergent2_tab(cf: Iterator[int],
+                       m0=np.identity(2, int),
+                       field_width=4):
+    chart = Chart(m=m0, field_width=field_width)
     (cf1, cf2) = tee(cf)
-    for (mat, a) in zip(cf_convergent1_(cf1), cf2):
-        chart.push_column(mat, a)
+    for (a, (q, r, m)) in zip(cf1, cf_convergent2_(cf2, m0)):
+        chart.push_column(m, a)
+        if q is None:
+            pass
+        else:
+            chart.push_row(r, q)
     print(chart)
