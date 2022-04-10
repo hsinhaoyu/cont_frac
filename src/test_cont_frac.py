@@ -3,6 +3,12 @@ import pytest
 from cont_frac import *
 
 
+class TestR2cf(object):
+    def test_basic(self):
+        res = r2cf(Rational(254, 100))
+        assert list(res) == [2, 1, 1, 5, 1, 3]
+
+
 class TestQRMatrix(object):
     def qr(self, m):
         res = qr_matrix(np.array(m))
@@ -61,12 +67,6 @@ class TestQRMatrix(object):
         m = [[1, 2], [2, 3]]
         (q, r) = self.qr(m)
         assert q == 0 and r == [[2, 3], [1, 2]]
-
-
-class TestR2cf(object):
-    def test_basic(self):
-        res = r2cf(Rational(254, 100))
-        assert list(res) == [2, 1, 1, 5, 1, 3]
 
 
 # Apply this test to two functions, because they should be equivalent

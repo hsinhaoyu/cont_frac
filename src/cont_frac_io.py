@@ -2,6 +2,7 @@ from cont_frac import *
 from functools import reduce
 
 
+# A class to facilitate tabular displays
 class Chart(object):
     def __init__(self,
                  m=np.identity(2, int),
@@ -78,7 +79,7 @@ def r2cf_tab(rn: Rational):
         return st + f"{b : > 5}  {q : < 5}\n"
 
     str0 = f"{rn.a : > 5}\n"
-    return reduce(row, r2cf_(rn), str0) + f"{0 : > 5}\n"
+    print(reduce(row, r2cf_(rn), str0) + f"{0 : > 5}\n")
 
 
 def cf_convergents1_tab(cf: Iterator[int]):
@@ -96,12 +97,10 @@ def euclid_matrix_tab(m):
     print(chart)
 
 
-def cf_convergent2_tab(cf: Iterator[int],
-                       m0=np.identity(2, int),
-                       field_width=4):
+def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int), field_width=4):
     chart = Chart(m=m0, field_width=field_width)
     (cf1, cf2) = tee(cf)
-    for (a, (q, r, m)) in zip(cf1, cf_convergent2_(cf2, m0)):
+    for (a, (q, r, m)) in zip(cf1, cf_transform_(cf2, m0)):
         chart.push_column(m, a)
         if q is None:
             pass
@@ -110,3 +109,34 @@ def cf_convergent2_tab(cf: Iterator[int],
             if r is None:
                 char.push_right(q)
     print(chart)
+
+
+# Utilities functions for LaTeX displays
+def latex_cf(lst: list):
+    if len(lst) == 1:
+        return str(lst[0])
+    else:
+        x = str(lst[0]) + "+"
+        x = x + r"\frac{1}{" + latex_cf(lst[1:]) + "}"
+        return x
+
+
+def latex_rational(r: Rational):
+    return r"\frac{" + str(r.a) + "}{" + str(r.b) + "}"
+
+
+def show_cf_expansion(r: Rational):
+    print(r"\[")
+    print(r"\frac{", r.a, "}{", r.b, "}=")
+    nc = list(r2cf(r))
+    print(latex_cf(nc))
+    print(r"\]")
+
+
+def show_rational_series(itr: Iterator[int]):
+    rLst = list(cf_convergents0(itr))
+    s = ""
+    for r in rLst:
+        s = s + "$" + latex_rational(r) + "$" + ","
+
+    print(s[:-1])

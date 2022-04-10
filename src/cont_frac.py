@@ -141,7 +141,7 @@ def euclid_matrix_(m):
             break
 
 
-def cf_convergent2_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
+def cf_transform_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
     m = m0
     for a in cf:
         m = np.matmul(m, h(a))
@@ -154,15 +154,15 @@ def cf_convergent2_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
             yield (None, None, m)
 
     # we will only reach this point if the series is finite
-    for s in euclid(Rational(m[0][0], m[1][0])):
+    for s in r2cf(Rational(m[0][0], m[1][0])):
         yield s, None, m
 
 
-def cf_convergent2(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
-    for res in cf_convergent2_(cf, m0):
+def cf_transform(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
+    for res in cf_transform_(cf, m0):
         if res:
             (q, r, m) = res
             if q is not None:
-                # cf_convergent2_ can return None to indicate that it needs more coefficients
+                # cf_transform_ can return None to indicate that it needs more coefficients
                 # to continue. It can be ignored
                 yield q
