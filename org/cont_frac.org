@@ -61,7 +61,7 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
 #+end_src
 
 Now we can use =r2cf= to convert a rational number into a continued fraction. In this article, continued fractions are represented by Python generators, because they can have infinite number of terms. However, the generators returned by =r2cf= are finite iterators because the continued fractions associated with rational numbers always have finite numbers of coefficients.
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   nc = r2cf(Rational(254, 100))
   print(list(nc))
@@ -71,7 +71,7 @@ Now we can use =r2cf= to convert a rational number into a continued fraction. In
 : [2, 1, 1, 5, 1, 3]
 
 This means that
-#+begin_src python :exports none :noweb no-export :results output raw :dir ../src/
+#+begin_src python :exports none :noweb strip-export :results output raw :dir ../src/
   <<DEMO_IMPORTS>>
   show_cf_expansion(Rational(254, 100))
 #+end_src
@@ -83,7 +83,7 @@ This means that
 \]
 
 We can display the process in a tabular format. For example:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   r2cf_tab(Rational(254, 100))
 #+end_src
@@ -102,7 +102,7 @@ We can display the process in a tabular format. For example:
 This table shows that 2 (the penultimate row) is the greatest common divider of 254 and 100. As a byproduct of this process, we also get the coefficients of the corresponding continued fraction, which are the quotients displayed on the right.
 
 Interestingly, the reciprocal of $\frac{254}{100}$ (that is, $\frac{100}{254}$) is represented by the following as a continued fraction:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   nc = r2cf(Rational(100, 254))
   print(list(nc))
@@ -135,7 +135,7 @@ This question has an easy solution if we use a series of rational numbers to app
 #+end_src
 
 For example, for the continued fraction $[2, 1, 1, 5, 1, 3]$, we get
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents0(iter([2, 1, 1, 5, 1, 3]))))
 #+end_src
@@ -144,7 +144,7 @@ For example, for the continued fraction $[2, 1, 1, 5, 1, 3]$, we get
 : [2/1, 3/1, 5/2, 28/11, 33/13, 127/50]
 
 In other words, 
-#+begin_src python :exports none :noweb no-export :results output raw :dir ../src/
+#+begin_src python :exports none :noweb strip-export :results output raw :dir ../src/
   <<DEMO_IMPORTS>>
   print("$" + latex_cf([2, 1, 1, 5, 1, 3]) + "$")
 #+end_src
@@ -152,7 +152,7 @@ In other words,
 #+RESULTS:
 $2+\frac{1}{1+\frac{1}{1+\frac{1}{5+\frac{1}{1+\frac{1}{3}}}}}$
 can be approximated with
-#+begin_src python :exports none :noweb no-export :results output raw :dir ../src/
+#+begin_src python :exports none :noweb strip-export :results output raw :dir ../src/
   <<DEMO_IMPORTS>>
   show_rational_series(iter([2, 1, 1, 5, 1, 3]))
 #+end_src
@@ -170,7 +170,7 @@ For convenience, we define a specialized version of =cf_convergents0= just for f
       return list(cf_convergents0(cf))[-1]
 #+end_src
 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(cf2r0(iter([2, 1, 1, 5, 1, 3])))
 #+end_src
@@ -191,7 +191,7 @@ Another example: the irrational number $e$ can be expressed as a continuous frac
 #+end_src
 
 It has infinite number of terms, but the series follows a simple pattern. This is just the first 16 terms:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(islice(cf_e(), 16)))
 #+end_src
@@ -199,7 +199,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 #+RESULTS:
 : [2, 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8, 1, 1, 10, 1]
 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   conv_ = cf_convergents0(cf_e())
   conv = list(islice(conv_, 16)) # the first 16 convergents
@@ -249,7 +249,7 @@ Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multipli
 #+end_src
 
 Let's try it on the example given in the previous section:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents1(iter([5, 1, 4]))))
 #+end_src
@@ -258,7 +258,7 @@ Let's try it on the example given in the previous section:
 : [5/1, 6/1, 29/5]
 
 Here's a longer sequence that we used previously:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents1(iter([2, 1, 1, 5, 1, 3]))))
 #+end_src
@@ -267,7 +267,7 @@ Here's a longer sequence that we used previously:
 : [2/1, 3/1, 5/2, 28/11, 33/13, 127/50]
 
 A very charming thing that Gosper did was that he used a compact tabulated format to illustrate the process. It's unnecessary for the computation, but I think it looks pretty cool:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   cf_convergents1_tab(iter([5, 1, 4]))
 #+end_src
@@ -280,7 +280,7 @@ A very charming thing that Gosper did was that he used a compact tabulated forma
 This table is read from the right to the left. The right-to-left direction takes some getting used to, but it's needed to preserve the normal representation of matrices.
 
 The first row represents the coefficients of the continued fraction. To understand the other numbers, we calculate the matrices for each additional coefficient in the continued fraction:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   itr = cf_convergents1_(iter([5, 1, 4]))
   print(next(itr),"\n")
@@ -321,7 +321,7 @@ $\begin{bmatrix}
 This explains the shift, and we have recovered the formula in =cf_convergents0=.
 
 Here's a longer series:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   cf_convergents1_tab(iter([2, 1, 1, 5, 1, 3]))
 #+end_src
@@ -353,7 +353,7 @@ So what do we do? The answer is still the Euclidean algorithm, but have to use i
 
 The most important step in the Euclidean algorithm is to express a number in terms of the quotient and the reminder of another number (see =qr()= in =r2cf_=). I implemented the symbolic version of this operation in a function called =qr_matrix= in the Appendix. Consider the second convergent of $[5, 1, 4...]$, we use =qr_matrix= to calculate the quotient and the reminder:
 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(qr_matrix(np.array([[6, 5], [1, 1]])))
 #+end_src
@@ -370,7 +370,7 @@ $\begin{bmatrix}
      5 & 1
 \end{bmatrix}$.
 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(qr_matrix(np.array([[29, 6], [5, 1]])))
 #+end_src
@@ -401,7 +401,7 @@ $\begin{bmatrix}
     12 & 5
 \end{bmatrix}$
 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   q = euclid_matrix_(np.array([[70, 29], [12, 5]]))
   for (r, m) in q:
@@ -419,7 +419,7 @@ $\begin{bmatrix}
 So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 coefficients. 
 
 As before, Gospher stacked the matrices in a compact format to illustrate the process:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   euclid_matrix_tab(np.array([[70, 29], [12, 5]]))
 #+end_src
@@ -461,7 +461,7 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
 #+end_src
 
 Run it on a continued fraction, and it just returns the same sequence. It doesn't seems to do any transformation. We'll see why the function is called =cf_transform= in the next section. 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_transform(iter([2, 1, 1, 5, 1, 3]))))
 #+end_src
@@ -471,7 +471,7 @@ Run it on a continued fraction, and it just returns the same sequence. It doesn'
 
 This seems to be anti-climatic for quite a bit of work... but here's something cool. Gospher combined the two stacked matrix representations that we have seen, to illustrate every step in the algorithm:
 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   cf_transform_tab(iter([2, 1, 1, 5, 1, 3]), field_width = 3)
 #+end_src
@@ -492,7 +492,7 @@ The numbers on the right are the outputs of =cf_transform=.
 In the previous section, we start with a continued fraction $a$ represented as $[a_1, a_2, ...]$, and use matrix multiplication to calculate an rational series to approximate it. What if $a$ is embedded in another expression? Let $b=2a$.
 
 The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, and turn it back to a continued fraction:
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print("[2, 1, 1, 5, 1] is ", cf2r1(iter([2, 1, 1, 5, 1])))
   print("The continued fraction of 66/13 is ", list(r2cf(Rational(66, 13))), "\n")
@@ -510,7 +510,7 @@ The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, 
 : 
 
 According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up with fewer terms? We can illustrate the process by running =cf_transform_tab= with the initial matrix $\begin{bmatrix} 2 & 0 \\ 0 & 1 \end{bmatrix}$ (which stands for the function $f(x) = 2x$):
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[2, 0], [0, 1]], int)
   cd = cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0)
@@ -527,7 +527,7 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
 :   1  1  0              13
 
 Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[0, 1], [1, 0]], int)
   cd = cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0)
@@ -549,7 +549,7 @@ The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1]
   1  0                 1 
 #+end_example
 
-* Appendix 1: Calculating the quotient and the reminder of a convergent in matrix form
+* Appendix: Calculating the quotient and the reminder of a convergent in matrix form
 This is just calculus
 
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
@@ -604,6 +604,7 @@ This is just calculus
   <<TEST_QR_MATRIX>>
   <<TEST_CONVERGENTS>>
   <<TEST_CF2R>>
+  <<TEST_CF_TRANSFORM>>
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref TEST_R2CF
@@ -705,6 +706,23 @@ This is just calculus
   def test_cf2r(cf2r_func):
       assert cf2r_func([2, 1, 1, 5, 1, 3]) == Rational(127, 50)
       assert cf2r_func([1, 2, 3, 4, 5]) == Rational(225, 157)
+#+end_src
+
+#+begin_src python :tangle no :noweb-ref TEST_CF_TRANSFORM
+  class TestCFTransform(object):
+      def test_cf_transform_basic1(self):
+          """ 2 * [2, 1, 1, 5, 1] == 66/13"""
+          m0 = np.array([[2, 0], [0, 1]], int)
+          cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0))
+          cf2 = list(r2cf(Rational(66, 13)))
+          assert cf1 == cf2
+
+      def test_cf_transform_basic1(self):
+          """ 1 / [2, 1, 1, 5, 1] == [0, 2, 1, 1, 5, 1]"""
+          m0 = np.array([[0, 1], [1, 0]], int)
+          cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0))
+          cf2 = [0, 2, 1, 1, 5, 1]
+          assert cf1 == cf2
 #+end_src
 
 * Appendix: Display utilities

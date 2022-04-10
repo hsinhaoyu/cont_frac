@@ -101,3 +101,20 @@ def test_convergents_basic2(conv_func):
 def test_cf2r(cf2r_func):
     assert cf2r_func([2, 1, 1, 5, 1, 3]) == Rational(127, 50)
     assert cf2r_func([1, 2, 3, 4, 5]) == Rational(225, 157)
+
+
+class TestCFTransform(object):
+
+    def test_cf_transform_basic1(self):
+        """ 2 * [2, 1, 1, 5, 1] == 66/13"""
+        m0 = np.array([[2, 0], [0, 1]], int)
+        cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0=m0))
+        cf2 = list(r2cf(Rational(66, 13)))
+        assert cf1 == cf2
+
+    def test_cf_transform_basic1(self):
+        """ 1 / [2, 1, 1, 5, 1] == [0, 2, 1, 1, 5, 1]"""
+        m0 = np.array([[0, 1], [1, 0]], int)
+        cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0=m0))
+        cf2 = [0, 2, 1, 1, 5, 1]
+        assert cf1 == cf2
