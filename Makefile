@@ -10,4 +10,4 @@ typing: tangle
 	mypy src/
 
 html: tangle
-	./org2html.sh org/*.org
+	./org2html.sh org/cont_frac.org
