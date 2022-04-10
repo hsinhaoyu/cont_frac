@@ -72,19 +72,19 @@ class Chart(object):
         return s
 
 
-def euclid_tab(rn: Rational):
+def r2cf_tab(rn: Rational):
     def row(st: str, x: tuple):
         b, q = x
         return st + f"{b : > 5}  {q : < 5}\n"
 
     str0 = f"{rn.a : > 5}\n"
-    return reduce(row, euclid_(rn), str0) + f"{0 : > 5}\n"
+    return reduce(row, r2cf_(rn), str0) + f"{0 : > 5}\n"
 
 
-def cf_convergent1_tab(cf: Iterator[int]):
+def cf_convergents1_tab(cf: Iterator[int]):
     chart = Chart(display_right=False)
     (cf1, cf2) = tee(cf)
-    for (mat, a) in zip(cf_convergent1_(cf1), cf2):
+    for (mat, a) in zip(cf_convergents1_(cf1), cf2):
         chart.push_column(mat, a)
     print(chart)
 
@@ -107,4 +107,6 @@ def cf_convergent2_tab(cf: Iterator[int],
             pass
         else:
             chart.push_row(r, q)
+            if r is None:
+                char.push_right(q)
     print(chart)

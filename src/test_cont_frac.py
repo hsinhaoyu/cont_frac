@@ -1,5 +1,6 @@
-from cont_frac import *
 import numpy as np
+import pytest
+from cont_frac import *
 
 
 class TestQRMatrix(object):
@@ -62,31 +63,39 @@ class TestQRMatrix(object):
         assert q == 0 and r == [[2, 3], [1, 2]]
 
 
-class TestEuclid(object):
+class TestR2cf(object):
     def test_basic(self):
-        res = euclid(Rational(254, 100))
+        res = r2cf(Rational(254, 100))
         assert list(res) == [2, 1, 1, 5, 1, 3]
 
 
-class TestConvergent0(object):
-    def test_basic(self):
-        l = list(cf_convergent0(iter([2, 1, 1, 5, 1, 3])))
-        assert l[0] == Rational(2, 1)
-        assert l[1] == Rational(3, 1)
-        assert l[2] == Rational(5, 2)
-        assert l[3] == Rational(28, 11)
-        assert l[4] == Rational(33, 13)
-        assert l[5] == Rational(127, 50)
-        assert len(l) == 6
+# Apply this test to two functions, because they should be equivalent
+@pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
+def test_convergents_basci1(conv_func):
+    l = list(conv_func(iter([2, 1, 1, 5, 1, 3])))
+    assert l[0] == Rational(2, 1)
+    assert l[1] == Rational(3, 1)
+    assert l[2] == Rational(5, 2)
+    assert l[3] == Rational(28, 11)
+    assert l[4] == Rational(33, 13)
+    assert l[5] == Rational(127, 50)
+    assert len(l) == 6
 
 
-class TestConvergent1(object):
-    def test_basic(self):
-        l = list(cf_convergent1(iter([2, 1, 1, 5, 1, 3])))
-        assert l[0] == Rational(2, 1)
-        assert l[1] == Rational(3, 1)
-        assert l[2] == Rational(5, 2)
-        assert l[3] == Rational(28, 11)
-        assert l[4] == Rational(33, 13)
-        assert l[5] == Rational(127, 50)
-        assert len(l) == 6
+# Apply this test to two functions, because they should be equivalent
+@pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
+def test_convergents_basic2(conv_func):
+    l = list(cf_convergents0(iter([1, 2, 3, 4, 5])))
+    assert l[0] == Rational(1, 1)
+    assert l[1] == Rational(3, 2)
+    assert l[2] == Rational(10, 7)
+    assert l[3] == Rational(43, 30)
+    assert l[4] == Rational(225, 157)
+    assert len(l) == 5
+
+
+# cf2r0 and cf2r1 should be equivalent
+@pytest.mark.parametrize('cf2r_func', [cf2r0, cf2r1])
+def test_cf2r(cf2r_func):
+    assert cf2r_func([2, 1, 1, 5, 1, 3]) == Rational(127, 50)
+    assert cf2r_func([1, 2, 3, 4, 5]) == Rational(225, 157)

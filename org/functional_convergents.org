@@ -1,0 +1,151 @@
+Given the first 3 terms in a continued fraction $[5, 1, 4...]$, let $x$ denote the reciprocal of the value of the remaining series. We can express the convergent as $f_1(x)$, $f_2(x)$, $f_3(x)$..., where
+
+\begin{equation*}
+    f_1(x) = 5 + \frac{1}{x}
+\end{equation*}
+
+\begin{equation*}
+    f_2(x) = 5 + \frac{1}{1 + \frac{1}{x}} = f_1(1 + \frac{1}{x})
+\end{equation*}
+
+\begin{equation*}
+    f_3(x) = 5 + \frac{1}{1 + \frac{1}{4 + \frac{1}{x}}} = f_1(f_2(4 + \frac{1}{x}))
+\end{equation*}
+
+Or more compactly, let
+\begin{equation*}
+    h(a, x) = a + \frac{1}{x}
+\end{equation*}
+
+then
+\begin{equation*}
+    f_1(x) = h(5, x)
+\end{equation*}
+
+\begin{equation*}
+    f_2(x) = h(5, h(1, x))
+\end{equation*}
+
+\begin{equation*}
+    f_3(x) = h(5, h(1, h(4, x))) 
+\end{equation*}
+
+This way, we express the approximation as a recursive process. If the continued fraction stops at the third term, its value is $h_3(\infty) = h(5, h(1, h(4, \infty)))$. Infinity might seem odd here, but remember that $x$ is the reciprocal of the rest of the sequence. So it just means that the rest of the sequence evaluates to 0.
+
+Before we rush to translate this into code, let's dig deeper. If we use column vectors to represent rational numbers:
+
+\begin{equation*}
+    \begin{bmatrix}
+           p \\
+           q
+    \end{bmatrix} = \frac{p}{q}
+\end{equation*}
+
+Then we can turn everything into linear algebra:
+
+\begin{equation*}
+    h(a, x) = a + \frac{1}{x} = \frac{ax + 1}{x}
+\end{equation*}
+
+can be written in our matrix notation as
+
+\begin{equation*}
+
+    \begin{bmatrix}
+        ax + 1 \\
+        x
+    \end{bmatrix}
+
+    =
+
+    \begin{bmatrix}
+        a & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix}
+\end{equation*}
+
+Furthermore, 
+
+\begin{equation*}
+    f_3(x) = h(5, h(1, h(4, x)))
+\end{equation*}
+
+can be written as
+
+\begin{equation*}
+
+    \begin{bmatrix}
+        5 & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        1 & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        4 & 1 \\
+        1 & 0
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix}
+
+    = 
+
+    \begin{bmatrix}
+        29 & 6 \\
+        5 & 1
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        x \\
+        1 
+    \end{bmatrix}
+
+\end{equation*}
+
+So, the 2-by-2 matrix
+
+$\begin{bmatrix}
+    29 & 6 \\
+     5 & 1
+\end{bmatrix}$
+
+represents a function that approximates a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If the continued fractions has only 3 terms, we terminate the process by evaluating
+
+\begin{equation*}
+
+    \begin{bmatrix}
+        29 & 6 \\
+         5 & 1
+    \end{bmatrix}
+
+    \begin{bmatrix}
+        1 \\
+        0 
+    \end{bmatrix}
+
+    = 
+
+    \begin{bmatrix}
+        29 \\
+         5
+    \end{bmatrix}
+
+    = \frac{29}{5}
+\end{equation*}
+
+Multiplying the matrix with
+$\begin{bmatrix}
+    1 \\
+    0 
+\end{bmatrix}$ turns the function into a rational value, which is the first column of the matrix.

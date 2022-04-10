@@ -11,14 +11,17 @@ class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
         return f'{self.a}/{self.b}'
 
 
+# Convert a rational number to a continued fraction
+
+
 def qr(a: int, b: int) -> Tuple[int, int]:
-    """a = b * q + r"""
+    """a = b * q + r, return (q, r)"""
     q = math.floor(a / b)  # the quotient
     r = a - b * q  # the reminder
     return (q, r)
 
 
-def euclid_(rn: Rational) -> Iterator[Tuple[int, int]]:
+def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
     a, b = rn
     while True:
         q, r = qr(a, b)
@@ -28,14 +31,18 @@ def euclid_(rn: Rational) -> Iterator[Tuple[int, int]]:
         a, b = b, r
 
 
-def euclid(rn: Rational) -> Iterator[int]:
+def r2cf(rn: Rational) -> Iterator[int]:
     def second(x: tuple):
         return x[1]
 
-    return map(second, euclid_(rn))
+    return map(second, r2cf_(rn))
 
 
-def cf_convergent0(cf: Iterator[int]) -> Iterator[Rational]:
+# Calculate the convergents of a continued fraction
+
+
+def cf_convergents0(cf: Iterator[int]) -> Iterator[Rational]:
+    """For a continued fraction cf, return an iterator of rational numbers to approximate it"""
     p1, p0 = 1, 0
     q1, q0 = 0, 1
 
@@ -48,22 +55,38 @@ def cf_convergent0(cf: Iterator[int]) -> Iterator[Rational]:
         q0, q1 = q1, q
 
 
+def cf2r0(cf: Iterator[int]) -> Rational:
+    """Given a finite-term continued fraction, return its value as a rational number.
+    This function will get into an infinite loop if the iterator doesn't stop.
+    """
+    return list(cf_convergents0(cf))[-1]
+
+
 def h(a):
     return np.array([[a, 1], [1, 0]])
 
 
-def cf_convergent1_(cf: Iterator[int]) -> Iterator:
+def cf_convergents1_(cf: Iterator[int]) -> Iterator:
     res = np.array([[1, 0], [0, 1]])
     for a in cf:
         res = np.matmul(res, h(a))
         yield res
 
 
-def cf_convergent1(cf: Iterator[int]) -> Iterator[Rational]:
-    mLst = cf_convergent1_(cf)
+def cf_convergents1(cf: Iterator[int]) -> Iterator[Rational]:
+    mLst = cf_convergents1_(cf)
     for m in mLst:
         yield Rational(m[0, 0], m[1, 0])
 
+
+def cf2r1(cf: Iterator[int]) -> Rational:
+    """Given a finite-term continued fraction, return its value as a rational number.
+    This function will get into an infinite loop if the iterator doesn't stop.
+    """
+    return list(cf_convergents1(cf))[-1]
+
+
+# Calculate the quotient and reminder of a 2-by-2 matrix
 
 flip_m = np.array([[0, 1], [1, 0]])
 
@@ -90,8 +113,7 @@ def qr_matrix(m):
             if r[1] < 0:
                 # this means d1 doesn't work, try d0
                 r = m2[0] - m2[1] * d0
-                if r[1] < 0:
-                    # d0 also does'nt work
+                if d0 < 0:
                     return None
                 else:
                     m2[0] = r
@@ -132,7 +154,7 @@ def cf_convergent2_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
             yield (None, None, m)
 
     # we will only reach this point if the series is finite
-    for s in euclid(Rational(m[0][0], m[0][1])):
+    for s in euclid(Rational(m[0][0], m[1][0])):
         yield s, None, m
 
 
@@ -140,7 +162,7 @@ def cf_convergent2(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
     for res in cf_convergent2_(cf, m0):
         if res:
             (q, r, m) = res
-            if q:
+            if q is not None:
                 # cf_convergent2_ can return None to indicate that it needs more coefficients
                 # to continue. It can be ignored
                 yield q

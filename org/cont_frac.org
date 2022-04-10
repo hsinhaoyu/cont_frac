@@ -4,10 +4,20 @@
 #+HTML_MATHJAX: scale: 85
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 #+TITLE: Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)
-* Continued fraction representations of rational numbers
-Since we'll use rational numbers a lot, let's define a class:
+
 #+begin_src python :noweb no-export :tangle ../src/cont_frac.py
   <<IMPORTS>>
+  <<RATIONAL_NUM>>
+  <<R2CF>>
+  <<CONVERGENTS0>>
+  <<CONVERGENTS1>>
+  <<QR_MATRIX>>
+  <<CF_TRANSFORM>>
+#+end_src
+
+* Representing rational numbers as continued fractions
+Since we'll use rational numbers a lot, let's define a class:
+#+begin_src python :tangle no :noweb-ref RATIONAL_NUM
   # Rational(a, b) = a/b
   class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
       def __repr__(self):
@@ -25,14 +35,16 @@ How to convert a rational number to a continued fraction? Observing that
 \]
 
 it should be obvious that the solution is just the [[https://en.wikipedia.org/wiki/Euclidean_algorithm][Euclidean algorithm]] for finding the greatest common divider:
-#+begin_src python :noweb yes :tangle ../src/cont_frac.py
+#+begin_src python :tangle no :noweb-ref R2CF
+  # Convert a rational number to a continued fraction
+  
   def qr(a: int, b: int) -> Tuple[int, int]:
-      """a = b * q + r"""
+      """a = b * q + r, return (q, r)"""
       q = math.floor(a / b)  # the quotient
       r = a - b * q          # the reminder
       return (q, r)
 
-  def euclid_(rn: Rational) -> Iterator[Tuple[int, int]]:
+  def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
       a, b = rn    
       while True:
           q, r = qr(a, b)
@@ -41,16 +53,16 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
               break
           a, b = b, r
 
-  def euclid(rn: Rational) -> Iterator[int]:
+  def r2cf(rn: Rational) -> Iterator[int]:
       def second(x: tuple):
           return x[1]
-      return map(second, euclid_(rn))
+      return map(second, r2cf_(rn))
 #+end_src
 
-Now we can use =euclid= to calculate the coefficients. I use a Python generator to represent the returned coefficients, because continued fractions can have infinite number of coefficients. However, the continuous fraction representations of rational numbers are always finite.
+Now we can use =r2cf= to convert a rational number into a continued fraction. In this article, continued fractions are represented by Python generators, because they can have infinite number of terms. However, the generators returned by =r2cf= are finite iterators because the continued fractions associated with rational numbers always have finite numbers of coefficients.
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  nc = euclid(Rational(254, 100))
+  nc = r2cf(Rational(254, 100))
   print(list(nc))
 #+end_src
 
@@ -73,7 +85,7 @@ This means that
 We can display the process in a tabular format. For example:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  print(euclid_tab(Rational(254, 100)))
+  print(r2cf_tab(Rational(254, 100)))
 #+end_src
 
 #+RESULTS:
@@ -87,40 +99,32 @@ We can display the process in a tabular format. For example:
 :     0
 : 
 
-This table shows that 2 (the penultimate row) is the greatest common divider of 254 and 100. The byproduct of this process, the quotients displayed on the right, are the coefficients.
+This table shows that 2 (the penultimate row) is the greatest common divider of 254 and 100. As a byproduct of this process, we also get the coefficients of the corresponding continued fraction, which are the quotients displayed on the right.
 
 Interestingly, the reciprocal of $\frac{254}{100}$ (that is, $\frac{100}{254}$) is represented by the following as a continued fraction:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  nc = euclid(Rational(100, 254))
+  nc = r2cf(Rational(100, 254))
   print(list(nc))
 #+end_src
 
 #+RESULTS:
 : [0, 2, 1, 1, 5, 1, 3]
 
-It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the =euclid= process.
+It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the Euclidean algorithm. We'll come back to this point later.
 
-However, it's not obvious how to perform algebraically meaningful transformations. For example, if we multiple the rational number by 2, the continued fraction series appear to be quite different.
-#+begin_src python :exports both :noweb no-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  print(list(euclid(Rational(200, 254))))
-#+end_src
+*  Calculating the convergents of a continued fraction
+Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
 
-#+RESULTS:
-: [0, 1, 3, 1, 2, 2, 1, 2]
-
-It's not clear how we get $[0, 1, 3, 1, 2, 2, 1, 2]$ from $[0, 2, 1, 1, 5, 1, 3]$. We'll come back to this question a little bit later. 
-
-*  Convergents
-Given a continued fraction, how do we calculate the value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
-
-This question has an easy solution if we use rational numbers in the approximation. Each approximation in the series is called a convergent. The formula for the convergents can be derived easily with mathematical induction, and it is implemented below. For the moment, we'll see it just a convenience to get the job done. We'll get deeper into its meaning in the next section.
-#+begin_src python :noweb yes :tangle ../src/cont_frac.py
-  def cf_convergent0(cf: Iterator[int]) -> Iterator[Rational]:
+This question has an easy solution if we use a series of rational numbers to approximate the continued fraction. Each term in the series is called a convergent. The formula for the convergents can be derived easily with mathematical induction, and it is implemented below. For the moment, we'll use the formula just a convenience to get the job done. We'll get deeper into its meaning in the next section.
+#+begin_src python :tangle no :noweb-ref CONVERGENTS0
+  # Calculate the convergents of a continued fraction
+  
+  def cf_convergents0(cf: Iterator[int]) -> Iterator[Rational]:
+      """For a continued fraction cf, return an iterator of rational numbers to approximate it""" 
       p1, p0 = 1, 0
       q1, q0 = 0, 1
-    
+
       for a in cf:
           p = a * p1 + p0
           q = a * q1 + q0
@@ -133,7 +137,7 @@ This question has an easy solution if we use rational numbers in the approximati
 For example, for the continued fraction $[2, 1, 1, 5, 1, 3]$, we get
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  print(list(cf_convergent0(iter([2, 1, 1, 5, 1, 3]))))
+  print(list(cf_convergents0(iter([2, 1, 1, 5, 1, 3]))))
 #+end_src
 
 #+RESULTS:
@@ -158,173 +162,40 @@ can be approximated with
 $\frac{2}{1}$,$\frac{3}{1}$,$\frac{5}{2}$,$\frac{28}{11}$,$\frac{33}{13}$,$\frac{127}{50}$
 .
 
+For convenience, we define a specialized version of =cf_convergents0= just for finite-term continued fractions. It returns the rational number corresponding to the continued fraction:
+#+begin_src python :tangle no :noweb-ref CONVERGENTS0
+  def cf2r0(cf: Iterator[int]) -> Rational:
+      """Given a finite-term continued fraction, return its value as a rational number.
+      This function will get into an infinite loop if the iterator doesn't stop.
+      """
+      return list(cf_convergents0(cf))[-1]
+#+end_src
+
+#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  print(cf2r0(iter([2, 1, 1, 5, 1, 3])))
+#+end_src
+
+#+RESULTS:
+: 127/50
+
 * Continued fraction approximation as function compositions
-Given the first 3 terms in a continued fraction $[5, 1, 4...]$, let $x$ denote the reciprocal of the value of the remaining series. We can express the convergent as $f_1(x)$, $f_2(x)$, $f_3(x)$..., where
-
-\begin{equation*}
-    f_1(x) = 5 + \frac{1}{x}
-\end{equation*}
-
-\begin{equation*}
-    f_2(x) = 5 + \frac{1}{1 + \frac{1}{x}} = f_1(1 + \frac{1}{x})
-\end{equation*}
-
-\begin{equation*}
-    f_3(x) = 5 + \frac{1}{1 + \frac{1}{4 + \frac{1}{x}}} = f_1(f_2(4 + \frac{1}{x}))
-\end{equation*}
-
-Or more compactly, let
-\begin{equation*}
-    h(a, x) = a + \frac{1}{x}
-\end{equation*}
-
-then
-\begin{equation*}
-    f_1(x) = h(5, x)
-\end{equation*}
-
-\begin{equation*}
-    f_2(x) = h(5, h(1, x))
-\end{equation*}
-
-\begin{equation*}
-    f_3(x) = h(5, h(1, h(4, x))) 
-\end{equation*}
-
-This way, we express the approximation as a recursive process. If the continued fraction stops at the third term, its value is $h_3(\infty) = h(5, h(1, h(4, \infty)))$. Infinity might seem odd here, but remember that $x$ is the reciprocal of the rest of the sequence. So it just means that the rest of the sequence evaluates to 0.
-
-Before we rush to translate this into code, let's dig deeper. If we use column vectors to represent rational numbers:
-
-\begin{equation*}
-    \begin{bmatrix}
-           p \\
-           q
-    \end{bmatrix} = \frac{p}{q}
-\end{equation*}
-
-Then we can turn everything into linear algebra:
-
-\begin{equation*}
-    h(a, x) = a + \frac{1}{x} = \frac{ax + 1}{x}
-\end{equation*}
-
-can be written in our matrix notation as
-
-\begin{equation*}
-
-    \begin{bmatrix}
-        ax + 1 \\
-        x
-    \end{bmatrix}
-
-    =
-
-    \begin{bmatrix}
-        a & 1 \\
-        1 & 0
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        x \\
-        1 
-    \end{bmatrix}
-\end{equation*}
-
-Furthermore, 
-
-\begin{equation*}
-    f_3(x) = h(5, h(1, h(4, x)))
-\end{equation*}
-
-can be written as
-
-\begin{equation*}
-
-    \begin{bmatrix}
-        5 & 1 \\
-        1 & 0
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        1 & 1 \\
-        1 & 0
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        4 & 1 \\
-        1 & 0
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        x \\
-        1 
-    \end{bmatrix}
-
-    = 
-
-    \begin{bmatrix}
-        29 & 6 \\
-        5 & 1
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        x \\
-        1 
-    \end{bmatrix}
-
-\end{equation*}
-
-So, the 2-by-2 matrix
-
-$\begin{bmatrix}
-    29 & 6 \\
-     5 & 1
-\end{bmatrix}$
-
-represents a function that approximates a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If the continued fractions has only 3 terms, we terminate the process by evaluating
-
-\begin{equation*}
-
-    \begin{bmatrix}
-        29 & 6 \\
-         5 & 1
-    \end{bmatrix}
-
-    \begin{bmatrix}
-        1 \\
-        0 
-    \end{bmatrix}
-
-    = 
-
-    \begin{bmatrix}
-        29 \\
-         5
-    \end{bmatrix}
-
-    = \frac{29}{5}
-\end{equation*}
-
-Multiplying the matrix with
-$\begin{bmatrix}
-    1 \\
-    0 
-\end{bmatrix}$ turns the function into a rational value, which is the first column of the matrix.
+#+INCLUDE: functional_convergents.org
 
 * Calculating convergents using the matrix notation
-Now, we are ready to rewrite the formula in =cf_convergence0= as matrix multiplications:
-#+begin_src python :noweb yes :tangle ../src/cont_frac.py
+Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multiplications:
+#+begin_src python :tangle no :noweb-ref CONVERGENTS1
   def h(a):
       return np.array([[a, 1], [1,0]])
 
-  def cf_convergent1_(cf: Iterator[int]) -> Iterator:
+  def cf_convergents1_(cf: Iterator[int]) -> Iterator:
       res = np.array([[1, 0], [0, 1]])
       for a in cf:
           res = np.matmul(res, h(a))
           yield res
 
-  def cf_convergent1(cf: Iterator[int]) -> Iterator[Rational]:
-      mLst = cf_convergent1_(cf)
+  def cf_convergents1(cf: Iterator[int]) -> Iterator[Rational]:
+      mLst = cf_convergents1_(cf)
       for m in mLst:
           yield Rational(m[0, 0], m[1, 0])
 #+end_src
@@ -332,7 +203,7 @@ Now, we are ready to rewrite the formula in =cf_convergence0= as matrix multipli
 Let's try it on the example given in the previous section:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  print(list(cf_convergent1(iter([5, 1, 4]))))
+  print(list(cf_convergents1(iter([5, 1, 4]))))
 #+end_src
 
 #+RESULTS:
@@ -341,7 +212,7 @@ Let's try it on the example given in the previous section:
 Here's a longer sequence that we used previously:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  print(list(cf_convergent1(iter([2, 1, 1, 5, 1, 3]))))
+  print(list(cf_convergents1(iter([2, 1, 1, 5, 1, 3]))))
 #+end_src
 
 #+RESULTS:
@@ -350,11 +221,11 @@ Here's a longer sequence that we used previously:
 A very charming thing that Gosper did was that he used a compact tabulated format to illustrate the process. It's unnecessary for the computation, but I think it looks pretty cool:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  cf_convergent1_tab(iter([5, 1, 4]))
+  cf_convergents1_tab(iter([5, 1, 4]))
 #+end_src
 
 #+RESULTS:
-:        4   1   5
+:        4   1   5    
 :   29   6   5   1   0
 :    5   1   1   0   1
 
@@ -363,7 +234,7 @@ This table is read from the right to the left. The right-to-left direction takes
 The first row represents the coefficients of the continued fraction. To understand the other numbers, we calculate the matrices for each additional coefficient in the continued fraction:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  itr = cf_convergent1_(iter([5, 1, 4]))
+  itr = cf_convergents1_(iter([5, 1, 4]))
   print(next(itr),"\n")
   print(next(itr),"\n")
   print(next(itr))
@@ -399,18 +270,27 @@ $\begin{bmatrix}
     \end{bmatrix}
 \end{equation*}
 
-This explains the shift, and we have recovered the formula in =cf_convergent0=.
+This explains the shift, and we have recovered the formula in =cf_convergents0=.
 
 Here's a longer series:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  cf_convergent1_tab(iter([2, 1, 1, 5, 1, 3]))
+  cf_convergents1_tab(iter([2, 1, 1, 5, 1, 3]))
 #+end_src
 
 #+RESULTS:
-:        3   1   5   1   1   2
+:        3   1   5   1   1   2    
 :  127  33  28   5   3   2   1   0
 :   50  13  11   2   1   1   0   1
+
+As before, we define a specialized version of =cf_convergents1= just for finite-term continued fractions. 
+#+begin_src python :tangle no :noweb-ref CONVERGENTS1
+  def cf2r1(cf: Iterator[int]) -> Rational:
+      """Given a finite-term continued fraction, return its value as a rational number.
+      This function will get into an infinite loop if the iterator doesn't stop.
+      """
+      return list(cf_convergents1(cf))[-1]
+#+end_src
 
 * Turning convergents into continued fractions
 What if we want to calculate the convergents using the same process in =cf_convergent1=, but we want the output to be in the form of a continued fraction? At this point, this seems to be a pointless exercise, because a continued fraction is what we start with! But it will become useful in the coming sections.
@@ -455,9 +335,7 @@ Why does =qr_matrix= returns None? Calculus shows that the function is bounded $
 Note that we can't pick the smaller number 5, and pass the error to the next term. This is because for any rational number, the coefficients of the corresponding continued fraction is unique. We therefore have to get the coefficient 100% right before we move on to the next one.
 
 Now we are ready to implement the symbolic form of the Euclidean algorithm:
-#+begin_src python :noweb no-export :tangle ../src/cont_frac.py
-  <<QR_MATRIX>>
-
+#+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def euclid_matrix_(m):
       while True:
           res = qr_matrix(m)
@@ -508,7 +386,7 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 :
 
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
-#+begin_src python :noweb no-export :tangle ../src/cont_frac.py
+#+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def cf_convergent2_(cf: Iterator[int], m0 = np.identity(2, int)) -> Iterator:
       m = m0
       for a in cf:
@@ -522,14 +400,14 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
               yield (None, None, m)
 
       # we will only reach this point if the series is finite
-      for s in euclid(Rational(m[0][0], m[0][1])):
+      for s in euclid(Rational(m[0][0], m[1][0])):
           yield s, None, m
 
   def cf_convergent2(cf: Iterator[int], m0 = np.identity(2, int)) -> Iterator:
       for res in cf_convergent2_(cf, m0):
           if res:
               (q, r, m) = res
-              if q:
+              if q is not None:
                   # cf_convergent2_ can return None to indicate that it needs more coefficients
                   # to continue. It can be ignored
                   yield q
@@ -544,31 +422,92 @@ Run it on a sequence, and it just returns the same sequence.
 #+RESULTS:
 : [2, 1, 1, 5, 1, 3]
 
-That seems to be anti-climatic for quite a bit of work... but here's something cool. Gospher combined the two stacked matrix representations that we have seen already, to illustrate every step in the algorithm:
+That seems to be anti-climatic for quite a bit of work... but here's something cool. Gospher combined the two stacked matrix representations that we have seen, to illustrate every step in the algorithm:
 
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  cf_convergent2_tab(iter([2, 1, 1, 5, 1, 3]), field_width = 2)
+  cf_convergent2_tab(iter([2, 1, 1, 5, 1, 3]), field_width = 3)
 #+end_src
 
 #+RESULTS:
-:    3 1 5 1 1 2  
-:          3 2 1 0  
-:        2 1 1 0 1  2
-:      6 1 1 0      1
-:    6 5 1 0        1
-:  4 1 1 0          5
-:  3 1 0            1
-:  1 0            
+:      3  1  5  1  1  2   
+:               3  2  1  0   
+:            2  1  1  0  1  2 
+:         6  1  1  0        1 
+:      6  5  1  0           1 
+:   4  1  1  0              5 
+:   3  1  0                 1 
+:   1  0                  
+
+The numbers on the right are the outputs of =cf_convergent2=.
 
 * Simple transformations of continued fractions
-In the previous section, we start with a continued fraction $a$ represented as $[a_1, a_2, ...]$, and use matrix multiplication to calculate an rational series to approximate it. What if $a$ is embedded in another expression? Let $b=2a$. 
+In the previous section, we start with a continued fraction $a$ represented as $[a_1, a_2, ...]$, and use matrix multiplication to calculate an rational series to approximate it. What if $a$ is embedded in another expression? Let $b=2a$.
+
+#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  print(list(cf_convergent1(iter([2, 1, 1, 5, 1])))[-1])
+  print(list(euclid(Rational(66, 13))))
+  print()
+  print(euclid_tab(Rational(66, 13)))
+#+end_src
+
+#+RESULTS:
+: 33/13
+: [5, 13]
+: 
+:    66
+:    13   5   
+:     1   13  
+:     0
+: 
+
+#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = np.array([[2, 0], [0, 1]], int)
+  cd = cf_convergent2(iter([2, 1, 1, 5, 1]), m0 = m0)
+  print(list(cd))
+  print()
+  cf_convergent2_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
+#+end_src
+
+#+RESULTS:
+: [5, 13]
+: 
+:      1  5  1  1  2   
+:     56 10  6  4  2  0   
+:  13 11  2  1  1  0  1  5 
+:   1  1  0            
+
+#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = np.array([[0, 1], [1, 0]], int)
+  cd = cf_convergent2(iter([2, 1, 1, 5, 1]), m0 = m0)
+  print(list(cd))
+  print()
+  cf_convergent2_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[0, 2, 1, 1, 5, 1]
+
+     1  5  1  1  2   
+              1  0  1   
+           3  2  1  0  0 
+        2  1  1  0     2 
+     6  1  1  0        1 
+  6  5  1  0           1 
+  1  1  0              5 
+  1  0               
+#+end_example
 
 * Appendix 1: Calculating the quotient and the reminder of a convergent in matrix form
 This is just calculus
 
-
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
+  # Calculate the quotient and reminder of a 2-by-2 matrix
+
   flip_m = np.array([[0, 1], [1, 0]])
 
   def qr_matrix(m):
@@ -593,8 +532,7 @@ This is just calculus
               if r[1] < 0:
                   # this means d1 doesn't work, try d0
                   r = m2[0] - m2[1] * d0
-                  if r[1] < 0:
-                      # d0 also does'nt work
+                  if d0 < 0:
                       return None
                   else:
                       m2[0] = r
@@ -611,9 +549,8 @@ This is just calculus
           return None
 #+end_src
 
-#+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
-  from cont_frac import *
-  import numpy as np
+#+begin_src python :noweb no-export :tangle ../src/test_cont_frac.py
+  <<TEST_IMPORTS>>
 
   class TestQRMatrix(object):
       def qr(self, m):
@@ -677,36 +614,43 @@ This is just calculus
 
 * Appendix: Additional tests
 #+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
-  class TestEuclid(object):
+  class TestR2cf(object):
       def test_basic(self):
-          res = euclid(Rational(254, 100))
+          res = r2cf(Rational(254, 100))
           assert list(res) == [2, 1, 1, 5, 1, 3]
 #+end_src
 
 #+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
-  class TestConvergent0(object):
-      def test_basic(self):
-          l = list(cf_convergent0(iter([2, 1, 1, 5, 1, 3])))
-          assert l[0] == Rational(2, 1)
-          assert l[1] == Rational(3, 1)
-          assert l[2] == Rational(5, 2)
-          assert l[3] == Rational(28, 11)
-          assert l[4] == Rational(33, 13)
-          assert l[5] == Rational(127, 50)
-          assert len(l) == 6
+  # Apply this test to two functions, because they should be equivalent
+  @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
+  def test_convergents_basci1(conv_func):
+      l = list(conv_func(iter([2, 1, 1, 5, 1, 3])))
+      assert l[0] == Rational(2, 1)
+      assert l[1] == Rational(3, 1)
+      assert l[2] == Rational(5, 2)
+      assert l[3] == Rational(28, 11)
+      assert l[4] == Rational(33, 13)
+      assert l[5] == Rational(127, 50)
+      assert len(l) == 6
+
+  # Apply this test to two functions, because they should be equivalent
+  @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
+  def test_convergents_basic2(conv_func):
+      l = list(cf_convergents0(iter([1, 2, 3, 4, 5])))
+      assert l[0] == Rational(1, 1)
+      assert l[1] == Rational(3, 2)
+      assert l[2] == Rational(10, 7)
+      assert l[3] == Rational(43, 30)
+      assert l[4] == Rational(225, 157)
+      assert len(l) == 5
 #+end_src
 
 #+begin_src python :noweb yes :tangle ../src/test_cont_frac.py
-  class TestConvergent1(object):
-      def test_basic(self):
-          l = list(cf_convergent1(iter([2, 1, 1, 5, 1, 3])))
-          assert l[0] == Rational(2, 1)
-          assert l[1] == Rational(3, 1)
-          assert l[2] == Rational(5, 2)
-          assert l[3] == Rational(28, 11)
-          assert l[4] == Rational(33, 13)
-          assert l[5] == Rational(127, 50)
-          assert len(l) == 6
+  # cf2r0 and cf2r1 should be equivalent
+  @pytest.mark.parametrize('cf2r_func', [cf2r0, cf2r1])
+  def test_cf2r(cf2r_func):
+      assert cf2r_func([2, 1, 1, 5, 1, 3]) == Rational(127, 50)
+      assert cf2r_func([1, 2, 3, 4, 5]) == Rational(225, 157)
 #+end_src
 
 * Appendix: Display utilities
@@ -781,19 +725,19 @@ This is just calculus
 
 * Appendix: Tabulated displays
 #+begin_src python :tangle ../src/cont_frac_io.py
-  def euclid_tab(rn: Rational):
+  def r2cf_tab(rn: Rational):
       def row(st: str, x: tuple):
           b, q = x
           return st + f"{b : > 5}  {q : < 5}\n"
       str0 = f"{rn.a : > 5}\n"
-      return reduce(row, euclid_(rn), str0) + f"{0 : > 5}\n"
+      return reduce(row, r2cf_(rn), str0) + f"{0 : > 5}\n"
 #+end_src
 
 #+begin_src python :noweb yes :tangle ../src/cont_frac_io.py
-  def cf_convergent1_tab(cf: Iterator[int]):
+  def cf_convergents1_tab(cf: Iterator[int]):
       chart = Chart(display_right = False)
       (cf1, cf2) = tee(cf)
-      for (mat, a) in zip(cf_convergent1_(cf1), cf2):
+      for (mat, a) in zip(cf_convergents1_(cf1), cf2):
           chart.push_column(mat, a)
       print(chart)
 #+end_src
@@ -816,6 +760,8 @@ This is just calculus
               pass
           else:
               chart.push_row(r, q)
+              if r is None:
+                  char.push_right(q)
       print(chart)
 #+end_src
 
@@ -840,7 +786,7 @@ This is just calculus
       print(r"\]")
 
   def show_rational_series(itr: Iterator[int]):
-      rLst = list(cf_convergent0(itr))
+      rLst = list(cf_convergents0(itr))
       s = ""
       for r in rLst:
           s = s + "$" + latex_rational(r) + "$" + ","
@@ -865,4 +811,10 @@ This is just calculus
 #+begin_src python :tangle no :noweb-ref IO_IMPORTS
   from cont_frac import *
   from functools import reduce
+#+end_src
+
+#+begin_src python :tangle no :noweb-ref TEST_IMPORTS
+  import numpy as np
+  import pytest
+  from cont_frac import *
 #+end_src
