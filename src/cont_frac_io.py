@@ -4,6 +4,7 @@ from functools import reduce
 
 # A class to facilitate tabular displays
 class Chart(object):
+
     def __init__(self,
                  m=np.identity(2, int),
                  display_top=True,
@@ -74,6 +75,7 @@ class Chart(object):
 
 
 def r2cf_tab(rn: Rational):
+
     def row(st: str, x: tuple):
         b, q = x
         return st + f"{b : > 5}  {q : < 5}\n"

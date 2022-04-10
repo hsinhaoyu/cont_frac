@@ -4,12 +4,14 @@ from cont_frac import *
 
 
 class TestR2cf(object):
+
     def test_basic(self):
         res = r2cf(Rational(254, 100))
         assert list(res) == [2, 1, 1, 5, 1, 3]
 
 
 class TestQRMatrix(object):
+
     def qr(self, m):
         res = qr_matrix(np.array(m))
         if res is None:

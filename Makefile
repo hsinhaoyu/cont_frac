@@ -7,7 +7,7 @@ test: tangle
 	pytest -s src/
 
 typing: tangle
-	mypy src/cont_frac.py
+	mypy src/
 
 html: tangle
 	./org2html.sh org/*.org

@@ -1,12 +1,13 @@
 import math
 import numpy as np
-from typing import NamedTuple, Iterator, Tuple
+from typing import NamedTuple, Iterator, Tuple, Optional
 from functools import reduce
 from itertools import tee
 
 
 # Rational(a, b) = a/b
 class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
+
     def __repr__(self):
         return f'{self.a}/{self.b}'
 
@@ -32,6 +33,7 @@ def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
 
 
 def r2cf(rn: Rational) -> Iterator[int]:
+
     def second(x: tuple):
         return x[1]
 
@@ -62,11 +64,11 @@ def cf2r0(cf: Iterator[int]) -> Rational:
     return list(cf_convergents0(cf))[-1]
 
 
-def h(a):
+def h(a: int) -> np.ndarray:
     return np.array([[a, 1], [1, 0]])
 
 
-def cf_convergents1_(cf: Iterator[int]) -> Iterator:
+def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
     res = np.array([[1, 0], [0, 1]])
     for a in cf:
         res = np.matmul(res, h(a))
@@ -91,7 +93,7 @@ def cf2r1(cf: Iterator[int]) -> Rational:
 flip_m = np.array([[0, 1], [1, 0]])
 
 
-def qr_matrix(m):
+def qr_matrix(m: np.ndarray) -> Optional[Tuple[int, np.ndarray]]:
     m2 = m.copy()
 
     if m2[1][0] != 0 and m2[1][1] != 0:
@@ -130,7 +132,7 @@ def qr_matrix(m):
         return None
 
 
-def euclid_matrix_(m):
+def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
     while True:
         res = qr_matrix(m)
         if res:
@@ -141,7 +143,9 @@ def euclid_matrix_(m):
             break
 
 
-def cf_transform_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
+def cf_transform_(
+    cf: Iterator[int], m0: np.ndarray = np.identity(2, int)
+) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
     m = m0
     for a in cf:
         m = np.matmul(m, h(a))
@@ -158,7 +162,8 @@ def cf_transform_(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
         yield s, None, m
 
 
-def cf_transform(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
+def cf_transform(
+    cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
     for res in cf_transform_(cf, m0):
         if res:
             (q, r, m) = res
@@ -168,7 +173,7 @@ def cf_transform(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
                 yield q
 
 
-def cf_e():
+def cf_e() -> Iterator[int]:
     yield 2
     k = 0
     while True:

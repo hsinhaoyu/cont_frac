@@ -180,7 +180,7 @@ For convenience, we define a specialized version of =cf_convergents0= just for f
 
 Another example: the irrational number $e$ can be expressed as a continuous fraction by:
 #+begin_src python :tangle no :noweb-ref CF_EXAMPLES
-  def cf_e():
+  def cf_e() -> Iterator[int]:
       yield 2
       k = 0
       while True:
@@ -233,10 +233,10 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 * Calculating convergents using the matrix notation
 Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multiplications:
 #+begin_src python :tangle no :noweb-ref CONVERGENTS1
-  def h(a):
+  def h(a: int) -> np.ndarray:
       return np.array([[a, 1], [1,0]])
 
-  def cf_convergents1_(cf: Iterator[int]) -> Iterator:
+  def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
       res = np.array([[1, 0], [0, 1]])
       for a in cf:
           res = np.matmul(res, h(a))
@@ -384,7 +384,7 @@ Note that we can't pick the smaller number 5, and pass the error to the next ter
 
 Now we are ready to implement the symbolic form of the Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
-  def euclid_matrix_(m):
+  def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
       while True:
           res = qr_matrix(m)
           if res:
@@ -434,7 +434,7 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
-  def cf_transform_(cf: Iterator[int], m0 = np.identity(2, int)) -> Iterator:
+  def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
       m = m0
       for a in cf:
           m = np.matmul(m, h(a))
@@ -450,7 +450,7 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
       for s in r2cf(Rational(m[0][0], m[1][0])):
           yield s, None, m
 
-  def cf_transform(cf: Iterator[int], m0 = np.identity(2, int)) -> Iterator:
+  def cf_transform(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
       for res in cf_transform_(cf, m0):
           if res:
               (q, r, m) = res
@@ -557,7 +557,7 @@ This is just calculus
 
   flip_m = np.array([[0, 1], [1, 0]])
 
-  def qr_matrix(m):
+  def qr_matrix(m: np.ndarray) -> Optional[Tuple[int, np.ndarray]]:
       m2 = m.copy()
 
       if m2[1][0] !=0 and m2[1][1] !=0:
@@ -870,7 +870,7 @@ This is just calculus
 #+begin_src python :tangle no :noweb-ref IMPORTS
   import math
   import numpy as np
-  from typing import NamedTuple, Iterator, Tuple
+  from typing import NamedTuple, Iterator, Tuple, Optional
   from functools import reduce
   from itertools import tee
 #+end_src
