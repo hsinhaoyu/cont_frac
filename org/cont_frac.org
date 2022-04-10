@@ -13,6 +13,7 @@
   <<CONVERGENTS1>>
   <<QR_MATRIX>>
   <<CF_TRANSFORM>>
+  <<CF_EXAMPLES>>
 #+end_src
 
 * Representing rational numbers as continued fractions
@@ -176,6 +177,55 @@ For convenience, we define a specialized version of =cf_convergents0= just for f
 
 #+RESULTS:
 : 127/50
+
+Another example: the irrational number $e$ can be expressed as a continuous fraction by:
+#+begin_src python :tangle no :noweb-ref CF_EXAMPLES
+  def cf_e():
+      yield 2
+      k = 0
+      while True:
+          # a finite generator comprehension
+          for i in (j for j in [1, 2 * k + 2, 1]):
+              yield i
+          k = k + 1
+#+end_src
+
+It has infinite number of terms, but the series follows a simple pattern. This is just the first 16 terms:
+#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  print(list(islice(cf_e(), 16)))
+#+end_src
+
+#+RESULTS:
+: [2, 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8, 1, 1, 10, 1]
+
+#+begin_src python :exports both :noweb no-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  conv_ = cf_convergents0(cf_e())
+  conv = list(islice(conv_, 16)) # the first 16 convergents
+  for c in conv:
+      print(f'{repr(c):<20} {c[0]/c[1]:.8f}')
+#+end_src
+
+#+RESULTS:
+#+begin_example
+2/1                  2.00000000
+3/1                  3.00000000
+8/3                  2.66666667
+11/4                 2.75000000
+19/7                 2.71428571
+87/32                2.71875000
+106/39               2.71794872
+193/71               2.71830986
+1264/465             2.71827957
+1457/536             2.71828358
+2721/1001            2.71828172
+23225/8544           2.71828184
+25946/9545           2.71828182
+49171/18089          2.71828183
+517656/190435        2.71828183
+566827/208524        2.71828183
+#+end_example
 
 * Continued fraction approximation as function compositions
 #+INCLUDE: functional_convergents.org
@@ -410,7 +460,7 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
                   yield q
 #+end_src
 
-Run it on a continued, and it just returns the same sequence. It doesn't seems to do any transformation. We'll see why the function is called =cf_transform= in the next section. 
+Run it on a continued fraction, and it just returns the same sequence. It doesn't seems to do any transformation. We'll see why the function is called =cf_transform= in the next section. 
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_transform(iter([2, 1, 1, 5, 1, 3]))))
@@ -434,24 +484,24 @@ This seems to be anti-climatic for quite a bit of work... but here's something c
 :      6  5  1  0           1 
 :   4  1  1  0              5 
 :   3  1  0                 1 
-:   1  0                  
+:   1  0                    3 
 
 The numbers on the right are the outputs of =cf_transform=.
 
 * Simple transformations of continued fractions
 In the previous section, we start with a continued fraction $a$ represented as $[a_1, a_2, ...]$, and use matrix multiplication to calculate an rational series to approximate it. What if $a$ is embedded in another expression? Let $b=2a$.
 
+The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, and turn it back to a continued fraction:
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  print(list(cf_convergent1(iter([2, 1, 1, 5, 1])))[-1])
-  print(list(euclid(Rational(66, 13))))
-  print()
-  print(euclid_tab(Rational(66, 13)))
+  print("[2, 1, 1, 5, 1] is ", cf2r1(iter([2, 1, 1, 5, 1])))
+  print("The continued fraction of 66/13 is ", list(r2cf(Rational(66, 13))), "\n")
+  r2cf_tab(Rational(66, 13))
 #+end_src
 
 #+RESULTS:
-: 33/13
-: [5, 13]
+: [2, 1, 1, 5, 1] is  33/13
+: The continued fraction of 66/13 is  [5, 13] 
 : 
 :    66
 :    13   5   
@@ -459,35 +509,35 @@ In the previous section, we start with a continued fraction $a$ represented as $
 :     0
 : 
 
+According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up with fewer terms? We can illustrate the process by running =cf_transform_tab= with the initial matrix $\begin{bmatrix} 2 & 0 \\ 0 & 1 \end{bmatrix}$ (which stands for the function $f(x) = 2x$):
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[2, 0], [0, 1]], int)
-  cd = cf_convergent2(iter([2, 1, 1, 5, 1]), m0 = m0)
-  print(list(cd))
-  print()
-  cf_convergent2_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
+  cd = cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0)
+  print(" 2 * [2, 1, 1, 5, 1] is ", list(cd), "\n")
+  cf_transform_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
 #+end_src
 
 #+RESULTS:
-: [5, 13]
+:  2 * [2, 1, 1, 5, 1] is  [5, 13] 
 : 
 :      1  5  1  1  2   
 :     56 10  6  4  2  0   
 :  13 11  2  1  1  0  1  5 
-:   1  1  0            
+:   1  1  0              13
 
+Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
 #+begin_src python :exports both :noweb no-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[0, 1], [1, 0]], int)
-  cd = cf_convergent2(iter([2, 1, 1, 5, 1]), m0 = m0)
-  print(list(cd))
-  print()
-  cf_convergent2_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
+  cd = cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0)
+  print("The reciprocal of [2, 1, 1, 5, 1] is ", list(cd), "\n")
+  cf_transform_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
 #+end_src
 
 #+RESULTS:
 #+begin_example
-[0, 2, 1, 1, 5, 1]
+The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1] 
 
      1  5  1  1  2   
               1  0  1   
@@ -496,7 +546,7 @@ In the previous section, we start with a continued fraction $a$ represented as $
      6  1  1  0        1 
   6  5  1  0           1 
   1  1  0              5 
-  1  0               
+  1  0                 1 
 #+end_example
 
 * Appendix 1: Calculating the quotient and the reminder of a convergent in matrix form
@@ -764,14 +814,25 @@ This is just calculus
   def cf_transform_tab(cf: Iterator[int], m0 = np.identity(2, int), field_width = 4):
       chart = Chart(m = m0, field_width = field_width)
       (cf1, cf2) = tee(cf)
-      for (a, (q, r, m)) in zip(cf1, cf_transform_(cf2, m0)):
+      res = cf_transform_(cf2, m0)
+
+      # res may be longer than cf1, res might not be empty after this loop
+      for (a, (q, r, m)) in zip(cf1, res):
           chart.push_column(m, a)
           if q is None:
+              # this means that no euclid step was performed
+              # do nothing
               pass
           else:
               chart.push_row(r, q)
-              if r is None:
-                  char.push_right(q)
+
+      for item in res:
+          # at this point, the quotients are quotients for rational numbers rather than matrices
+          # so r should be None
+          (q, r, m) = item
+          assert r is None
+          chart.push_right(q)
+
       print(chart)
 #+end_src
 
@@ -817,6 +878,7 @@ This is just calculus
 #+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
   from cont_frac import *
   from cont_frac_io import *
+  from itertools import islice
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref IO_IMPORTS

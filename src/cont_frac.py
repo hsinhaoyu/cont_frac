@@ -166,3 +166,13 @@ def cf_transform(cf: Iterator[int], m0=np.identity(2, int)) -> Iterator:
                 # cf_transform_ can return None to indicate that it needs more coefficients
                 # to continue. It can be ignored
                 yield q
+
+
+def cf_e():
+    yield 2
+    k = 0
+    while True:
+        # a finite generator comprehension
+        for i in (j for j in [1, 2 * k + 2, 1]):
+            yield i
+        k = k + 1

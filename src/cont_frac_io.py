@@ -100,14 +100,25 @@ def euclid_matrix_tab(m):
 def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int), field_width=4):
     chart = Chart(m=m0, field_width=field_width)
     (cf1, cf2) = tee(cf)
-    for (a, (q, r, m)) in zip(cf1, cf_transform_(cf2, m0)):
+    res = cf_transform_(cf2, m0)
+
+    # res may be longer than cf1, res might not be empty after this loop
+    for (a, (q, r, m)) in zip(cf1, res):
         chart.push_column(m, a)
         if q is None:
+            # this means that no euclid step was performed
+            # do nothing
             pass
         else:
             chart.push_row(r, q)
-            if r is None:
-                char.push_right(q)
+
+    for item in res:
+        # at this point, the quotients are quotients for rational numbers rather than matrices
+        # so r should be None
+        (q, r, m) = item
+        assert r is None
+        chart.push_right(q)
+
     print(chart)
 
 
