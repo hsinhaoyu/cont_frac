@@ -52,6 +52,7 @@ class Chart(object):
         new_row = [None] * len(self.board[-1])
         new_row[0] = m[1][0]
         new_row[1] = m[1][1]
+        print("new_row=", new_row)
         self.board.append(new_row)
         self.right.append(q)
 
@@ -99,13 +100,22 @@ def euclid_matrix_tab(m):
     print(chart)
 
 
-def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int), field_width=4):
+def cf_transform_tab(cf: Iterator[int],
+                     m0=np.identity(2, int),
+                     n=None,
+                     field_width=4):
     chart = Chart(m=m0, field_width=field_width)
-    (cf1, cf2) = tee(cf)
-    res = cf_transform_(cf2, m0)
+    if n:
+        cf = islice(cf, n)
 
+    (cf1, cf2) = tee(cf)
+
+    res = cf_transform_(cf2, m0)
     # res may be longer than cf1, res might not be empty after this loop
     for (a, (q, r, m)) in zip(cf1, res):
+        print("==", a, q)
+        print(r)
+        print(m)
         chart.push_column(m, a)
         if q is None:
             # this means that no euclid step was performed

@@ -2,7 +2,7 @@ import math
 import numpy as np
 from typing import NamedTuple, Iterator, Tuple, Optional
 from functools import reduce
-from itertools import tee
+from itertools import tee, islice
 
 
 # Rational(a, b) = a/b
@@ -164,7 +164,9 @@ def cf_transform_(
 
 def cf_transform(
     cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
-    for res in cf_transform_(cf, m0):
+    cf_ = cf_transform_(cf, m0)
+
+    for res in cf_:
         if res:
             (q, r, m) = res
             if q is not None:
@@ -181,3 +183,9 @@ def cf_e() -> Iterator[int]:
         for i in (j for j in [1, 2 * k + 2, 1]):
             yield i
         k = k + 1
+
+
+def cf_sqrt2():
+    yield 1
+    while True:
+        yield 2
