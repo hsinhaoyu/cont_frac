@@ -377,7 +377,9 @@ $\begin{bmatrix}
 #+end_src
 
 #+RESULTS:
-: None
+: (5, array([[5, 1],
+:        [4, 1]]))
+
 
 Why does =qr_matrix= returns None? Calculus shows that the function is bounded $5.8 < f_3(x) \leq 6$. It's similar to the previous example, but in this case, the bounds are not tight enough to decide if the quotient is 5 or 6. That's why =qr_matrix= returns =None=, indicating that we have to wait for further information to resolve the quotient.
 
@@ -387,13 +389,17 @@ Now we are ready to implement the symbolic form of the Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
       while True:
-          res = qr_matrix(m)
-          if res:
-              q, r = res
-              yield q, r
-              m = r
-          else:
+          if m[0][0] == 0 and [0][1] == 0:
+              # if there is no remain, stop
               break
+          else:
+              (q, r) = qr_matrix(m)
+              if q is not None:
+                  yield q, r
+                  m = r
+              else:
+                  # if quotient cannot be determined, stop
+                  break
 #+end_src
 
 Let's try it on
@@ -433,34 +439,34 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 :    2   1  4  
 :    2   0
 
+
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
       m = m0
       for a in cf:
           m = np.matmul(m, h(a))
-          q = -1
+          q = None
           for (q, r) in euclid_matrix_(m):
-              yield q, r, m
-              m = r
-          if q == -1:
-              # for this coefficient a, the convergent cannot be turned into a continued fraction
+              if q is not None:
+                  yield q, r, m
+                  m = r
+          if q is None:
+              # Nothing was yielded. That means for this convergent cannot be turned into a continued fraction
               yield (None, None, m)
 
       # we will only reach this point if the series is finite
-      for s in r2cf(Rational(m[0][0], m[1][0])):
-          yield s, None, m
+      if m[1][0] != 0:
+          for s in r2cf(Rational(m[0][0], m[1][0])):
+              yield s, None, m
 
   def cf_transform(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
-      cf_ = cf_transform_(cf, m0)
-
-      for res in cf_:
-          if res:
-              (q, r, m) = res
-              if q is not None:
-                  # cf_transform_ can return None to indicate that it needs more coefficients
-                  # to continue. It can be ignored
-                  yield q
+      for res in cf_transform_(cf, m0):
+          (q, r, m) = res
+          if q is not None:
+              yield q
+              # q can be None, indicating that more coefficients are needed
+              # to continue. It can be ignored
 #+end_src
 
 Run it on a continued fraction, and it just returns the same sequence. It doesn't seems to do any transformation. We'll see why the function is called =cf_transform= in the next section. 
@@ -488,6 +494,7 @@ This seems to be anti-climatic for quite a bit of work... but here's something c
 :   4  1  1  0              5 
 :   3  1  0                 1 
 :   1  0                    3 
+
 
 The numbers on the right are the outputs of =cf_transform=.
 
@@ -525,9 +532,9 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
 :  2 * [2, 1, 1, 5, 1] is  [5, 13] 
 : 
 :      1  5  1  1  2   
-:     56 10  6  4  2  0   
+:        10  6  4  2  0   
 :  13 11  2  1  1  0  1  5 
-:   1  1  0              13
+:   1  1  0  1           13
 
 Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -551,6 +558,7 @@ The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1]
   1  1  0              5 
   1  0                 1 
 #+end_example
+
 
 Another example: 
 #+begin_src python :tangle no :noweb-ref CF_EXAMPLES
@@ -581,34 +589,33 @@ Another example:
      5  2  1  0                    4 
  10  4  2  0                       1 
   2  1  0                          4 
-  2  0                           
+  2  0                             1 
 #+end_example
+
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[1, -1], [1, 1]], int)
-  cf = islice(cf_transform(cf_e(), m0 = m0), 2)
-  #for i in cf:
-  #    print(i)
-  cf_transform_tab(cf_e(), m0 = m0, n = 2, field_width = 4)
+  cf = islice(cf_transform(cf_e(), m0 = m0), 5)
+  for i in cf:
+      print(i)
+  cf_transform_tab(cf_e(), m0 = m0, n = 8, field_width = 3)
 #+end_src
 
 #+RESULTS:
 #+begin_example
-== 2 None
-None
-[[1 1]
- [3 1]]
-== 1 0
-[[4 3]
- [2 1]]
-[[2 1]
- [4 3]]
-new_row= [2, 1, None, None]
-       1   2    
-   2   1   1  -1    
-   4   3   1   1  0  
-   2   1          2  
+0
+2
+6
+10
+14
+     1  1  4  1  1  2  1  2   
+                       1  1 -1   
+                    4  3  1  1  0 
+          12  7  5  2  1  1     2 
+ 20 11  9  2  1  1  0  1        6 
+  2  1  1  0  1                 10
+  0  1                        
 #+end_example
 
 
@@ -616,47 +623,55 @@ new_row= [2, 1, None, None]
 This is just calculus
 
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
-  # Calculate the quotient and reminder of a 2-by-2 matrix
-
   flip_m = np.array([[0, 1], [1, 0]])
+  identity_m = np.array([[1, 0], [0, 1]])
 
-  def qr_matrix(m: np.ndarray) -> Optional[Tuple[int, np.ndarray]]:
+  def flip_remain(m: np.ndarray, q: int):
+      assert q >= 0
+      r = m[0] - m[1] * q
+      m[0] = r
+      return np.matmul(flip_m, m)
+
+  def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
+      """Calculate the quotient and the reminder of a 2x2 matrix"""
+
+      assert not(m[1][0] == 0 and m[1][1] == 0)
+      # this means that the series has already ended. Nothing further needs to be done
+      # The caller should not call qr_matrix in this case
+
       m2 = m.copy()
 
-      if m2[1][0] !=0 and m2[1][1] !=0:
-          d0 = math.floor(m[0][0] / m[1][0])
-          d1 = math.floor(m[0][1] / m[1][1])
-
-          # the quotient is between d0 and d1 (inclusive)
-          (d0, d1) = sorted([d0, d1])
+      if m2[1][0] == 0 or m2[1][1] == 0:
+          # If the function is unbounded, the quotient cannot be determined
+          return (None, identity_m)
+      elif m2[1][1] < 0:
+          # This means that the denominator can be made 0 (i.e., a singularity)
+          return (None, identity_m)
+      else:
+          # If the function is bounded...
+          v0: float = m[0][0] / m[1][0]
+          v1: float = m[0][1] / m[1][1]
+          v0, v1 = sorted([v0, v1])
+          d0: int = math.floor(v0)
+          d1: int = math.floor(v1)
           if d0 == d1:
-              # if d1 and d2 are the same, the coefficient is determined
-              # calculate the remain, and flip the matrix
-              r = m2[0] - m2[1] * d0
-              m2[0] = r
-              m2 = np.matmul(flip_m, m2)
+              # If d1 and d2 are the same, the quotient is determined
+              # Calculate the remain, and flip the matrix
+              m2 = flip_remain(m2, d1)
               return d1, m2
           elif d1 == d0 + 1:
-              # if d1 is d0 + 1, there is a situation where coefficient can be determined
-              r = m2[0] - m2[1] * d1
-              if r[1] < 0:
-                  # this means d1 doesn't work, try d0
-                  r = m2[0] - m2[1] * d0
-                  if d0 < 0:
-                      return None
-                  else:
-                      m2[0] = r
-                      m2 = np.matmul(flip_m, m2)
-                      return d0, m2
+              if d1 == v1:
+                  # This means that d1 is the upper-bound
+                  # it's only reached at 0 or infinity 
+                  # So d0 is the quotient
+                  m2 = flip_remain(m2, d0)
+                  return d0, m2
               else:
-                 # cannot rule out d1
-                 return None
+                  # The bounds are not tight enough to determine the quotiemt
+                  return (None, identity_m)
           else:
-              # the range is too big, so the coefficient cannot be determined
-              return None
-      else:
-          # coefficient cannot be determined for unbounded function
-          return None
+              # The bounds are not tight enough to determine the quotiemt
+              return (None, identity_m)
 #+end_src
 
 * Appendix: Tests
@@ -689,47 +704,67 @@ This is just calculus
 
       def test_basic1(self):
           # (4x+2)/(3x+2) is between 4/2 and 2/2 (1 to 1.33)
+          # increasing
           m = [[4, 2], [3, 2]]
           (q, r) = self.qr(m)
           assert q == 1 and r == [[3, 2], [1, 0]]
 
       def test_basic2(self):
           # (70x + 29)/ (12x + 5) is between 29/5 and 35/6 (5.8 to 5.88)
+          # increasing. an example in the paper
           m = [[70, 29], [12, 5]]
           (q, r) = self.qr(m)
           assert q == 5 and r == [[12, 5], [10, 4]]
 
       def test_basic3(self):
           # (12x + 5) / (10 x + 4) is between 6/5 and 5/4 (1.2 to 1.25)
+          # decreasing. an example in the paper
           m = [[12, 5], [10, 4]]
           (q, r) = self.qr(m)
           assert q == 1 and r == [[10, 4], [2, 1]]
 
-      def test_negative1(self):
+      def test_edgecase1(self):
           # (10x + 4) / (2x + 1) is bounded between 4 and 5
           # the quotient is 4, because it is 5 only at infinity
+          # increasing. an example in the paper
           m = [[10, 4], [2, 1]]
           (q, r) = self.qr(m)
           assert q == 4 and r == [[2, 1], [2, 0]]
 
-      def test_negative2(self):
+      def test_edgecase2(self):
           # (8x + 3) / (2x + 1) is bounded between 3 and 4
-          # it is only 4 if x is infinity, so the coefficient has to be 3
+          # it is only 4 if x is infinity, so the quotient has to be 3
+          # increasing
           m = [[8, 3], [2, 1]]
           (q, r) = self.qr(m)
           assert q == 3 and r == [[2, 1], [2, 0]]
 
-      def test_divergent1(self):
+      def test_edgecase3(self):
+          # (29x + 6) / (5x + 1) is bounded between 5.8 and 6
+          # it is only 6 if x is 0, so the coefficient has to be 5
+          # decreasing
+          m = [[29, 6], [5, 1]]
+          (q, r) = self.qr(m)
+          assert q == 5 and r == [[5, 1], [4, 1]]
+
+      def test_unbounded1(self):
           # 4x + 2 is unbounded
           m = [[4, 2], [0, 1]]
-          res = self.qr(m)
-          assert res is None
+          (q, r) = self.qr(m)
+          assert q is None
 
-      def test_divergent2(self):
+      def test_unbounded2(self):
           # (4x + 2) / 3 is unbounded
           m = [[4, 2], [3, 0]]
-          res = self.qr(m)
-          assert res is None
+          (q, r) = self.qr(m)
+          assert q is None
+
+      def test_unbounded3(self):
+          # 2x / (2x - 1) is unbounded, because there is a singularity at x = 1/2
+          # This is in the paper
+          m = [[2, 0], [2, -1]]
+          (q, r) = self.qr(m)
+          assert q is None
 
       def test_zero_coeff(self):
           # (1x + 2) / (2x + 3) is bounded between 1/2 and 2/3 (0.5 to 0.666)
@@ -842,7 +877,6 @@ This is just calculus
           new_row = [None] * len(self.board[-1])
           new_row[0] = m[1][0]
           new_row[1] = m[1][1]
-          print("new_row=", new_row)
           self.board.append(new_row)
           self.right.append(q)
 
@@ -903,9 +937,6 @@ This is just calculus
       res = cf_transform_(cf2, m0)
       # res may be longer than cf1, res might not be empty after this loop
       for (a, (q, r, m)) in zip(cf1, res):
-          print("==", a, q)
-          print(r)
-          print(m)
           chart.push_column(m, a)
           if q is None:
               # this means that no euclid step was performed
@@ -920,6 +951,7 @@ This is just calculus
           (q, r, m) = item
           assert r is None
           chart.push_right(q)
+          pass
 
       print(chart)
 #+end_src

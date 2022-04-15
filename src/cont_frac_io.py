@@ -52,7 +52,6 @@ class Chart(object):
         new_row = [None] * len(self.board[-1])
         new_row[0] = m[1][0]
         new_row[1] = m[1][1]
-        print("new_row=", new_row)
         self.board.append(new_row)
         self.right.append(q)
 
@@ -113,9 +112,6 @@ def cf_transform_tab(cf: Iterator[int],
     res = cf_transform_(cf2, m0)
     # res may be longer than cf1, res might not be empty after this loop
     for (a, (q, r, m)) in zip(cf1, res):
-        print("==", a, q)
-        print(r)
-        print(m)
         chart.push_column(m, a)
         if q is None:
             # this means that no euclid step was performed
@@ -130,6 +126,7 @@ def cf_transform_tab(cf: Iterator[int],
         (q, r, m) = item
         assert r is None
         chart.push_right(q)
+        pass
 
     print(chart)
 

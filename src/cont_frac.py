@@ -88,59 +88,72 @@ def cf2r1(cf: Iterator[int]) -> Rational:
     return list(cf_convergents1(cf))[-1]
 
 
-# Calculate the quotient and reminder of a 2-by-2 matrix
-
 flip_m = np.array([[0, 1], [1, 0]])
+identity_m = np.array([[1, 0], [0, 1]])
 
 
-def qr_matrix(m: np.ndarray) -> Optional[Tuple[int, np.ndarray]]:
+def flip_remain(m: np.ndarray, q: int):
+    assert q >= 0
+    r = m[0] - m[1] * q
+    m[0] = r
+    return np.matmul(flip_m, m)
+
+
+def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
+    """Calculate the quotient and the reminder of a 2x2 matrix"""
+
+    assert not (m[1][0] == 0 and m[1][1] == 0)
+    # this means that the series has already ended. Nothing further needs to be done
+    # The caller should not call qr_matrix in this case
+
     m2 = m.copy()
 
-    if m2[1][0] != 0 and m2[1][1] != 0:
-        d0 = math.floor(m[0][0] / m[1][0])
-        d1 = math.floor(m[0][1] / m[1][1])
-
-        # the quotient is between d0 and d1 (inclusive)
-        (d0, d1) = sorted([d0, d1])
+    if m2[1][0] == 0 or m2[1][1] == 0:
+        # If the function is unbounded, the quotient cannot be determined
+        return (None, identity_m)
+    elif m2[1][1] < 0:
+        # This means that the denominator can be made 0 (i.e., a singularity)
+        return (None, identity_m)
+    else:
+        # If the function is bounded...
+        v0: float = m[0][0] / m[1][0]
+        v1: float = m[0][1] / m[1][1]
+        v0, v1 = sorted([v0, v1])
+        d0: int = math.floor(v0)
+        d1: int = math.floor(v1)
         if d0 == d1:
-            # if d1 and d2 are the same, the coefficient is determined
-            # calculate the remain, and flip the matrix
-            r = m2[0] - m2[1] * d0
-            m2[0] = r
-            m2 = np.matmul(flip_m, m2)
+            # If d1 and d2 are the same, the quotient is determined
+            # Calculate the remain, and flip the matrix
+            m2 = flip_remain(m2, d1)
             return d1, m2
         elif d1 == d0 + 1:
-            # if d1 is d0 + 1, there is a situation where coefficient can be determined
-            r = m2[0] - m2[1] * d1
-            if r[1] < 0:
-                # this means d1 doesn't work, try d0
-                r = m2[0] - m2[1] * d0
-                if d0 < 0:
-                    return None
-                else:
-                    m2[0] = r
-                    m2 = np.matmul(flip_m, m2)
-                    return d0, m2
+            if d1 == v1:
+                # This means that d1 is the upper-bound
+                # it's only reached at 0 or infinity
+                # So d0 is the quotient
+                m2 = flip_remain(m2, d0)
+                return d0, m2
             else:
-                # cannot rule out d1
-                return None
+                # The bounds are not tight enough to determine the quotiemt
+                return (None, identity_m)
         else:
-            # the range is too big, so the coefficient cannot be determined
-            return None
-    else:
-        # coefficient cannot be determined for unbounded function
-        return None
+            # The bounds are not tight enough to determine the quotiemt
+            return (None, identity_m)
 
 
 def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
     while True:
-        res = qr_matrix(m)
-        if res:
-            q, r = res
-            yield q, r
-            m = r
-        else:
+        if m[0][0] == 0 and [0][1] == 0:
+            # if there is no remain, stop
             break
+        else:
+            (q, r) = qr_matrix(m)
+            if q is not None:
+                yield q, r
+                m = r
+            else:
+                # if quotient cannot be determined, stop
+                break
 
 
 def cf_transform_(
@@ -149,32 +162,31 @@ def cf_transform_(
     m = m0
     for a in cf:
         m = np.matmul(m, h(a))
-        q = -1
+        q = None
         for (q, r) in euclid_matrix_(m):
-            yield q, r, m
-            m = r
-        if q == -1:
-            # for this coefficient a, the convergent cannot be turned into a continued fraction
+            if q is not None:
+                yield q, r, m
+                m = r
+        if q is None:
+            # Nothing was yielded. That means for this convergent cannot be turned into a continued fraction
             yield (None, None, m)
 
     # we will only reach this point if the series is finite
-    for s in r2cf(Rational(m[0][0], m[1][0])):
-        yield s, None, m
+    if m[1][0] != 0:
+        for s in r2cf(Rational(m[0][0], m[1][0])):
+            yield s, None, m
 
 
 def cf_transform(
     cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
-    cf_ = cf_transform_(cf, m0)
-
-    for res in cf_:
-        if res:
-            (q, r, m) = res
-            if q is not None:
-                # cf_transform_ can return None to indicate that it needs more coefficients
-                # to continue. It can be ignored
-                yield q
+    for res in cf_transform_(cf, m0):
+        (q, r, m) = res
+        if q is not None:
+            yield q
 
 
+            # q can be None, indicating that more coefficients are needed
+            # to continue. It can be ignored
 def cf_e() -> Iterator[int]:
     yield 2
     k = 0
