@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-04-11 Mon 00:25 -->
+<!-- 2022-04-15 Fri 18:01 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)</title>
@@ -228,18 +228,18 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org7b11200">1. Representing rational numbers as continued fractions</a></li>
-<li><a href="#org1aee412">2. Calculating the convergents of a continued fraction</a></li>
-<li><a href="#org19b567a">3. Continued fraction approximation as function compositions</a></li>
-<li><a href="#orgf9e77e0">4. Calculating convergents using the matrix notation</a></li>
-<li><a href="#orge1d5815">5. Turning convergents into continued fractions</a></li>
-<li><a href="#orgddf02d8">6. Simple transformations of continued fractions</a></li>
-<li><a href="#org2985c03">7. Appendix: Calculating the quotient and the reminder of a convergent in matrix form</a></li>
-<li><a href="#orga2038d8">8. Appendix: Tests</a></li>
-<li><a href="#orgb89a1bb">9. Appendix: Display utilities</a></li>
-<li><a href="#org9544751">10. Appendix: Tabulated displays</a></li>
-<li><a href="#orge3a4792">11. Appendix: LaTeX utilities</a></li>
-<li><a href="#org65acaa0">12. Appendix: Imports</a></li>
+<li><a href="#org0fc85f3">1. Representing rational numbers as continued fractions</a></li>
+<li><a href="#org15fdf7f">2. Calculating the convergents of a continued fraction</a></li>
+<li><a href="#org92106a6">3. Continued fraction approximation as function compositions</a></li>
+<li><a href="#org39c47b7">4. Calculating convergents using the matrix notation</a></li>
+<li><a href="#org0a77283">5. Turning convergents into continued fractions</a></li>
+<li><a href="#orgdb70520">6. Simple transformations of continued fractions</a></li>
+<li><a href="#org97a4ab4">7. Appendix: Calculating the quotient and the remainder of a convergent in matrix form</a></li>
+<li><a href="#orgd75cd78">8. Appendix: Tests</a></li>
+<li><a href="#org3dc255e">9. Appendix: Display utilities</a></li>
+<li><a href="#org1b8403e">10. Appendix: Tabulated displays</a></li>
+<li><a href="#org0db79af">11. Appendix: LaTeX utilities</a></li>
+<li><a href="#org8891262">12. Appendix: Imports</a></li>
 </ul>
 </div>
 </div>
@@ -255,15 +255,15 @@
 </pre>
 </div>
 
-<div id="outline-container-org7b11200" class="outline-2">
-<h2 id="org7b11200"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
+<div id="outline-container-org0fc85f3" class="outline-2">
+<h2 id="org0fc85f3"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Since we'll use rational numbers a lot, let's define a class:
 </p>
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Rational(a, b) = a/b</span>
-<span class="org-keyword">class</span> <span class="org-type">Rational</span>(NamedTuple(<span class="org-string">'Rational'</span>, [(<span class="org-string">'a'</span>, <span class="org-builtin">int</span>), (<span class="org-string">'b'</span>, <span class="org-builtin">int</span>)])):
+<pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">Rational</span>(NamedTuple(<span class="org-string">'Rational'</span>, [(<span class="org-string">'a'</span>, <span class="org-builtin">int</span>), (<span class="org-string">'b'</span>, <span class="org-builtin">int</span>)])):
+    <span class="org-doc">"""Rational(a, b) = a/b"""</span>
     <span class="org-keyword">def</span> <span class="org-function-name">__repr__</span>(<span class="org-keyword">self</span>):
         <span class="org-keyword">return</span> f<span class="org-string">'{self.a}/{self.b}'</span>
 </pre>
@@ -292,10 +292,12 @@ it should be obvious that the solution is just the <a href="https://en.wikipedia
 <span class="org-keyword">def</span> <span class="org-function-name">qr</span>(a: <span class="org-builtin">int</span>, b: <span class="org-builtin">int</span>) -&gt; Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]:
     <span class="org-doc">"""a = b * q + r, return (q, r)"""</span>
     <span class="org-variable-name">q</span> = math.floor(a / b)  <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient</span>
-    <span class="org-variable-name">r</span> = a - b * q          <span class="org-comment-delimiter"># </span><span class="org-comment">the reminder</span>
+    <span class="org-variable-name">r</span> = a - b * q          <span class="org-comment-delimiter"># </span><span class="org-comment">the remainder</span>
     <span class="org-keyword">return</span> (q, r)
 
 <span class="org-keyword">def</span> <span class="org-function-name">r2cf_</span>(rn: Rational) -&gt; Iterator[Tuple[<span class="org-builtin">int</span>, <span class="org-builtin">int</span>]]:
+    <span class="org-doc">"""The Euclidean algorithm for representing a rational number as a continuous fraction.</span>
+<span class="org-doc">    Return an iterator of quotients and remainders"""</span>
     <span class="org-variable-name">a</span>, <span class="org-variable-name">b</span> = rn    
     <span class="org-keyword">while</span> <span class="org-constant">True</span>:
         <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = qr(a, b)
@@ -305,6 +307,8 @@ it should be obvious that the solution is just the <a href="https://en.wikipedia
         <span class="org-variable-name">a</span>, <span class="org-variable-name">b</span> = b, r
 
 <span class="org-keyword">def</span> <span class="org-function-name">r2cf</span>(rn: Rational) -&gt; Iterator[<span class="org-builtin">int</span>]:
+    <span class="org-doc">"""Represent a rational number as a continued fraction.</span>
+<span class="org-doc">    Return an iterator of integers"""</span>
     <span class="org-keyword">def</span> <span class="org-function-name">second</span>(x: <span class="org-builtin">tuple</span>):
         <span class="org-keyword">return</span> x[1]
     <span class="org-keyword">return</span> <span class="org-builtin">map</span>(second, r2cf_(rn))
@@ -381,8 +385,8 @@ It's the same sequence with an additional 0 at the beginning! This is our first 
 </div>
 </div>
 
-<div id="outline-container-org1aee412" class="outline-2">
-<h2 id="org1aee412"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
+<div id="outline-container-org15fdf7f" class="outline-2">
+<h2 id="org15fdf7f"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
@@ -458,7 +462,10 @@ For convenience, we define a specialized version of <code>cf_convergents0</code>
 Another example: the irrational number \(e\) can be expressed as a continuous fraction by:
 </p>
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_e</span>() -&gt; Iterator[<span class="org-builtin">int</span>]:
+<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Examples of continuous fractions</span>
+
+<span class="org-keyword">def</span> <span class="org-function-name">cf_e</span>() -&gt; Iterator[<span class="org-builtin">int</span>]:
+    <span class="org-doc">"""e as a continuous fraction"""</span>
     <span class="org-keyword">yield</span> 2
     <span class="org-variable-name">k</span> = 0
     <span class="org-keyword">while</span> <span class="org-constant">True</span>:
@@ -492,7 +499,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 </pre>
 </div>
 
-<pre class="example" id="orgf3c69a0">
+<pre class="example" id="org9c118fa">
 2/1                  2.00000000
 3/1                  3.00000000
 8/3                  2.66666667
@@ -513,8 +520,8 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 </div>
 </div>
 
-<div id="outline-container-org19b567a" class="outline-2">
-<h2 id="org19b567a"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
+<div id="outline-container-org92106a6" class="outline-2">
+<h2 id="org92106a6"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Given the first 3 terms in a continued fraction \([5, 1, 4...]\), let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
@@ -696,23 +703,27 @@ Multiplying the matrix with
 </div>
 </div>
 
-<div id="outline-container-orgf9e77e0" class="outline-2">
-<h2 id="orgf9e77e0"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
+<div id="outline-container-org39c47b7" class="outline-2">
+<h2 id="org39c47b7"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matrix multiplications:
 </p>
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">h</span>(a: <span class="org-builtin">int</span>) -&gt; np.ndarray:
+<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Calculate the convergents using matrix multiplication</span>
+
+<span class="org-keyword">def</span> <span class="org-function-name">h</span>(a: <span class="org-builtin">int</span>) -&gt; np.ndarray:
     <span class="org-keyword">return</span> np.array([[a, 1], [1,0]])
 
 <span class="org-keyword">def</span> <span class="org-function-name">cf_convergents1_</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[np.ndarray]:
+    <span class="org-doc">"""Given a continuous fraction, return an iterator of 2x2 matrices representing convergents"""</span>
     <span class="org-variable-name">res</span> = np.array([[1, 0], [0, 1]])
     <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cf:
         <span class="org-variable-name">res</span> = np.matmul(res, h(a))
         <span class="org-keyword">yield</span> res
 
 <span class="org-keyword">def</span> <span class="org-function-name">cf_convergents1</span>(cf: Iterator[<span class="org-builtin">int</span>]) -&gt; Iterator[Rational]:
+    <span class="org-doc">"""Given a continuous fraction, return an iterator of rational numbers representing convergents"""</span>
     <span class="org-variable-name">mLst</span> = cf_convergents1_(cf)
     <span class="org-keyword">for</span> m <span class="org-keyword">in</span> mLst:
         <span class="org-keyword">yield</span> Rational(m[0, 0], m[1, 0])
@@ -847,85 +858,64 @@ As before, we define a specialized version of <code>cf_convergents1</code> just 
 </div>
 </div>
 
-<div id="outline-container-orge1d5815" class="outline-2">
-<h2 id="orge1d5815"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
+<div id="outline-container-org0a77283" class="outline-2">
+<h2 id="org0a77283"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
 <div class="outline-text-2" id="text-5">
 <p>
-What if we want to calculate convergents as in <code>cf_convergent1</code>, but we also want them expressed as continued fractions? This seems to be a pointless exercise, because a continued fraction is what we start with! But it will become useful in the coming sections.
+In this section, we'll develop code that calculates convergents as in <code>cf_convergent1</code>, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that the code receives a continued fraction, and just returns the same series. However, this code will become useful in the coming sections.
 </p>
 
 <p>
-Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? Remember that the third convergent of the infinite series \([5, 1, 4... ]\) is
+Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the last section that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
 \(\begin{bmatrix}
     29 & 6 \\
      5 & 1
-\end{bmatrix}\), which represents the function \(\frac{29x + 6}{5x + 1}\). This is not the same as the third convergent of the finite series \([5, 1, 4]\), which is the rational number \(\frac{29}{5}\).
+\end{bmatrix}\), which represents the function \(\frac{29x + 6}{5x + 1}\). To turn it into a continued fraction, we'll need to take the rest of the series, represented by \(x\), into account.
 </p>
 
 <p>
-So what do we do? The answer is still the Euclidean algorithm, but have to use it symbolically rather than numerically.
+How? The answer is still the Euclidean algorithm, but we have to use it symbolically rather than numerically.
 </p>
 
 <p>
-The most important step in the Euclidean algorithm is to express a number in terms of the quotient and the reminder of another number (see <code>qr()</code> in <code>r2cf_</code>). I implemented the symbolic version of this operation in a function called <code>qr_matrix</code> in the Appendix. Consider the second convergent of \([5, 1, 4...]\), we use <code>qr_matrix</code> to calculate the quotient and the reminder:
+The first step is to symbolically represent the function as a quotient and a remainder (see <code>qr()</code> in <code>r2cf_</code>). I implemented this operation in <code>qr_matrix</code> in the Appendix. We can use it on the third convergent:
 </p>
 
 <div class="org-src-container">
 <pre class="src src-python">
-<span class="org-keyword">print</span>(qr_matrix(np.array([[6, 5], [1, 1]])))
+pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
 </pre>
 </div>
 
 <pre class="example">
-(5, array([[1, 1],
-       [1, 0]]))
+5  5  1
+   4  1
 </pre>
 
 
 <p>
-This means that \(f_2(x) = \frac{6x+5}{1x+1} = 5 + \frac{1}{\frac{1x + 1}{x}}\). Sine \(\lim_{x \to 0} f_2(x) = 5\) and \(\lim_{x \to \infty} f_2(x) = 6\), the function is bounded by \(5 \leq f_2(x) < 6\). The quotient has to be 5, because the function is 6 only at infinity. 
+This means that \(f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}\). Why is the quotient 5? Since \(\lim_{x \to 0} f_3(x) = 6\) and \(\lim_{x \to \infty} f_3(x) = \frac{29}{5} = 5.8\), the function is bounded by \(5.8 < f_3(x) < 6\) (note that \(0 < x < \infty\)). The quotient therefore has to be 5.
 </p>
 
 <p>
-Let's try another example: The 3rd convergent of the series is
-\(\begin{bmatrix}
-    29 & 6 \\
-     5 & 1
-\end{bmatrix}\).
-</p>
-
-<div class="org-src-container">
-<pre class="src src-python">
-<span class="org-keyword">print</span>(qr_matrix(np.array([[29, 6], [5, 1]])))
-</pre>
-</div>
-
-<pre class="example">
-None
-</pre>
-
-
-<p>
-Why does <code>qr_matrix</code> returns None? Calculus shows that the function is bounded \(5.8 < f_3(x) \leq 6\). It's similar to the previous example, but in this case, the bounds are not tight enough to decide if the quotient is 5 or 6. That's why <code>qr_matrix</code> returns <code>None</code>, indicating that we have to wait for further information to resolve the quotient.
-</p>
-
-<p>
-Note that we can't pick the smaller number 5, and pass the error to the next term. This is because for any rational number, the coefficients of the corresponding continued fraction is unique. We therefore have to get the coefficient 100% right before we move on to the next one.
-</p>
-
-<p>
-Now we are ready to implement the symbolic form of the Euclidean algorithm:
+Now, we are ready to implement the symbolic form of the Euclidean algorithm by calling <code>qr_matrix</code> repeatedly:
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">euclid_matrix_</span>(m: np.ndarray) -&gt; Iterator[Tuple[<span class="org-builtin">int</span>, np.ndarray]]:
+    <span class="org-doc">"""The Euclidean algorithm for the function express by matrix m.</span>
+<span class="org-doc">    Returns an iterator of the quotient and the remainder"""</span>
     <span class="org-keyword">while</span> <span class="org-constant">True</span>:
-        <span class="org-variable-name">res</span> = qr_matrix(m)
-        <span class="org-keyword">if</span> res:
-            <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = res
-            <span class="org-keyword">yield</span> q, r
-            <span class="org-variable-name">m</span> = r
-        <span class="org-keyword">else</span>:
+        <span class="org-keyword">if</span> m[0][0] == 0 <span class="org-keyword">and</span> [0][1] == 0:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">if there is no remain, stop</span>
             <span class="org-keyword">break</span>
+        <span class="org-keyword">else</span>:
+            (q, r) = qr_matrix(m)
+            <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+                <span class="org-keyword">yield</span> q, r
+                <span class="org-variable-name">m</span> = r
+            <span class="org-keyword">else</span>:
+                <span class="org-comment-delimiter"># </span><span class="org-comment">if the quotient cannot be determined, stop</span>
+                <span class="org-keyword">break</span>
 </pre>
 </div>
 
@@ -941,22 +931,26 @@ Let's try it on
 <pre class="src src-python">
 <span class="org-variable-name">q</span> = euclid_matrix_(np.array([[70, 29], [12, 5]]))
 <span class="org-keyword">for</span> (r, m) <span class="org-keyword">in</span> q:
-    <span class="org-keyword">print</span>(r, m)
+    pp_qr((r, m))
+    <span class="org-keyword">print</span>()
 </pre>
 </div>
 
 <pre class="example">
-5 [[12  5]
- [10  4]]
-1 [[10  4]
- [ 2  1]]
-4 [[2 1]
- [2 0]]
+5 12  5
+  10  4
+
+1 10  4
+   2  1
+
+4  2  1
+   2  0
+
 </pre>
 
 
 <p>
-So there is enough information in \(\frac{70x+29}{12x+5}\) to precisely determine 3 coefficients. 
+So there is enough information in \(\frac{70x+29}{12x+5}\) to precisely determine 3 coefficients (5, 1, 4). We stopped at the last term, because \(\frac{2x+1}{2x}\) is an unbounded function, so the quotient cannot be determined.
 </p>
 
 <p>
@@ -983,29 +977,32 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_transform_</span>(cf: Iterator[<span class="org-builtin">int</span>], m0: np.ndarray = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator[Tuple[Optional[<span class="org-builtin">int</span>], Optional[np.ndarray], np.ndarray]]:
+    <span class="org-doc">"""Transform the input continued fraction by matrix m</span>
+<span class="org-doc">    returns another continued fraction"""</span>
     <span class="org-variable-name">m</span> = m0
     <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cf:
         <span class="org-variable-name">m</span> = np.matmul(m, h(a))
-        <span class="org-variable-name">q</span> = -1
+        <span class="org-variable-name">q</span> = <span class="org-constant">None</span>
         <span class="org-keyword">for</span> (q, r) <span class="org-keyword">in</span> euclid_matrix_(m):
-            <span class="org-keyword">yield</span> q, r, m
-            <span class="org-variable-name">m</span> = r
-        <span class="org-keyword">if</span> q == -1:
-            <span class="org-comment-delimiter"># </span><span class="org-comment">for this coefficient a, the convergent cannot be turned into a continued fraction</span>
+            <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+                <span class="org-keyword">yield</span> q, r, m
+                <span class="org-variable-name">m</span> = r
+        <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">Nothing was yielded. That means for this convergent cannot be turned into a continued fraction</span>
             <span class="org-keyword">yield</span> (<span class="org-constant">None</span>, <span class="org-constant">None</span>, m)
 
     <span class="org-comment-delimiter"># </span><span class="org-comment">we will only reach this point if the series is finite</span>
-    <span class="org-keyword">for</span> s <span class="org-keyword">in</span> r2cf(Rational(m[0][0], m[1][0])):
-        <span class="org-keyword">yield</span> s, <span class="org-constant">None</span>, m
+    <span class="org-keyword">if</span> m[1][0] != 0:
+        <span class="org-keyword">for</span> s <span class="org-keyword">in</span> r2cf(Rational(m[0][0], m[1][0])):
+            <span class="org-keyword">yield</span> s, <span class="org-constant">None</span>, m
 
 <span class="org-keyword">def</span> <span class="org-function-name">cf_transform</span>(cf: Iterator[<span class="org-builtin">int</span>], m0: np.ndarray = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator[<span class="org-builtin">int</span>]:
     <span class="org-keyword">for</span> res <span class="org-keyword">in</span> cf_transform_(cf, m0):
-        <span class="org-keyword">if</span> res:
-            (q, r, m) = res
-            <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
-                <span class="org-comment-delimiter"># </span><span class="org-comment">cf_transform_ can return None to indicate that it needs more coefficients</span>
-                <span class="org-comment-delimiter"># </span><span class="org-comment">to continue. It can be ignored</span>
-                <span class="org-keyword">yield</span> q
+        (q, r, m) = res
+        <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">yield</span> q
+            <span class="org-comment-delimiter"># </span><span class="org-comment">q can be None, indicating that more coefficients are needed</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">to continue. It can be ignored</span>
 </pre>
 </div>
 
@@ -1045,17 +1042,18 @@ cf_transform_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1, 3]), fiel
 </pre>
 
 
+
 <p>
 The numbers on the right are the outputs of <code>cf_transform</code>.
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgddf02d8" class="outline-2">
-<h2 id="orgddf02d8"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
+<div id="outline-container-orgdb70520" class="outline-2">
+<h2 id="orgdb70520"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
 <div class="outline-text-2" id="text-6">
 <p>
-In the previous section, we start with a continued fraction \(a\) represented as \([a_1, a_2, ...]\), and use matrix multiplication to calculate an rational series to approximate it. What if \(a\) is embedded in another expression? Let \(b=2a\).
+The beauty of representing convergents as matrices is that we can transform it with a function of the form \(f(x) = \frac{ax+b}{cx+d}\). All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving <code>cf_transform</code> an initial matrix.
 </p>
 
 <p>
@@ -1097,11 +1095,15 @@ cf_transform_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1]), m0 = m0
 2 * [2, 1, 1, 5, 1] is  [5, 13] 
 
     1  5  1  1  2   
-   56 10  6  4  2  0   
+      10  6  4  2  0   
 13 11  2  1  1  0  1  5 
- 1  1  0              13
+ 1  1  0  1           13
 </pre>
 
+
+<p>
+Take the term \(\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}\) for example. The range is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore has to wait for the next coefficient to resolve it. That's why the transformed continued fraction has a smaller number of terms. 
+</p>
 
 <p>
 Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix \(\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}\) (which stands for the function \(f(x) = \frac{1}{x}\)): 
@@ -1109,13 +1111,13 @@ Previously, we saw that the reciprocal of a continuous fraction has an addition 
 <div class="org-src-container">
 <pre class="src src-python">
 <span class="org-variable-name">m0</span> = np.array([[0, 1], [1, 0]], <span class="org-builtin">int</span>)
-<span class="org-variable-name">cd</span> = cf_transform(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1]), m0 = m0)
-<span class="org-keyword">print</span>(<span class="org-string">"The reciprocal of [2, 1, 1, 5, 1] is "</span>, <span class="org-builtin">list</span>(cd), <span class="org-string">"\n"</span>)
+<span class="org-variable-name">cf</span> = cf_transform(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1]), m0 = m0)
+<span class="org-keyword">print</span>(<span class="org-string">"The reciprocal of [2, 1, 1, 5, 1] is "</span>, <span class="org-builtin">list</span>(cf), <span class="org-string">"\n"</span>)
 cf_transform_tab(<span class="org-builtin">iter</span>([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
 </pre>
 </div>
 
-<pre class="example" id="org6ada961">
+<pre class="example" id="org98dabcf">
 The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1] 
 
      1  5  1  1  2   
@@ -1127,65 +1129,235 @@ The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1]
   1  1  0              5 
   1  0                 1 
 </pre>
+
+<p>
+Another example: what is \(\frac{2}{3-\sqrt{2}}\) as a continued fraction? First, \(\sqrt{2} = [1, 2, 2, 2...]\), so we should define an infinite generator:
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_sqrt2</span>():
+    <span class="org-doc">"""A generator representing sqrt(2) as a continued fraction"""</span>
+    <span class="org-keyword">yield</span> 1
+    <span class="org-keyword">while</span> <span class="org-constant">True</span>:
+        <span class="org-keyword">yield</span> 2
+</pre>
+</div>
+
+<p>
+Then, we just need to run <code>cf_transform</code> with \(\begin{bmatrix} 0 & 2 \\ -1 & 3 \end{bmatrix}\) (which stands for \(\frac{2}{-x + 3}\)):
+</p>
+<div class="org-src-container">
+<pre class="src src-python">
+<span class="org-variable-name">m0</span> = np.array([[0, 2], [-1, 3]], <span class="org-builtin">int</span>)
+<span class="org-variable-name">cf</span> = islice(cf_transform(cf_sqrt2(), m0 = m0), 6)
+<span class="org-keyword">print</span>(<span class="org-string">" 2 / (3 - sqrt(2)) is "</span>, pp_inf_cf(<span class="org-builtin">list</span>(cf)), <span class="org-string">"\n"</span>)
+cf_transform_tab(cf_sqrt2(), m0 = m0, n = 6, field_width = 3)
+</pre>
+</div>
+
+<pre class="example" id="org1f031c0">
+2 / (3 - sqrt(2)) is  [1,3,1,4,1,4...] 
+
+    2  2  2  2  2  1   
+             4  2  0  2   
+          8  3  2 -1  3  1 
+       5  2  1  0        3 
+   10  4  2  0           1 
+ 5  2  1  0              4 
+ 4  2  0                 1 
+ 1  0                    4 
+</pre>
+
+<p>
+The answer is a periodic continued fraction \([1, 3, 1, 4, 1, 4...]\).
+</p>
+
+<p>
+Another example: what is \(\tanh{\frac{1}{2}} = \frac{e-1}{e+1}\)? We have already defined the continued fraction for \(e\), so it's just a matter of choosing the right initial matrix (\(\begin{bmatrix} 1 & -1 \\ 1 & 1 \end{bmatrix}\), representing \(\frac{x-1}{x+1}\)):
+</p>
+<div class="org-src-container">
+<pre class="src src-python">
+<span class="org-variable-name">m0</span> = np.array([[1, -1], [1, 1]], <span class="org-builtin">int</span>)
+<span class="org-variable-name">cf</span> = islice(cf_transform(cf_e(), m0 = m0), 6)
+<span class="org-keyword">print</span>(<span class="org-string">"(e-1)/(e+1) is "</span>, pp_inf_cf(<span class="org-builtin">list</span>(cf)), <span class="org-string">"\n"</span>)
+cf_transform_tab(cf_e(), m0 = m0, n = 12, field_width = 3)
+</pre>
+</div>
+
+<pre class="example" id="orga379d69">
+(e-1)/(e+1) is  [0,2,6,10,14,18...] 
+
+     8  1  1  6  1  1  4  1  1  2  1  2   
+                                   1  1 -1   
+                                4  3  1  1  0 
+                      12  7  5  2  1  1     2 
+             20 11  9  2  1  1  0  1        6 
+    28 15 13  2  1  1  0  1                 10
+ 17  2  1  1  0  1                          14
+  1  0  1                                   17
+</pre>
+<p>
+The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term. 
+</p>
 </div>
 </div>
 
-<div id="outline-container-org2985c03" class="outline-2">
-<h2 id="org2985c03"><span class="section-number-2">7.</span> Appendix: Calculating the quotient and the reminder of a convergent in matrix form</h2>
+<div id="outline-container-org97a4ab4" class="outline-2">
+<h2 id="org97a4ab4"><span class="section-number-2">7.</span> Appendix: Calculating the quotient and the remainder of a convergent in matrix form</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 This is just calculus
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Calculate the quotient and reminder of a 2-by-2 matrix</span>
+<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Simple transformation of continued fraction</span>
 
 <span class="org-variable-name">flip_m</span> = np.array([[0, 1], [1, 0]])
+<span class="org-variable-name">identity_m</span> = np.array([[1, 0], [0, 1]])
 
-<span class="org-keyword">def</span> <span class="org-function-name">qr_matrix</span>(m: np.ndarray) -&gt; Optional[Tuple[<span class="org-builtin">int</span>, np.ndarray]]:
+<span class="org-keyword">def</span> <span class="org-function-name">flip_remain</span>(m: np.ndarray, q: <span class="org-builtin">int</span>):
+    <span class="org-keyword">assert</span> q &gt;= 0
+    <span class="org-variable-name">r</span> = m[0] - m[1] * q
+    <span class="org-variable-name">m</span>[0] = r
+    <span class="org-keyword">return</span> np.matmul(flip_m, m)
+
+<span class="org-keyword">def</span> <span class="org-function-name">qr_matrix</span>(m: np.ndarray) -&gt; Tuple[<span class="org-builtin">int</span>, np.ndarray]:
+    <span class="org-doc">"""Calculate the quotient and the remainder of a 2x2 matrix"""</span>
+
+    <span class="org-keyword">assert</span> <span class="org-keyword">not</span>(m[1][0] == 0 <span class="org-keyword">and</span> m[1][1] == 0)
+    <span class="org-comment-delimiter"># </span><span class="org-comment">this means that the series has already ended. Nothing further needs to be done</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">The caller should not call qr_matrix in this case</span>
+
     <span class="org-variable-name">m2</span> = m.copy()
 
-    <span class="org-keyword">if</span> m2[1][0] !=0 <span class="org-keyword">and</span> m2[1][1] !=0:
-        <span class="org-variable-name">d0</span> = math.floor(m[0][0] / m[1][0])
-        <span class="org-variable-name">d1</span> = math.floor(m[0][1] / m[1][1])
-
-        <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient is between d0 and d1 (inclusive)</span>
-        (d0, d1) = <span class="org-builtin">sorted</span>([d0, d1])
+    <span class="org-keyword">if</span> m2[1][0] == 0 <span class="org-keyword">or</span> m2[1][1] == 0:
+        <span class="org-comment-delimiter"># </span><span class="org-comment">If the function is unbounded, the quotient cannot be determined</span>
+        <span class="org-keyword">return</span> (<span class="org-constant">None</span>, identity_m)
+    <span class="org-keyword">elif</span> m2[1][1] &lt; 0:
+        <span class="org-comment-delimiter"># </span><span class="org-comment">This means that the denominator can be made 0 (i.e., a singularity)</span>
+        <span class="org-keyword">return</span> (<span class="org-constant">None</span>, identity_m)
+    <span class="org-keyword">else</span>:
+        <span class="org-comment-delimiter"># </span><span class="org-comment">If the function is bounded...</span>
+        v0: <span class="org-builtin">float</span> = m[0][0] / m[1][0]
+        v1: <span class="org-builtin">float</span> = m[0][1] / m[1][1]
+        <span class="org-variable-name">v0</span>, <span class="org-variable-name">v1</span> = <span class="org-builtin">sorted</span>([v0, v1])
+        d0: <span class="org-builtin">int</span> = math.floor(v0)
+        d1: <span class="org-builtin">int</span> = math.floor(v1)
         <span class="org-keyword">if</span> d0 == d1:
-            <span class="org-comment-delimiter"># </span><span class="org-comment">if d1 and d2 are the same, the coefficient is determined</span>
-            <span class="org-comment-delimiter"># </span><span class="org-comment">calculate the remain, and flip the matrix</span>
-            <span class="org-variable-name">r</span> = m2[0] - m2[1] * d0
-            <span class="org-variable-name">m2</span>[0] = r
-            <span class="org-variable-name">m2</span> = np.matmul(flip_m, m2)
+            <span class="org-comment-delimiter"># </span><span class="org-comment">If d1 and d2 are the same, the quotient is determined</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">Calculate the remain, and flip the matrix</span>
+            <span class="org-variable-name">m2</span> = flip_remain(m2, d1)
             <span class="org-keyword">return</span> d1, m2
         <span class="org-keyword">elif</span> d1 == d0 + 1:
-            <span class="org-comment-delimiter"># </span><span class="org-comment">if d1 is d0 + 1, there is a situation where coefficient can be determined</span>
-            <span class="org-variable-name">r</span> = m2[0] - m2[1] * d1
-            <span class="org-keyword">if</span> r[1] &lt; 0:
-                <span class="org-comment-delimiter"># </span><span class="org-comment">this means d1 doesn't work, try d0</span>
-                <span class="org-variable-name">r</span> = m2[0] - m2[1] * d0
-                <span class="org-keyword">if</span> d0 &lt; 0:
-                    <span class="org-keyword">return</span> <span class="org-constant">None</span>
-                <span class="org-keyword">else</span>:
-                    <span class="org-variable-name">m2</span>[0] = r
-                    <span class="org-variable-name">m2</span> = np.matmul(flip_m, m2)
-                    <span class="org-keyword">return</span> d0, m2
+            <span class="org-keyword">if</span> d1 == v1:
+                <span class="org-comment-delimiter"># </span><span class="org-comment">This means that d1 is the upper-bound</span>
+                <span class="org-comment-delimiter"># </span><span class="org-comment">it's only reached at 0 or infinity </span>
+                <span class="org-comment-delimiter"># </span><span class="org-comment">So d0 is the quotient</span>
+                <span class="org-variable-name">m2</span> = flip_remain(m2, d0)
+                <span class="org-keyword">return</span> d0, m2
             <span class="org-keyword">else</span>:
-               <span class="org-comment-delimiter"># </span><span class="org-comment">cannot rule out d1</span>
-               <span class="org-keyword">return</span> <span class="org-constant">None</span>
+                <span class="org-comment-delimiter"># </span><span class="org-comment">The bounds are not tight enough to determine the quotient</span>
+                <span class="org-keyword">return</span> (<span class="org-constant">None</span>, identity_m)
         <span class="org-keyword">else</span>:
-            <span class="org-comment-delimiter"># </span><span class="org-comment">the range is too big, so the coefficient cannot be determined</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">The bounds are not tight enough to determine the quotient</span>
+            <span class="org-keyword">return</span> (<span class="org-constant">None</span>, identity_m)
+</pre>
+</div>
+
+<p>
+Here are some example calls:
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestQRMatrix</span>(<span class="org-builtin">object</span>):
+    <span class="org-keyword">def</span> <span class="org-function-name">qr</span>(<span class="org-keyword">self</span>, m):
+        <span class="org-variable-name">res</span> = qr_matrix(np.array(m))
+        <span class="org-keyword">if</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>:
             <span class="org-keyword">return</span> <span class="org-constant">None</span>
-    <span class="org-keyword">else</span>:
-        <span class="org-comment-delimiter"># </span><span class="org-comment">coefficient cannot be determined for unbounded function</span>
-        <span class="org-keyword">return</span> <span class="org-constant">None</span>
+        <span class="org-keyword">else</span>:
+            (q, r) = res
+            <span class="org-keyword">return</span> q, r.tolist()
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic1</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(4x+2)/(3x+2) is between 4/2 and 2/2 (1 to 1.33)</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">increasing</span>
+        <span class="org-variable-name">m</span> = [[4, 2], [3, 2]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 1 <span class="org-keyword">and</span> r == [[3, 2], [1, 0]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic2</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(70x + 29)/ (12x + 5) is between 29/5 and 35/6 (5.8 to 5.88)</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">increasing. an example in the paper</span>
+        <span class="org-variable-name">m</span> = [[70, 29], [12, 5]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 5 <span class="org-keyword">and</span> r == [[12, 5], [10, 4]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_basic3</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(12x + 5) / (10 x + 4) is between 6/5 and 5/4 (1.2 to 1.25)</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">decreasing. an example in the paper</span>
+        <span class="org-variable-name">m</span> = [[12, 5], [10, 4]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 1 <span class="org-keyword">and</span> r == [[10, 4], [2, 1]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_edgecase1</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(10x + 4) / (2x + 1) is bounded between 4 and 5</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient is 4, because it is 5 only at infinity</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">increasing. an example in the paper</span>
+        <span class="org-variable-name">m</span> = [[10, 4], [2, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 4 <span class="org-keyword">and</span> r == [[2, 1], [2, 0]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_edgecase2</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(8x + 3) / (2x + 1) is bounded between 3 and 4</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">it is only 4 if x is infinity, so the quotient has to be 3</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">increasing</span>
+        <span class="org-variable-name">m</span> = [[8, 3], [2, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 3 <span class="org-keyword">and</span> r == [[2, 1], [2, 0]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_edgecase3</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(29x + 6) / (5x + 1) is bounded between 5.8 and 6</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">it is only 6 if x is 0, so the coefficient has to be 5</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">decreasing</span>
+        <span class="org-variable-name">m</span> = [[29, 6], [5, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 5 <span class="org-keyword">and</span> r == [[5, 1], [4, 1]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_unbounded1</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">4x + 2 is unbounded</span>
+        <span class="org-variable-name">m</span> = [[4, 2], [0, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_unbounded2</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(4x + 2) / 3 is unbounded</span>
+        <span class="org-variable-name">m</span> = [[4, 2], [3, 0]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_unbounded3</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">2x / (2x - 1) is unbounded, because there is a singularity at x = 1/2</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">This is in the paper</span>
+        <span class="org-variable-name">m</span> = [[2, 0], [2, -1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_zero_coeff</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(1x + 2) / (2x + 3) is bounded between 1/2 and 2/3 (0.5 to 0.666)</span>
+        <span class="org-variable-name">m</span> = [[1, 2], [2, 3]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q == 0 <span class="org-keyword">and</span> r == [[2, 3], [1, 2]]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">test_too_wide</span>(<span class="org-keyword">self</span>):
+        <span class="org-comment-delimiter"># </span><span class="org-comment">(7x + 5) / (x + 1) is bounded between 5 and 7. It's too wide to determine tne quotient</span>
+        <span class="org-variable-name">m</span> = [[7, 5], [1, 1]]
+        (q, r) = <span class="org-keyword">self</span>.qr(m)
+        <span class="org-keyword">assert</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orga2038d8" class="outline-2">
-<h2 id="orga2038d8"><span class="section-number-2">8.</span> Appendix: Tests</h2>
+<div id="outline-container-orgd75cd78" class="outline-2">
+<h2 id="orgd75cd78"><span class="section-number-2">8.</span> Appendix: Tests</h2>
 <div class="outline-text-2" id="text-8">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;TEST_IMPORTS&gt;&gt;
@@ -1202,68 +1374,6 @@ This is just calculus
     <span class="org-keyword">def</span> <span class="org-function-name">test_basic</span>(<span class="org-keyword">self</span>):
         <span class="org-variable-name">res</span> = r2cf(Rational(254, 100))
         <span class="org-keyword">assert</span> <span class="org-builtin">list</span>(res) == [2, 1, 1, 5, 1, 3]
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestQRMatrix</span>(<span class="org-builtin">object</span>):
-    <span class="org-keyword">def</span> <span class="org-function-name">qr</span>(<span class="org-keyword">self</span>, m):
-        <span class="org-variable-name">res</span> = qr_matrix(np.array(m))
-        <span class="org-keyword">if</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>:
-            <span class="org-keyword">return</span> <span class="org-constant">None</span>
-        <span class="org-keyword">else</span>:
-            (q, r) = res
-            <span class="org-keyword">return</span> q, r.tolist()
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_basic1</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(4x+2)/(3x+2) is between 4/2 and 2/2 (1 to 1.33)</span>
-        <span class="org-variable-name">m</span> = [[4, 2], [3, 2]]
-        (q, r) = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> q == 1 <span class="org-keyword">and</span> r == [[3, 2], [1, 0]]
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_basic2</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(70x + 29)/ (12x + 5) is between 29/5 and 35/6 (5.8 to 5.88)</span>
-        <span class="org-variable-name">m</span> = [[70, 29], [12, 5]]
-        (q, r) = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> q == 5 <span class="org-keyword">and</span> r == [[12, 5], [10, 4]]
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_basic3</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(12x + 5) / (10 x + 4) is between 6/5 and 5/4 (1.2 to 1.25)</span>
-        <span class="org-variable-name">m</span> = [[12, 5], [10, 4]]
-        (q, r) = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> q == 1 <span class="org-keyword">and</span> r == [[10, 4], [2, 1]]
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_negative1</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(10x + 4) / (2x + 1) is bounded between 4 and 5</span>
-        <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient is 4, because it is 5 only at infinity</span>
-        <span class="org-variable-name">m</span> = [[10, 4], [2, 1]]
-        (q, r) = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> q == 4 <span class="org-keyword">and</span> r == [[2, 1], [2, 0]]
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_negative2</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(8x + 3) / (2x + 1) is bounded between 3 and 4</span>
-        <span class="org-comment-delimiter"># </span><span class="org-comment">it is only 4 if x is infinity, so the coefficient has to be 3</span>
-        <span class="org-variable-name">m</span> = [[8, 3], [2, 1]]
-        (q, r) = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> q == 3 <span class="org-keyword">and</span> r == [[2, 1], [2, 0]]
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_divergent1</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">4x + 2 is unbounded</span>
-        <span class="org-variable-name">m</span> = [[4, 2], [0, 1]]
-        <span class="org-variable-name">res</span> = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_divergent2</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(4x + 2) / 3 is unbounded</span>
-        <span class="org-variable-name">m</span> = [[4, 2], [3, 0]]
-        <span class="org-variable-name">res</span> = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> res <span class="org-keyword">is</span> <span class="org-constant">None</span>
-
-    <span class="org-keyword">def</span> <span class="org-function-name">test_zero_coeff</span>(<span class="org-keyword">self</span>):
-        <span class="org-comment-delimiter"># </span><span class="org-comment">(1x + 2) / (2x + 3) is bounded between 1/2 and 2/3 (0.5 to 0.666)</span>
-        <span class="org-variable-name">m</span> = [[1, 2], [2, 3]]
-        (q, r) = <span class="org-keyword">self</span>.qr(m)
-        <span class="org-keyword">assert</span> q == 0 <span class="org-keyword">and</span> r == [[2, 3], [1, 2]]
 </pre>
 </div>
 
@@ -1322,14 +1432,15 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orgb89a1bb" class="outline-2">
-<h2 id="orgb89a1bb"><span class="section-number-2">9.</span> Appendix: Display utilities</h2>
+<div id="outline-container-org3dc255e" class="outline-2">
+<h2 id="org3dc255e"><span class="section-number-2">9.</span> Appendix: Display utilities</h2>
 <div class="outline-text-2" id="text-9">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;IO_IMPORTS&gt;&gt;
 &lt;&lt;CHART_CLASS&gt;&gt;
 &lt;&lt;TABS&gt;&gt;
 &lt;&lt;LATEX_UTILS&gt;&gt;
+&lt;&lt;MISC&gt;&gt;
 </pre>
 </div>
 
@@ -1401,11 +1512,35 @@ This is just calculus
         <span class="org-keyword">return</span> s
 </pre>
 </div>
+
+<p>
+Some miscellaneous pretty printing utilities:
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Pretty printing utilities</span>
+
+<span class="org-keyword">def</span> <span class="org-function-name">pp_qr</span>(qr: Tuple[<span class="org-builtin">int</span>, np.ndarray]) -&gt; <span class="org-constant">None</span>:
+    <span class="org-doc">"""Pretty print a tuple of a quotient and a remainder matrix"""</span>
+    <span class="org-variable-name">q</span>, <span class="org-variable-name">r</span> = qr
+    <span class="org-keyword">print</span>(f<span class="org-string">"{q:&gt;2} {r[0][0]:2} {r[0][1]:2}"</span>)
+    <span class="org-keyword">print</span>(f<span class="org-string">"   {r[1][0]:2} {r[1][1]:2}"</span>)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">pp_inf_cf</span>(cf: <span class="org-builtin">list</span>) -&gt; <span class="org-constant">None</span>:
+    <span class="org-doc">"""Pretty print a list representing the first couple terms of a longer continued fraction"""</span>
+    <span class="org-variable-name">res</span> = <span class="org-string">"["</span>
+    <span class="org-variable-name">res</span> = res + <span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> s, n: s + <span class="org-builtin">str</span>(n) + <span class="org-string">","</span>, cf, <span class="org-string">""</span>)
+    <span class="org-variable-name">res</span> = res[:-1] + <span class="org-string">"...]"</span>
+    <span class="org-keyword">return</span> res
+</pre>
+</div>
 </div>
 </div>
 
-<div id="outline-container-org9544751" class="outline-2">
-<h2 id="org9544751"><span class="section-number-2">10.</span> Appendix: Tabulated displays</h2>
+<div id="outline-container-org1b8403e" class="outline-2">
+<h2 id="org1b8403e"><span class="section-number-2">10.</span> Appendix: Tabulated displays</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">r2cf_tab</span>(rn: Rational):
@@ -1437,11 +1572,14 @@ This is just calculus
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_transform_tab</span>(cf: Iterator[<span class="org-builtin">int</span>], m0 = np.identity(2, <span class="org-builtin">int</span>), field_width = 4):
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_transform_tab</span>(cf: Iterator[<span class="org-builtin">int</span>], m0 = np.identity(2, <span class="org-builtin">int</span>), n = <span class="org-constant">None</span>, field_width = 4):
     <span class="org-variable-name">chart</span> = Chart(m = m0, field_width = field_width)
-    (cf1, cf2) = tee(cf)
-    <span class="org-variable-name">res</span> = cf_transform_(cf2, m0)
+    <span class="org-keyword">if</span> n:
+        <span class="org-variable-name">cf</span> = islice(cf, n)
 
+    (cf1, cf2) = tee(cf)
+
+    <span class="org-variable-name">res</span> = cf_transform_(cf2, m0)
     <span class="org-comment-delimiter"># </span><span class="org-comment">res may be longer than cf1, res might not be empty after this loop</span>
     <span class="org-keyword">for</span> (a, (q, r, m)) <span class="org-keyword">in</span> <span class="org-builtin">zip</span>(cf1, res):
         chart.push_column(m, a)
@@ -1458,6 +1596,7 @@ This is just calculus
         (q, r, m) = item
         <span class="org-keyword">assert</span> r <span class="org-keyword">is</span> <span class="org-constant">None</span>
         chart.push_right(q)
+        <span class="org-keyword">pass</span>
 
     <span class="org-keyword">print</span>(chart)
 </pre>
@@ -1465,8 +1604,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orge3a4792" class="outline-2">
-<h2 id="orge3a4792"><span class="section-number-2">11.</span> Appendix: LaTeX utilities</h2>
+<div id="outline-container-org0db79af" class="outline-2">
+<h2 id="org0db79af"><span class="section-number-2">11.</span> Appendix: LaTeX utilities</h2>
 <div class="outline-text-2" id="text-11">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Utilities functions for LaTeX displays</span>
@@ -1500,15 +1639,15 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org65acaa0" class="outline-2">
-<h2 id="org65acaa0"><span class="section-number-2">12.</span> Appendix: Imports</h2>
+<div id="outline-container-org8891262" class="outline-2">
+<h2 id="org8891262"><span class="section-number-2">12.</span> Appendix: Imports</h2>
 <div class="outline-text-2" id="text-12">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> math
 <span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
 <span class="org-keyword">from</span> typing <span class="org-keyword">import</span> NamedTuple, Iterator, Tuple, Optional
 <span class="org-keyword">from</span> functools <span class="org-keyword">import</span> <span class="org-builtin">reduce</span>
-<span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> tee
+<span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> tee, islice
 </pre>
 </div>
 
@@ -1536,7 +1675,7 @@ This is just calculus
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Hsin-Hao Yu</p>
-<p class="date">Created: 2022-04-11 Mon 00:25</p>
+<p class="date">Created: 2022-04-15 Fri 18:01</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

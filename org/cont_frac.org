@@ -20,8 +20,8 @@
 * Representing rational numbers as continued fractions
 Since we'll use rational numbers a lot, let's define a class:
 #+begin_src python :tangle no :noweb-ref RATIONAL_NUM
-  # Rational(a, b) = a/b
   class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
+      """Rational(a, b) = a/b"""
       def __repr__(self):
           return f'{self.a}/{self.b}'
 #+end_src
@@ -43,10 +43,12 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
   def qr(a: int, b: int) -> Tuple[int, int]:
       """a = b * q + r, return (q, r)"""
       q = math.floor(a / b)  # the quotient
-      r = a - b * q          # the reminder
+      r = a - b * q          # the remainder
       return (q, r)
 
   def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
+      """The Euclidean algorithm for representing a rational number as a continuous fraction.
+      Return an iterator of quotients and remainders"""
       a, b = rn    
       while True:
           q, r = qr(a, b)
@@ -56,6 +58,8 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
           a, b = b, r
 
   def r2cf(rn: Rational) -> Iterator[int]:
+      """Represent a rational number as a continued fraction.
+      Return an iterator of integers"""
       def second(x: tuple):
           return x[1]
       return map(second, r2cf_(rn))
@@ -181,7 +185,10 @@ For convenience, we define a specialized version of =cf_convergents0= just for f
 
 Another example: the irrational number $e$ can be expressed as a continuous fraction by:
 #+begin_src python :tangle no :noweb-ref CF_EXAMPLES
+  # Examples of continuous fractions
+  
   def cf_e() -> Iterator[int]:
+      """e as a continuous fraction"""
       yield 2
       k = 0
       while True:
@@ -234,16 +241,20 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 * Calculating convergents using the matrix notation
 Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multiplications:
 #+begin_src python :tangle no :noweb-ref CONVERGENTS1
+  # Calculate the convergents using matrix multiplication
+  
   def h(a: int) -> np.ndarray:
       return np.array([[a, 1], [1,0]])
 
   def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
+      """Given a continuous fraction, return an iterator of 2x2 matrices representing convergents"""
       res = np.array([[1, 0], [0, 1]])
       for a in cf:
           res = np.matmul(res, h(a))
           yield res
 
   def cf_convergents1(cf: Iterator[int]) -> Iterator[Rational]:
+      """Given a continuous fraction, return an iterator of rational numbers representing convergents"""
       mLst = cf_convergents1_(cf)
       for m in mLst:
           yield Rational(m[0, 0], m[1, 0])
@@ -342,52 +353,34 @@ As before, we define a specialized version of =cf_convergents1= just for finite-
 #+end_src
 
 * Turning convergents into continued fractions
-What if we want to calculate convergents as in =cf_convergent1=, but we also want them expressed as continued fractions? This seems to be a pointless exercise, because a continued fraction is what we start with! But it will become useful in the coming sections.
+In this section, we'll develop code that calculates convergents as in =cf_convergent1=, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that the code receives a continued fraction, and just returns the same series. However, this code will become useful in the coming sections.
 
-Let's take the continued fraction $[5, 1, 4... ]$ as an example. Since we already know that the third convergent of $[5, 1, 4]$ is $\frac{29}{5}$, can't we just turn $\frac{29}{5}$ into a continued fraction? Remember that the third convergent of the infinite series $[5, 1, 4... ]$ is
+Let's take the continued fraction $[5, 1, 4... ]$ as an example. Since we already know from the last section that the third convergent of $[5, 1, 4]$ is $\frac{29}{5}$, can't we just turn $\frac{29}{5}$ into a continued fraction? It is not as simple as that, because $[5, 1, 4]$ and $[5, 1, 4...]$ are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
 $\begin{bmatrix}
     29 & 6 \\
      5 & 1
-\end{bmatrix}$, which represents the function $\frac{29x + 6}{5x + 1}$. This is not the same as the third convergent of the finite series $[5, 1, 4]$, which is the rational number $\frac{29}{5}$.
+\end{bmatrix}$, which represents the function $\frac{29x + 6}{5x + 1}$. To turn it into a continued fraction, we'll need to take the rest of the series, represented by $x$, into account.
 
-So what do we do? The answer is still the Euclidean algorithm, but have to use it symbolically rather than numerically.
+How? The answer is still the Euclidean algorithm, but we have to use it symbolically rather than numerically.
 
-The most important step in the Euclidean algorithm is to express a number in terms of the quotient and the reminder of another number (see =qr()= in =r2cf_=). I implemented the symbolic version of this operation in a function called =qr_matrix= in the Appendix. Consider the second convergent of $[5, 1, 4...]$, we use =qr_matrix= to calculate the quotient and the reminder:
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  print(qr_matrix(np.array([[6, 5], [1, 1]])))
-#+end_src
-
-#+RESULTS:
-: (5, array([[1, 1],
-:        [1, 0]]))
-
-This means that $f_2(x) = \frac{6x+5}{1x+1} = 5 + \frac{1}{\frac{1x + 1}{x}}$. Sine $\lim_{x \to 0} f_2(x) = 5$ and $\lim_{x \to \infty} f_2(x) = 6$, the function is bounded by $5 \leq f_2(x) < 6$. The quotient has to be 5, because the function is 6 only at infinity. 
-
-Let's try another example: The 3rd convergent of the series is
-$\begin{bmatrix}
-    29 & 6 \\
-     5 & 1
-\end{bmatrix}$.
+The first step is to symbolically represent the function as a quotient and a remainder (see =qr()= in =r2cf_=). I implemented this operation in =qr_matrix= in the Appendix. We can use it on the third convergent:
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  print(qr_matrix(np.array([[29, 6], [5, 1]])))
+  pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
 #+end_src
 
 #+RESULTS:
-: (5, array([[5, 1],
-:        [4, 1]]))
+:  5  5  1
+:     4  1
 
+This means that $f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}$. Why is the quotient 5? Since $\lim_{x \to 0} f_3(x) = 6$ and $\lim_{x \to \infty} f_3(x) = \frac{29}{5} = 5.8$, the function is bounded by $5.8 < f_3(x) < 6$ (note that $0 < x < \infty$). The quotient therefore has to be 5.
 
-Why does =qr_matrix= returns None? Calculus shows that the function is bounded $5.8 < f_3(x) \leq 6$. It's similar to the previous example, but in this case, the bounds are not tight enough to decide if the quotient is 5 or 6. That's why =qr_matrix= returns =None=, indicating that we have to wait for further information to resolve the quotient.
-
-Note that we can't pick the smaller number 5, and pass the error to the next term. This is because for any rational number, the coefficients of the corresponding continued fraction is unique. We therefore have to get the coefficient 100% right before we move on to the next one.
-
-Now we are ready to implement the symbolic form of the Euclidean algorithm:
+Now, we are ready to implement the symbolic form of the Euclidean algorithm by calling =qr_matrix= repeatedly:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
+      """The Euclidean algorithm for the function express by matrix m.
+      Returns an iterator of the quotient and the remainder"""
       while True:
           if m[0][0] == 0 and [0][1] == 0:
               # if there is no remain, stop
@@ -398,7 +391,7 @@ Now we are ready to implement the symbolic form of the Euclidean algorithm:
                   yield q, r
                   m = r
               else:
-                  # if quotient cannot be determined, stop
+                  # if the quotient cannot be determined, stop
                   break
 #+end_src
 
@@ -412,18 +405,22 @@ $\begin{bmatrix}
   <<DEMO_IMPORTS>>
   q = euclid_matrix_(np.array([[70, 29], [12, 5]]))
   for (r, m) in q:
-      print(r, m)
+      pp_qr((r, m))
+      print()
 #+end_src
 
 #+RESULTS:
-: 5 [[12  5]
-:  [10  4]]
-: 1 [[10  4]
-:  [ 2  1]]
-: 4 [[2 1]
-:  [2 0]]
+:  5 12  5
+:    10  4
+: 
+:  1 10  4
+:     2  1
+: 
+:  4  2  1
+:     2  0
+: 
 
-So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 coefficients. 
+So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 coefficients (5, 1, 4). We stopped at the last term, because $\frac{2x+1}{2x}$ is an unbounded function, so the quotient cannot be determined.
 
 As before, Gospher stacked the matrices in a compact format to illustrate the process:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -439,10 +436,11 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 :    2   1  4  
 :    2   0
 
-
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
+      """Transform the input continued fraction by matrix m
+      returns another continued fraction"""
       m = m0
       for a in cf:
           m = np.matmul(m, h(a))
@@ -499,7 +497,7 @@ This seems to be anti-climatic for quite a bit of work... but here's something c
 The numbers on the right are the outputs of =cf_transform=.
 
 * Simple transformations of continued fractions
-In the previous section, we start with a continued fraction $a$ represented as $[a_1, a_2, ...]$, and use matrix multiplication to calculate an rational series to approximate it. What if $a$ is embedded in another expression? Let $b=2a$.
+The beauty of representing convergents as matrices is that we can transform it with a function of the form $f(x) = \frac{ax+b}{cx+d}$. All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving =cf_transform= an initial matrix.
 
 The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, and turn it back to a continued fraction:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -536,6 +534,8 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
 :  13 11  2  1  1  0  1  5 
 :   1  1  0  1           13
 
+Take the term $\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}$ for example. The range is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore has to wait for the next coefficient to resolve it. That's why the transformed continued fraction has a smaller number of terms. 
+
 Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
@@ -559,70 +559,70 @@ The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1]
   1  0                 1 
 #+end_example
 
-
-Another example: 
+Another example: what is $\frac{2}{3-\sqrt{2}}$ as a continued fraction? First, $\sqrt{2} = [1, 2, 2, 2...]$, so we should define an infinite generator:
 #+begin_src python :tangle no :noweb-ref CF_EXAMPLES
   def cf_sqrt2():
+      """A generator representing sqrt(2) as a continued fraction"""
       yield 1
       while True:
           yield 2
 #+end_src
 
+Then, we just need to run =cf_transform= with $\begin{bmatrix} 0 & 2 \\ -1 & 3 \end{bmatrix}$ (which stands for $\frac{2}{-x + 3}$):
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[0, 2], [-1, 3]], int)
-  cf = islice(cf_transform(cf_sqrt2(), m0 = m0), 9)
-  print(list(cf))
-  cf_transform_tab(cf_sqrt2(), m0 = m0, n = 9, field_width = 3)
+  cf = islice(cf_transform(cf_sqrt2(), m0 = m0), 6)
+  print(" 2 / (3 - sqrt(2)) is ", pp_inf_cf(list(cf)), "\n")
+  cf_transform_tab(cf_sqrt2(), m0 = m0, n = 6, field_width = 3)
 #+end_src
 
 #+RESULTS:
 #+begin_example
-[1, 3, 1, 4, 1, 4, 1, 4, 1]
-     2  2  2  2  2  2  2  2  1   
-                       4  2  0  2   
-                    8  3  2 -1  3  1 
-                 5  2  1  0        3 
-             10  4  2  0           1 
-           5  2  1  0              4 
-       10  4  2  0                 1 
-     5  2  1  0                    4 
- 10  4  2  0                       1 
-  2  1  0                          4 
-  2  0                             1 
+ 2 / (3 - sqrt(2)) is  [1,3,1,4,1,4...] 
+
+     2  2  2  2  2  1   
+              4  2  0  2   
+           8  3  2 -1  3  1 
+        5  2  1  0        3 
+    10  4  2  0           1 
+  5  2  1  0              4 
+  4  2  0                 1 
+  1  0                    4 
 #+end_example
 
+The answer is a periodic continued fraction $[1, 3, 1, 4, 1, 4...]$.
 
+Another example: what is $\tanh{\frac{1}{2}} = \frac{e-1}{e+1}$? We have already defined the continued fraction for $e$, so it's just a matter of choosing the right initial matrix ($\begin{bmatrix} 1 & -1 \\ 1 & 1 \end{bmatrix}$, representing $\frac{x-1}{x+1}$):
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[1, -1], [1, 1]], int)
-  cf = islice(cf_transform(cf_e(), m0 = m0), 5)
-  for i in cf:
-      print(i)
-  cf_transform_tab(cf_e(), m0 = m0, n = 8, field_width = 3)
+  cf = islice(cf_transform(cf_e(), m0 = m0), 6)
+  print("(e-1)/(e+1) is ", pp_inf_cf(list(cf)), "\n")
+  cf_transform_tab(cf_e(), m0 = m0, n = 12, field_width = 3)
 #+end_src
 
 #+RESULTS:
 #+begin_example
-0
-2
-6
-10
-14
-     1  1  4  1  1  2  1  2   
-                       1  1 -1   
-                    4  3  1  1  0 
-          12  7  5  2  1  1     2 
- 20 11  9  2  1  1  0  1        6 
-  2  1  1  0  1                 10
-  0  1                        
+(e-1)/(e+1) is  [0,2,6,10,14,18...] 
+
+     8  1  1  6  1  1  4  1  1  2  1  2   
+                                   1  1 -1   
+                                4  3  1  1  0 
+                      12  7  5  2  1  1     2 
+             20 11  9  2  1  1  0  1        6 
+    28 15 13  2  1  1  0  1                 10
+ 17  2  1  1  0  1                          14
+  1  0  1                                   17
 #+end_example
+The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term. 
 
-
-* Appendix: Calculating the quotient and the reminder of a convergent in matrix form
+* Appendix: Calculating the quotient and the remainder of a convergent in matrix form
 This is just calculus
 
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
+  # Simple transformation of continued fraction
+  
   flip_m = np.array([[0, 1], [1, 0]])
   identity_m = np.array([[1, 0], [0, 1]])
 
@@ -633,7 +633,7 @@ This is just calculus
       return np.matmul(flip_m, m)
 
   def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
-      """Calculate the quotient and the reminder of a 2x2 matrix"""
+      """Calculate the quotient and the remainder of a 2x2 matrix"""
 
       assert not(m[1][0] == 0 and m[1][1] == 0)
       # this means that the series has already ended. Nothing further needs to be done
@@ -667,31 +667,14 @@ This is just calculus
                   m2 = flip_remain(m2, d0)
                   return d0, m2
               else:
-                  # The bounds are not tight enough to determine the quotiemt
+                  # The bounds are not tight enough to determine the quotient
                   return (None, identity_m)
           else:
-              # The bounds are not tight enough to determine the quotiemt
+              # The bounds are not tight enough to determine the quotient
               return (None, identity_m)
 #+end_src
 
-* Appendix: Tests
-
-#+begin_src python :noweb no-export :tangle ../src/test_cont_frac.py
-  <<TEST_IMPORTS>>
-  <<TEST_R2CF>>
-  <<TEST_QR_MATRIX>>
-  <<TEST_CONVERGENTS>>
-  <<TEST_CF2R>>
-  <<TEST_CF_TRANSFORM>>
-#+end_src
-
-#+begin_src python :tangle no :noweb-ref TEST_R2CF
-  class TestR2cf(object):
-      def test_basic(self):
-          res = r2cf(Rational(254, 100))
-          assert list(res) == [2, 1, 1, 5, 1, 3]
-#+end_src
-
+Here are some example calls:
 #+begin_src python :tangle no :noweb-ref TEST_QR_MATRIX
   class TestQRMatrix(object):
       def qr(self, m):
@@ -771,6 +754,30 @@ This is just calculus
           m = [[1, 2], [2, 3]]
           (q, r) = self.qr(m)
           assert q == 0 and r == [[2, 3], [1, 2]]
+
+      def test_too_wide(self):
+          # (7x + 5) / (x + 1) is bounded between 5 and 7. It's too wide to determine tne quotient
+          m = [[7, 5], [1, 1]]
+          (q, r) = self.qr(m)
+          assert q is None
+#+end_src
+
+* Appendix: Tests
+
+#+begin_src python :noweb no-export :tangle ../src/test_cont_frac.py
+  <<TEST_IMPORTS>>
+  <<TEST_R2CF>>
+  <<TEST_QR_MATRIX>>
+  <<TEST_CONVERGENTS>>
+  <<TEST_CF2R>>
+  <<TEST_CF_TRANSFORM>>
+#+end_src
+
+#+begin_src python :tangle no :noweb-ref TEST_R2CF
+  class TestR2cf(object):
+      def test_basic(self):
+          res = r2cf(Rational(254, 100))
+          assert list(res) == [2, 1, 1, 5, 1, 3]
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref TEST_CONVERGENTS
@@ -829,6 +836,7 @@ This is just calculus
   <<CHART_CLASS>>
   <<TABS>>
   <<LATEX_UTILS>>
+  <<MISC>>
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref CHART_CLASS
@@ -897,6 +905,26 @@ This is just calculus
                   s = s + "\n"
           s = s[:-1] # remove the last "\n"
           return s
+#+end_src
+
+Some miscellaneous pretty printing utilities:
+#+begin_src python :tangle no :noweb-ref MISC
+  # Pretty printing utilities
+
+  def pp_qr(qr: Tuple[int, np.ndarray]) -> None:
+      """Pretty print a tuple of a quotient and a remainder matrix"""
+      q, r = qr
+      print(f"{q:>2} {r[0][0]:2} {r[0][1]:2}")
+      print(f"   {r[1][0]:2} {r[1][1]:2}")
+#+end_src
+
+#+begin_src python :tangle no :noweb-ref MISC
+  def pp_inf_cf(cf: list) -> None:
+      """Pretty print a list representing the first couple terms of a longer continued fraction"""
+      res = "["
+      res = res + reduce(lambda s, n: s + str(n) + ",", cf, "")
+      res = res[:-1] + "...]"
+      return res
 #+end_src
 
 * Appendix: Tabulated displays

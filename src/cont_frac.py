@@ -5,8 +5,8 @@ from functools import reduce
 from itertools import tee, islice
 
 
-# Rational(a, b) = a/b
 class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
+    """Rational(a, b) = a/b"""
 
     def __repr__(self):
         return f'{self.a}/{self.b}'
@@ -18,11 +18,13 @@ class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
 def qr(a: int, b: int) -> Tuple[int, int]:
     """a = b * q + r, return (q, r)"""
     q = math.floor(a / b)  # the quotient
-    r = a - b * q  # the reminder
+    r = a - b * q  # the remainder
     return (q, r)
 
 
 def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
+    """The Euclidean algorithm for representing a rational number as a continuous fraction.
+    Return an iterator of quotients and remainders"""
     a, b = rn
     while True:
         q, r = qr(a, b)
@@ -33,6 +35,8 @@ def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
 
 
 def r2cf(rn: Rational) -> Iterator[int]:
+    """Represent a rational number as a continued fraction.
+    Return an iterator of integers"""
 
     def second(x: tuple):
         return x[1]
@@ -64,11 +68,15 @@ def cf2r0(cf: Iterator[int]) -> Rational:
     return list(cf_convergents0(cf))[-1]
 
 
+# Calculate the convergents using matrix multiplication
+
+
 def h(a: int) -> np.ndarray:
     return np.array([[a, 1], [1, 0]])
 
 
 def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
+    """Given a continuous fraction, return an iterator of 2x2 matrices representing convergents"""
     res = np.array([[1, 0], [0, 1]])
     for a in cf:
         res = np.matmul(res, h(a))
@@ -76,6 +84,7 @@ def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
 
 
 def cf_convergents1(cf: Iterator[int]) -> Iterator[Rational]:
+    """Given a continuous fraction, return an iterator of rational numbers representing convergents"""
     mLst = cf_convergents1_(cf)
     for m in mLst:
         yield Rational(m[0, 0], m[1, 0])
@@ -87,6 +96,8 @@ def cf2r1(cf: Iterator[int]) -> Rational:
     """
     return list(cf_convergents1(cf))[-1]
 
+
+# Simple transformation of continued fraction
 
 flip_m = np.array([[0, 1], [1, 0]])
 identity_m = np.array([[1, 0], [0, 1]])
@@ -142,6 +153,8 @@ def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
 
 
 def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
+    """The Euclidean algorithm for the function express by matrix m.
+    Returns an iterator of the quotient and the remainder"""
     while True:
         if m[0][0] == 0 and [0][1] == 0:
             # if there is no remain, stop
@@ -152,13 +165,15 @@ def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
                 yield q, r
                 m = r
             else:
-                # if quotient cannot be determined, stop
+                # if the quotient cannot be determined, stop
                 break
 
 
 def cf_transform_(
     cf: Iterator[int], m0: np.ndarray = np.identity(2, int)
 ) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
+    """Transform the input continued fraction by matrix m
+    returns another continued fraction"""
     m = m0
     for a in cf:
         m = np.matmul(m, h(a))
@@ -183,11 +198,15 @@ def cf_transform(
         (q, r, m) = res
         if q is not None:
             yield q
-
-
             # q can be None, indicating that more coefficients are needed
             # to continue. It can be ignored
+
+
+# Examples of continuous fractions
+
+
 def cf_e() -> Iterator[int]:
+    """e as a continuous fraction"""
     yield 2
     k = 0
     while True:
@@ -198,6 +217,7 @@ def cf_e() -> Iterator[int]:
 
 
 def cf_sqrt2():
+    """A generator representing sqrt(2) as a continued fraction"""
     yield 1
     while True:
         yield 2

@@ -160,3 +160,21 @@ def show_rational_series(itr: Iterator[int]):
         s = s + "$" + latex_rational(r) + "$" + ","
 
     print(s[:-1])
+
+
+# Pretty printing utilities
+
+
+def pp_qr(qr: Tuple[int, np.ndarray]) -> None:
+    """Pretty print a tuple of a quotient and a remainder matrix"""
+    q, r = qr
+    print(f"{q:>2} {r[0][0]:2} {r[0][1]:2}")
+    print(f"   {r[1][0]:2} {r[1][1]:2}")
+
+
+def pp_inf_cf(cf: list) -> None:
+    """Pretty print a list representing the first couple terms of a longer continued fraction"""
+    res = "["
+    res = res + reduce(lambda s, n: s + str(n) + ",", cf, "")
+    res = res[:-1] + "...]"
+    return res
