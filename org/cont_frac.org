@@ -15,6 +15,7 @@
   <<QR_MATRIX>>
   <<CF_TRANSFORM>>
   <<CF_EXAMPLES>>
+  <<BIHOMOGRAPHY>>
 #+end_src
 
 * Representing rational numbers as continued fractions
@@ -118,7 +119,7 @@ Interestingly, the reciprocal of $\frac{254}{100}$ (that is, $\frac{100}{254}$) 
 
 It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the Euclidean algorithm. We'll come back to this point later.
 
-*  Calculating the convergents of a continued fraction
+* Calculating the convergents of a continued fraction
 Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
 
 This question has an easy solution if we use a series of rational numbers to approximate the continued fraction. Each term in the series is called a convergent. The formula for the convergents can be derived easily with mathematical induction, and it is implemented below. For the moment, we'll use the formula just a convenience to get the job done. We'll get deeper into its meaning in the next section.
@@ -615,7 +616,91 @@ Another example: what is $\tanh{\frac{1}{2}} = \frac{e-1}{e+1}$? We have already
  17  2  1  1  0  1                          14
   1  0  1                                   17
 #+end_example
-The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term. 
+The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term.
+
+* Arithmetic: bilinear homographic functions
+When there is just one continued fraction $a$, the action is on the convergent of the form $f(x) = \frac{px+q}{rx+s}$, which can be represented with by a matrix $M = \begin{bmatrix} p & q \\ r & s \end{bmatrix}$. With two continued fractions $a$ and $b$, the function generalizes to $f(x, y) = \frac{axy + bx + cy + d}{exy + fx + gy + h}$, where $x$ and $y$ are the unknown terms for $a$ and $b$ respectively. This bilinear function can be represented by the 2x2x2 tensor $T=\begin{bmatrix}\begin{bmatrix} b & d \\ a & c \end{bmatrix}\begin{bmatrix} f & h \\ e & g \end{bmatrix}\end{bmatrix}$, where the first matrix encodes terms in the numerator, and the second encodes terms in the denominator. This particular representation is not necessary for the computation, but it gives the update rules a very nice visual interpretation. When the tensor is viewed as a 2x2x2 cube in 3D, it moves to leftwards when it receives a term of $a$, and it moves downwards when it receives a term of $b$. The following figure illustrates this for $a + b$. For each row, the table on the left illustrates the matrix encoding terms in the numerator, and the table on the right illustrates terms in the denominator. When the two matrices are combined, they describes the function in the middle panel. We start at the initial condition in the first row, add the first coefficient of $a$ in the second row, and then add the first coefficient of $b$ in the third row.
+
+#+attr_html: :width 500px
+[[../figs/addition.png]]
+
+Given what we have learned in the previous section, it shouldn't be too surprising that multiplication can be performed with a different initial tensor (but it's still quite remarkable!)
+
+#+attr_html: :width 500px
+[[../figs/multiplication.png]]
+
+Let's implement this with Numpy tensors:
+
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  def tFrom2x4(m: np.ndarray) -> np.ndarray:
+      ((a, b, c, d), (e, f, g, h)) = m.tolist()
+      return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
+
+  def tTo2x4(m: np.ndarray) -> np.ndarray:
+       (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
+       return np.array([[a, b, c, d], [e, f, g, h]])
+#+end_src
+
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  def tForAddition() -> np.ndarray:
+      return np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+
+  def tForMultiplication() -> np.ndarray:
+      return np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+#+end_src
+
+Applying new coefficients is implemented with my favorite Numpy function: =einsum= (Einstein's sum):
+
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  def apply_a(t: np.ndarray, a: int):
+      ha = h(a)
+      return np.einsum('dyx,xz->dyz', t, ha)
+
+  def apply_b(t: np.ndarray, b: int):
+      hb = h(b)
+      return np.einsum('dyx,yz->dxz', t, hb)
+#+end_src
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = tForAddition()
+  m1 = apply_a(m0, 2)
+  print(m1)
+  m2 = apply_a(m1, 3)
+  print()
+  print(m2)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[[[2 1]
+  [1 0]]
+
+ [[1 0]
+  [0 0]]]
+
+[[[7 2]
+  [3 1]]
+
+ [[3 1]
+  [0 0]]]
+#+end_example
+
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = tForAddition()
+  m1 = apply_b(m0, 2)
+  print(m1)
+#+end_src
+
+#+RESULTS:
+: [[[2 1]
+:   [1 0]]
+: 
+:  [[0 0]
+:   [2 1]]]
+
 
 * Appendix: Calculating the quotient and the remainder of a convergent in matrix form
 This is just calculus
@@ -674,162 +759,8 @@ This is just calculus
               return (None, identity_m)
 #+end_src
 
-Here are some example calls:
-#+begin_src python :tangle no :noweb-ref TEST_QR_MATRIX
-  class TestQRMatrix(object):
-      def qr(self, m):
-          res = qr_matrix(np.array(m))
-          if res is None:
-              return None
-          else:
-              (q, r) = res
-              return q, r.tolist()
-
-      def test_basic1(self):
-          # (4x+2)/(3x+2) is between 4/2 and 2/2 (1 to 1.33)
-          # increasing
-          m = [[4, 2], [3, 2]]
-          (q, r) = self.qr(m)
-          assert q == 1 and r == [[3, 2], [1, 0]]
-
-      def test_basic2(self):
-          # (70x + 29)/ (12x + 5) is between 29/5 and 35/6 (5.8 to 5.88)
-          # increasing. an example in the paper
-          m = [[70, 29], [12, 5]]
-          (q, r) = self.qr(m)
-          assert q == 5 and r == [[12, 5], [10, 4]]
-
-      def test_basic3(self):
-          # (12x + 5) / (10 x + 4) is between 6/5 and 5/4 (1.2 to 1.25)
-          # decreasing. an example in the paper
-          m = [[12, 5], [10, 4]]
-          (q, r) = self.qr(m)
-          assert q == 1 and r == [[10, 4], [2, 1]]
-
-      def test_edgecase1(self):
-          # (10x + 4) / (2x + 1) is bounded between 4 and 5
-          # the quotient is 4, because it is 5 only at infinity
-          # increasing. an example in the paper
-          m = [[10, 4], [2, 1]]
-          (q, r) = self.qr(m)
-          assert q == 4 and r == [[2, 1], [2, 0]]
-
-      def test_edgecase2(self):
-          # (8x + 3) / (2x + 1) is bounded between 3 and 4
-          # it is only 4 if x is infinity, so the quotient has to be 3
-          # increasing
-          m = [[8, 3], [2, 1]]
-          (q, r) = self.qr(m)
-          assert q == 3 and r == [[2, 1], [2, 0]]
-
-      def test_edgecase3(self):
-          # (29x + 6) / (5x + 1) is bounded between 5.8 and 6
-          # it is only 6 if x is 0, so the coefficient has to be 5
-          # decreasing
-          m = [[29, 6], [5, 1]]
-          (q, r) = self.qr(m)
-          assert q == 5 and r == [[5, 1], [4, 1]]
-
-      def test_unbounded1(self):
-          # 4x + 2 is unbounded
-          m = [[4, 2], [0, 1]]
-          (q, r) = self.qr(m)
-          assert q is None
-
-      def test_unbounded2(self):
-          # (4x + 2) / 3 is unbounded
-          m = [[4, 2], [3, 0]]
-          (q, r) = self.qr(m)
-          assert q is None
-
-      def test_unbounded3(self):
-          # 2x / (2x - 1) is unbounded, because there is a singularity at x = 1/2
-          # This is in the paper
-          m = [[2, 0], [2, -1]]
-          (q, r) = self.qr(m)
-          assert q is None
-
-      def test_zero_coeff(self):
-          # (1x + 2) / (2x + 3) is bounded between 1/2 and 2/3 (0.5 to 0.666)
-          m = [[1, 2], [2, 3]]
-          (q, r) = self.qr(m)
-          assert q == 0 and r == [[2, 3], [1, 2]]
-
-      def test_too_wide(self):
-          # (7x + 5) / (x + 1) is bounded between 5 and 7. It's too wide to determine tne quotient
-          m = [[7, 5], [1, 1]]
-          (q, r) = self.qr(m)
-          assert q is None
-#+end_src
-
 * Appendix: Tests
-
-#+begin_src python :noweb no-export :tangle ../src/test_cont_frac.py
-  <<TEST_IMPORTS>>
-  <<TEST_R2CF>>
-  <<TEST_QR_MATRIX>>
-  <<TEST_CONVERGENTS>>
-  <<TEST_CF2R>>
-  <<TEST_CF_TRANSFORM>>
-#+end_src
-
-#+begin_src python :tangle no :noweb-ref TEST_R2CF
-  class TestR2cf(object):
-      def test_basic(self):
-          res = r2cf(Rational(254, 100))
-          assert list(res) == [2, 1, 1, 5, 1, 3]
-#+end_src
-
-#+begin_src python :tangle no :noweb-ref TEST_CONVERGENTS
-  # Apply this test to two functions, because they should be equivalent
-  @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
-  def test_convergents_basci1(conv_func):
-      l = list(conv_func(iter([2, 1, 1, 5, 1, 3])))
-      assert l[0] == Rational(2, 1)
-      assert l[1] == Rational(3, 1)
-      assert l[2] == Rational(5, 2)
-      assert l[3] == Rational(28, 11)
-      assert l[4] == Rational(33, 13)
-      assert l[5] == Rational(127, 50)
-      assert len(l) == 6
-
-  # Apply this test to two functions, because they should be equivalent
-  @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
-  def test_convergents_basic2(conv_func):
-      l = list(cf_convergents0(iter([1, 2, 3, 4, 5])))
-      assert l[0] == Rational(1, 1)
-      assert l[1] == Rational(3, 2)
-      assert l[2] == Rational(10, 7)
-      assert l[3] == Rational(43, 30)
-      assert l[4] == Rational(225, 157)
-      assert len(l) == 5
-#+end_src
-
-#+begin_src python :tangle no :noweb-ref TEST_CF2R
-  # cf2r0 and cf2r1 should be equivalent
-  @pytest.mark.parametrize('cf2r_func', [cf2r0, cf2r1])
-  def test_cf2r(cf2r_func):
-      assert cf2r_func([2, 1, 1, 5, 1, 3]) == Rational(127, 50)
-      assert cf2r_func([1, 2, 3, 4, 5]) == Rational(225, 157)
-#+end_src
-
-#+begin_src python :tangle no :noweb-ref TEST_CF_TRANSFORM
-  class TestCFTransform(object):
-      def test_cf_transform_basic1(self):
-          """ 2 * [2, 1, 1, 5, 1] == 66/13"""
-          m0 = np.array([[2, 0], [0, 1]], int)
-          cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0))
-          cf2 = list(r2cf(Rational(66, 13)))
-          assert cf1 == cf2
-
-      def test_cf_transform_basic1(self):
-          """ 1 / [2, 1, 1, 5, 1] == [0, 2, 1, 1, 5, 1]"""
-          m0 = np.array([[0, 1], [1, 0]], int)
-          cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0))
-          cf2 = [0, 2, 1, 1, 5, 1]
-          assert cf1 == cf2
-#+end_src
-
+#+INCLUDE: tests.org
 * Appendix: Display utilities
 #+begin_src python :noweb no-export :tangle ../src/cont_frac_io.py
   <<IO_IMPORTS>>
@@ -1032,10 +963,4 @@ Some miscellaneous pretty printing utilities:
 #+begin_src python :tangle no :noweb-ref IO_IMPORTS
   from cont_frac import *
   from functools import reduce
-#+end_src
-
-#+begin_src python :tangle no :noweb-ref TEST_IMPORTS
-  import numpy as np
-  import pytest
-  from cont_frac import *
 #+end_src

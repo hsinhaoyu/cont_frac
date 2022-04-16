@@ -1,0 +1,88 @@
+\documentclass[preview]{standalone}
+\usepackage{colortbl}
+\usepackage{amsmath}
+\begin{document}
+
+\begin{tabular}{ccc}
+
+%%%%%%%%%% first row
+\begin{tabular}{ c c c | c}
+    &  &  & \\  
+    \hline
+    & \cellcolor{yellow} 0 & \cellcolor{yellow} 0  & \\
+    & \cellcolor{yellow} 1 & \cellcolor{yellow} 0  &
+\end{tabular} & 
+
+\parbox{4cm}{
+    \begin{center}
+    \begin{equation*}
+    \begin{split}
+        \frac{xy}{1} \\
+        = x \cdot y
+    \end{split}
+    \end{equation*}
+    \end{center}
+} &
+\begin{tabular}{ c c c | c}
+    & &  & \\  
+    \hline
+    & \cellcolor{yellow} 0 & \cellcolor{yellow} 1  & \\
+    & \cellcolor{yellow} 0 & \cellcolor{yellow} 0  & \\
+\end{tabular} \\
+
+%%%%%%%%%%%%% second row
+
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    \cellcolor{yellow} 0  & \cellcolor{yellow} 0 & 0  & \\
+    \cellcolor{yellow} $a_1$ & \cellcolor{yellow} 1 & 0  &
+\end{tabular} & 
+
+\parbox{4cm}{
+    \begin{center}
+    \begin{equation*}
+    \begin{split}
+        \frac{a_1 xy + y}{x} \\
+        = (a_1 + \frac{1}{x}) \cdot y
+    \end{split}
+    \end{equation*}
+    \end{center}
+} &
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    \cellcolor{yellow} 1  & \cellcolor{yellow} 0 & 1  & \\
+    \cellcolor{yellow} 0 & \cellcolor{yellow} 0 & 0  & \\
+\end{tabular} \\
+
+%%%%%%%%%%%%%% third row
+
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    0  & 0 & 0  & \\
+    \cellcolor{yellow} $a_1$ & \cellcolor{yellow} 1 & 0  & $b_1$ \\
+    \cellcolor{yellow} $a_1 b_1 $ & \cellcolor{yellow} $b_1$  &  & \\
+\end{tabular} & 
+
+\parbox{4cm}{
+    \begin{center}
+    \begin{equation*}
+    \begin{split}
+        \frac{a_1 b_1x y + b_1 y + a_1 x + 1}{xy} \\
+        = (a_1 + \frac{1}{x}) \cdot (b_1 + \frac{1}{y})
+    \end{split}
+    \end{equation*}
+    \end{center}
+} &
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    1  & 0 & 1  & \\
+    \cellcolor{yellow} 0 & \cellcolor{yellow} 0 & 0  & $b_1$ \\
+    \cellcolor{yellow} 1 & \cellcolor{yellow} 0  &  & \\
+\end{tabular} 
+
+\end{tabular}
+\end{document}

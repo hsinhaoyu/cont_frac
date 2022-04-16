@@ -90,6 +90,12 @@ class TestQRMatrix(object):
         (q, r) = self.qr(m)
         assert q == 0 and r == [[2, 3], [1, 2]]
 
+    def test_too_wide(self):
+        # (7x + 5) / (x + 1) is bounded between 5 and 7. It's too wide to determine tne quotient
+        m = [[7, 5], [1, 1]]
+        (q, r) = self.qr(m)
+        assert q is None
+
 
 # Apply this test to two functions, because they should be equivalent
 @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
@@ -138,3 +144,19 @@ class TestCFTransform(object):
         cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0=m0))
         cf2 = [0, 2, 1, 1, 5, 1]
         assert cf1 == cf2
+
+
+class TestBiho(object):
+
+    def test_biho_basic1(self):
+        (a, b, c, d, e, f, g, h) = (1, 2, 3, 4, 5, 6, 7, 8)
+        m = np.array([[a, b, c, d], [e, f, g, h]])
+        t = tFrom2x4(m)
+        assert np.array_equal(t, np.array([[[b, d], [a, c]], [[f, h], [e,
+                                                                       g]]]))
+
+    def test_biho_basic2(self):
+        (a, b, c, d, e, f, g, h) = (1, 2, 3, 4, 5, 6, 7, 8)
+        m = np.array([[a, b, c, d], [e, f, g, h]])
+        t = np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
+        assert np.array_equal(tTo2x4(t), m)

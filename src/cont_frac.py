@@ -111,7 +111,7 @@ def flip_remain(m: np.ndarray, q: int):
 
 
 def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
-    """Calculate the quotient and the reminder of a 2x2 matrix"""
+    """Calculate the quotient and the remainder of a 2x2 matrix"""
 
     assert not (m[1][0] == 0 and m[1][1] == 0)
     # this means that the series has already ended. Nothing further needs to be done
@@ -145,10 +145,10 @@ def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
                 m2 = flip_remain(m2, d0)
                 return d0, m2
             else:
-                # The bounds are not tight enough to determine the quotiemt
+                # The bounds are not tight enough to determine the quotient
                 return (None, identity_m)
         else:
-            # The bounds are not tight enough to determine the quotiemt
+            # The bounds are not tight enough to determine the quotient
             return (None, identity_m)
 
 
@@ -221,3 +221,31 @@ def cf_sqrt2():
     yield 1
     while True:
         yield 2
+
+
+def tFrom2x4(m: np.ndarray) -> np.ndarray:
+    ((a, b, c, d), (e, f, g, h)) = m.tolist()
+    return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
+
+
+def tTo2x4(m: np.ndarray) -> np.ndarray:
+    (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
+    return np.array([[a, b, c, d], [e, f, g, h]])
+
+
+def tForAddition() -> np.ndarray:
+    return np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+
+
+def tForMultiplication() -> np.ndarray:
+    return np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+
+
+def apply_a(t: np.ndarray, a: int):
+    ha = h(a)
+    return np.einsum('dyx,xz->dyz', t, ha)
+
+
+def apply_b(t: np.ndarray, b: int):
+    hb = h(b)
+    return np.einsum('dyx,yz->dxz', t, hb)

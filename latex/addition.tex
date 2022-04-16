@@ -1,0 +1,88 @@
+\documentclass[preview]{standalone}
+\usepackage{colortbl}
+\usepackage{amsmath}
+\begin{document}
+
+\begin{tabular}{ccc}
+
+
+\begin{tabular}{ c c c | c}
+    &  &  & \\  
+    \hline
+    & \cellcolor{yellow} 1 & \cellcolor{yellow} 0  & \\
+    & \cellcolor{yellow} 0 & \cellcolor{yellow} 1  &
+\end{tabular} & 
+
+\parbox{4cm}{
+    \begin{center}
+    \begin{equation*}
+    \begin{split}
+        \frac{x + y}{1} \\
+        = x + y
+    \end{split}
+    \end{equation*}
+    \end{center}
+} &
+\begin{tabular}{ c c c | c}
+    & &  & \\  
+    \hline
+    & \cellcolor{yellow} 0 & \cellcolor{yellow} 1  & \\
+    & \cellcolor{yellow} 0 & \cellcolor{yellow} 0  & \\
+\end{tabular} \\
+
+%%%%%%%%%%%%%
+
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    \cellcolor{yellow} $a_1$  & \cellcolor{yellow} 1 & 0  & \\
+    \cellcolor{yellow} 1 & \cellcolor{yellow} 0 & 1  &
+\end{tabular} & 
+
+\parbox{4cm}{
+    \begin{center}
+    \begin{equation*}
+    \begin{split}
+        \frac{xy + a_1 x + 1}{xy} \\
+        = (a_1 + \frac{1}{x}) + y
+    \end{split}
+    \end{equation*}
+    \end{center}
+} &
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    \cellcolor{yellow} 1  & \cellcolor{yellow} 0 & 1  & \\
+    \cellcolor{yellow} 0 & \cellcolor{yellow} 0 & 0  & \\
+\end{tabular} \\
+
+%%%%%%%%%%%%%% 
+
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    $a_1$  & 1 & 0  & \\
+    \cellcolor{yellow} 1 & \cellcolor{yellow} 0 & 1  & $b_1$ \\
+    \cellcolor{yellow} $a_1 + b_1 $ & \cellcolor{yellow} 1  &  & \\
+\end{tabular} & 
+
+\parbox{4cm}{
+    \begin{center}
+    \begin{equation*}
+    \begin{split}
+        \frac{(a_1+b_1)xy + x + y}{xy} \\
+        = (a_1 + \frac{1}{x}) + (b_1 + \frac{1}{y})
+    \end{split}
+    \end{equation*}
+    \end{center}
+} &
+\begin{tabular}{ c c c | c}
+    & $a_1$ &  & \\  
+    \hline
+    1  & 0 & 1  & \\
+    \cellcolor{yellow} 0 & \cellcolor{yellow} 0 & 0  & $b_1$ \\
+    \cellcolor{yellow} 1 & \cellcolor{yellow} 0  &  & \\
+\end{tabular} 
+
+\end{tabular}
+\end{document}
