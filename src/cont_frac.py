@@ -246,6 +246,10 @@ def apply_a(t: np.ndarray, a: int):
     return np.einsum('dyx,xz->dyz', t, ha)
 
 
+def h_rotated(b: int) -> np.ndarray:
+    return np.array([[0, 1], [1, b]])
+
+
 def apply_b(t: np.ndarray, b: int):
-    hb = h(b)
-    return np.einsum('dyx,yz->dxz', t, hb)
+    hb = h_rotated(b)
+    return np.einsum('yz,dyx->dxz', hb, t)
