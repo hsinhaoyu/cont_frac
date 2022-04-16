@@ -252,4 +252,5 @@ def h_rotated(b: int) -> np.ndarray:
 
 def apply_b(t: np.ndarray, b: int):
     hb = h_rotated(b)
-    return np.einsum('yz,dyx->dxz', hb, t)
+    #return np.einsum('yz,dyx->dxz', hb, t)
+    return np.einsum('zy,dyx->dzx', hb, t)

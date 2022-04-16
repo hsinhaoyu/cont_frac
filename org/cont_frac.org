@@ -658,11 +658,14 @@ Applying new coefficients is implemented with my favorite Numpy function: =einsu
 
   def h_rotated(b: int) -> np.ndarray:
       return np.array([[0, 1], [1, b]])
-
+      
   def apply_b(t: np.ndarray, b: int):
       hb = h_rotated(b)
-      return np.einsum('yz,dyx->dxz', hb, t)
+      #return np.einsum('yz,dyx->dxz', hb, t)
+      return np.einsum('zy,dyx->dzx', hb, t)      
 #+end_src
+
+#+RESULTS:
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
@@ -693,31 +696,60 @@ Applying new coefficients is implemented with my favorite Numpy function: =einsu
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = tForAddition()
+  print(m0, "\n")
   m1 = apply_b(m0, 2)
   print(m1)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[[[1 0]
+  [0 1]]
+
+ [[0 1]
+  [0 0]]] 
+
+[[[1 2]
+  [0 1]]
+
+ [[0 1]
+  [0 0]]]
+#+end_example
+
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = tForAddition()
+  print(m0[0])
+  m1 = apply_b(m0, 2)
+  print(m1[0])
+#+end_src
+
+#+RESULTS:
+: [[1 0]
+:  [0 1]]
+: [[0 1]
+:  [1 2]]
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m = tForAddition()
+  m = apply_a(m, 2)
+  print(m)
+  m = apply_b(m, 3)
+  m = apply_a(m, 4)
+  m = apply_b(m, 5)  
+  print(tTo2x4(m))
 #+end_src
 
 #+RESULTS:
 : [[[2 1]
 :   [1 0]]
 : 
-:  [[0 0]
-:   [2 1]]]
-
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  m0 = tForAddition()
-  m1 = apply_b(m0, 2)
-  print(m1)
-#+end_src
-
-#+RESULTS:
-: [[[0 1]
-:   [1 2]]
-: 
-:  [[0 0]
-:   [0 1]]]
+:  [[1 0]
+:   [0 0]]]
+: [[109  21  26   5]
+:  [ 20   4   5   1]]
 
 * Appendix: Calculating the quotient and the remainder of a convergent in matrix form
 This is just calculus
