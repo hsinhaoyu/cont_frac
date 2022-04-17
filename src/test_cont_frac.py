@@ -4,14 +4,12 @@ from cont_frac import *
 
 
 class TestR2cf(object):
-
     def test_basic(self):
         res = r2cf(Rational(254, 100))
         assert list(res) == [2, 1, 1, 5, 1, 3]
 
 
 class TestQRMatrix(object):
-
     def qr(self, m):
         res = qr_matrix(np.array(m))
         if res is None:
@@ -130,7 +128,6 @@ def test_cf2r(cf2r_func):
 
 
 class TestCFTransform(object):
-
     def test_cf_transform_basic1(self):
         """ 2 * [2, 1, 1, 5, 1] == 66/13"""
         m0 = np.array([[2, 0], [0, 1]], int)
@@ -147,7 +144,6 @@ class TestCFTransform(object):
 
 
 class TestBiho(object):
-
     def test_biho_basic1(self):
         (a, b, c, d, e, f, g, h) = (1, 2, 3, 4, 5, 6, 7, 8)
         m = np.array([[a, b, c, d], [e, f, g, h]])

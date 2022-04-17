@@ -7,7 +7,6 @@ from itertools import tee, islice
 
 class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
     """Rational(a, b) = a/b"""
-
     def __repr__(self):
         return f'{self.a}/{self.b}'
 
@@ -37,7 +36,6 @@ def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
 def r2cf(rn: Rational) -> Iterator[int]:
     """Represent a rational number as a continued fraction.
     Return an iterator of integers"""
-
     def second(x: tuple):
         return x[1]
 
@@ -252,5 +250,4 @@ def h_rotated(b: int) -> np.ndarray:
 
 def apply_b(t: np.ndarray, b: int):
     hb = h_rotated(b)
-    #return np.einsum('yz,dyx->dxz', hb, t)
     return np.einsum('zy,dyx->dzx', hb, t)

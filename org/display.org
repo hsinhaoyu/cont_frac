@@ -73,6 +73,30 @@
                   s = s + "\n"
           s = s[:-1] # remove the last "\n"
           return s
+
+      def to_array(self):
+          main_content = self.board.copy()
+          top_content = self.top.copy()
+          right_content = self.right.copy()
+          m = len(main_content)
+          n = len(main_content[0])
+
+          delta = n - len(top_content)
+          top_content = [None] * delta + top_content + [None]
+
+          delta = m - len(right_content)
+          right_content = right_content + [None] * delta
+
+          zz = [top_content]
+          for i in range(m):
+              zz = zz + [main_content[i] + [right_content[i]]]
+          return zz
+
+      def export_csv(self, filename):
+          array = self.to_array()
+          with open(filename, mode = 'w') as out_file:
+              writer = csv.writer(out_file)
+              writer.writerows(array)
 #+end_src
 
 Some miscellaneous pretty printing utilities:
@@ -111,7 +135,7 @@ Some miscellaneous pretty printing utilities:
       (cf1, cf2) = tee(cf)
       for (mat, a) in zip(cf_convergents1_(cf1), cf2):
           chart.push_column(mat, a)
-      print(chart)
+      return chart
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref TABS
@@ -149,7 +173,7 @@ Some miscellaneous pretty printing utilities:
           chart.push_right(q)
           pass
 
-      print(chart)
+      return chart
 #+end_src
 * LaTeX utilities
 #+begin_src python :tangle no :noweb-ref LATEX_UTILS
@@ -185,4 +209,5 @@ Some miscellaneous pretty printing utilities:
 #+begin_src python :tangle no :noweb-ref IO_IMPORTS
   from cont_frac import *
   from functools import reduce
+  import csv
 #+end_src

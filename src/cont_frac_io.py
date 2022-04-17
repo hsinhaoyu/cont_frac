@@ -1,10 +1,10 @@
 from cont_frac import *
 from functools import reduce
+import csv
 
 
 # A class to facilitate tabular displays
 class Chart(object):
-
     def __init__(self,
                  m=np.identity(2, int),
                  display_top=True,
@@ -73,9 +73,32 @@ class Chart(object):
         s = s[:-1]  # remove the last "\n"
         return s
 
+    def to_array(self):
+        main_content = self.board.copy()
+        top_content = self.top.copy()
+        right_content = self.right.copy()
+        m = len(main_content)
+        n = len(main_content[0])
+
+        delta = n - len(top_content)
+        top_content = [None] * delta + top_content + [None]
+
+        delta = m - len(right_content)
+        right_content = right_content + [None] * delta
+
+        zz = [top_content]
+        for i in range(m):
+            zz = zz + [main_content[i] + [right_content[i]]]
+        return zz
+
+    def export_csv(self, filename):
+        array = self.to_array()
+        with open(filename, mode='w') as out_file:
+            writer = csv.writer(out_file)
+            writer.writerows(array)
+
 
 def r2cf_tab(rn: Rational):
-
     def row(st: str, x: tuple):
         b, q = x
         return st + f"{b : > 5}  {q : < 5}\n"
@@ -89,7 +112,7 @@ def cf_convergents1_tab(cf: Iterator[int]):
     (cf1, cf2) = tee(cf)
     for (mat, a) in zip(cf_convergents1_(cf1), cf2):
         chart.push_column(mat, a)
-    print(chart)
+    return chart
 
 
 def euclid_matrix_tab(m):
@@ -128,7 +151,7 @@ def cf_transform_tab(cf: Iterator[int],
         chart.push_right(q)
         pass
 
-    print(chart)
+    return chart
 
 
 # Utilities functions for LaTeX displays

@@ -282,7 +282,7 @@ Here's a longer sequence that we used previously:
 A very charming thing that Gosper did was that he used a compact tabulated format to illustrate the process. It's unnecessary for the computation, but I think it looks pretty cool:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  cf_convergents1_tab(iter([5, 1, 4]))
+  print(cf_convergents1_tab(iter([5, 1, 4])))
 #+end_src
 
 #+RESULTS:
@@ -336,7 +336,7 @@ This explains the shift, and we have recovered the formula in =cf_convergents0=.
 Here's a longer series:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  cf_convergents1_tab(iter([2, 1, 1, 5, 1, 3]))
+  print(cf_convergents1_tab(iter([2, 1, 1, 5, 1, 3])))
 #+end_src
 
 #+RESULTS:
@@ -481,7 +481,7 @@ This seems to be anti-climatic for quite a bit of work... but here's something c
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  cf_transform_tab(iter([2, 1, 1, 5, 1, 3]), field_width = 3)
+  print(cf_transform_tab(iter([2, 1, 1, 5, 1, 3]), field_width = 3))
 #+end_src
 
 #+RESULTS:
@@ -524,7 +524,7 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
   m0 = np.array([[2, 0], [0, 1]], int)
   cd = cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0)
   print(" 2 * [2, 1, 1, 5, 1] is ", list(cd), "\n")
-  cf_transform_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
+  print(cf_transform_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3))
 #+end_src
 
 #+RESULTS:
@@ -543,7 +543,7 @@ Previously, we saw that the reciprocal of a continuous fraction has an addition 
   m0 = np.array([[0, 1], [1, 0]], int)
   cf = cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0)
   print("The reciprocal of [2, 1, 1, 5, 1] is ", list(cf), "\n")
-  cf_transform_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3)
+  print(cf_transform_tab(iter([2, 1, 1, 5, 1]), m0 = m0, field_width = 3))
 #+end_src
 
 #+RESULTS:
@@ -575,7 +575,7 @@ Then, we just need to run =cf_transform= with $\begin{bmatrix} 0 & 2 \\ -1 & 3 \
   m0 = np.array([[0, 2], [-1, 3]], int)
   cf = islice(cf_transform(cf_sqrt2(), m0 = m0), 6)
   print(" 2 / (3 - sqrt(2)) is ", pp_inf_cf(list(cf)), "\n")
-  cf_transform_tab(cf_sqrt2(), m0 = m0, n = 6, field_width = 3)
+  print(cf_transform_tab(cf_sqrt2(), m0 = m0, n = 6, field_width = 3))
 #+end_src
 
 #+RESULTS:
@@ -600,7 +600,7 @@ Another example: what is $\tanh{\frac{1}{2}} = \frac{e-1}{e+1}$? We have already
   m0 = np.array([[1, -1], [1, 1]], int)
   cf = islice(cf_transform(cf_e(), m0 = m0), 6)
   print("(e-1)/(e+1) is ", pp_inf_cf(list(cf)), "\n")
-  cf_transform_tab(cf_e(), m0 = m0, n = 12, field_width = 3)
+  print(cf_transform_tab(cf_e(), m0 = m0, n = 12, field_width = 3))
 #+end_src
 
 #+RESULTS:
@@ -661,95 +661,55 @@ Applying new coefficients is implemented with my favorite Numpy function: =einsu
       
   def apply_b(t: np.ndarray, b: int):
       hb = h_rotated(b)
-      #return np.einsum('yz,dyx->dxz', hb, t)
       return np.einsum('zy,dyx->dzx', hb, t)      
 #+end_src
 
-#+RESULTS:
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  m0 = tForAddition()
-  m1 = apply_a(m0, 2)
-  print(m1)
-  m2 = apply_a(m1, 3)
-  print()
-  print(m2)
-#+end_src
-
-#+RESULTS:
-#+begin_example
-[[[2 1]
-  [1 0]]
-
- [[1 0]
-  [0 0]]]
-
-[[[7 2]
-  [3 1]]
-
- [[3 1]
-  [0 0]]]
-#+end_example
-
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  m0 = tForAddition()
-  print(m0, "\n")
-  m1 = apply_b(m0, 2)
-  print(m1)
-#+end_src
-
-#+RESULTS:
-#+begin_example
-[[[1 0]
-  [0 1]]
-
- [[0 1]
-  [0 0]]] 
-
-[[[1 2]
-  [0 1]]
-
- [[0 1]
-  [0 0]]]
-#+end_example
-
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  m0 = tForAddition()
-  print(m0[0])
-  m1 = apply_b(m0, 2)
-  print(m1[0])
-#+end_src
-
-#+RESULTS:
-: [[1 0]
-:  [0 1]]
-: [[0 1]
-:  [1 2]]
-
+To make sure that it works:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m = tForAddition()
   m = apply_a(m, 2)
-  print(m)
   m = apply_b(m, 3)
   m = apply_a(m, 4)
-  m = apply_b(m, 5)  
+  m = apply_b(m, 5)
+  print(m, "\n")
   print(tTo2x4(m))
 #+end_src
 
 #+RESULTS:
-: [[[2 1]
-:   [1 0]]
+: [[[ 21   5]
+:   [109  26]]
 : 
-:  [[1 0]
-:   [0 0]]]
+:  [[  4   1]
+:   [ 20   5]]] 
+: 
 : [[109  21  26   5]
 :  [ 20   4   5   1]]
+
+$\begin{bmatrix} 109 & 21 & 26 & 5 \\ 20 & 4 & 5 & 1 \end{bmatrix}$ means $\frac{109xy + 21x + 26y + 5}{20xy + 4x + 5y + 1}$, which equals $(2+\frac{1}{4+\frac{1}{x}}) + (3+\frac{1}{5+\frac{1}{y}})$. That's correct.
+
+Let's try multiplication:
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m = tForMultiplication()
+  m = apply_a(m, 2)
+  m = apply_b(m, 3)
+  m = apply_a(m, 4)
+  print(m, "\n")
+  print(tTo2x4(m))
+#+end_src
+
+#+RESULTS:
+: [[[ 9  2]
+:   [27  6]]
+: 
+:  [[ 0  0]
+:   [ 4  1]]] 
+: 
+: [[27  9  6  2]
+:  [ 4  0  1  0]]
+
+$\frac{27xy+9x+6y+2}{4xy+y} = (2 + \frac{1}{4+\frac{1}{x}}) \cdot (3+\frac{1}{y})$. That's also correct.
 
 * Appendix: Calculating the quotient and the remainder of a convergent in matrix form
 This is just calculus

@@ -1,0 +1,75 @@
+* Convergents
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  zz=cf_convergents1_tab(islice(cf_e(),10))
+  print(zz)
+  zz.export_csv('../exports/cf_convergents1_tab_1.csv')
+#+end_src
+
+#+RESULTS:
+:        1   6   1   1   4   1   1   2   1   2    
+:  1457 1264 193 106  87  19  11   8   3   2   1   0
+:  536 465  71  39  32   7   4   3   1   1   0   1
+
+#+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
+  from cont_frac import *
+  from cont_frac_io import *
+  from itertools import islice
+#+end_src
+
+** Transformations
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = np.array([[0, 2], [-1, 3]], int)
+  zz = cf_transform_tab(cf_sqrt2(), m0 = m0, n = 10, field_width = 3)
+  print(zz)
+  zz.export_csv('../exports/cf_transform_tab_1.csv')
+#+end_src
+
+#+RESULTS:
+#+begin_example
+     2  2  2  2  2  2  2  2  2  1   
+                          4  2  0  2   
+                       8  3  2 -1  3  1 
+                    5  2  1  0        3 
+                10  4  2  0           1 
+              5  2  1  0              4 
+          10  4  2  0                 1 
+        5  2  1  0                    4 
+    10  4  2  0                       1 
+  5  2  1  0                          4 
+  4  2  0                             1 
+  1  0                                4 
+#+end_example
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = np.array([[1, -1], [1, 1]], int)
+  zz = cf_transform_tab(cf_e(), m0=m0, n=18, field_width=3)
+  print(zz)
+  zz.export_csv('../exports/cf_transform_tab_2.csv')
+#+end_src
+
+#+RESULTS:
+#+begin_example
+    12  1  1 10  1  1  8  1  1  6  1  1  4  1  1  2  1  2   
+                                                     1  1 -1   
+                                                  4  3  1  1  0 
+                                        12  7  5  2  1  1     2 
+                               20 11  9  2  1  1  0  1        6 
+                      28 15 13  2  1  1  0  1                 10
+             36 19 17  2  1  1  0  1                          14
+    44 23 21  2  1  1  0  1                                   18
+ 25  2  1  1  0  1                                            22
+  1  0  1                                                     25
+#+end_example
+
+* Imports
+#+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
+  from cont_frac import *
+  from cont_frac_io import *
+  from itertools import islice
+#+end_src
+

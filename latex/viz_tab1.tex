@@ -1,0 +1,18 @@
+\documentclass[preview]{standalone}
+\usepackage{graphicx}
+\usepackage[rightcaption]{sidecap}
+\usepackage{caption}
+\graphicspath{ {/Users/hhyu/projects/cont_frac/figs} }
+\sidecaptionvpos{figure}{c}
+\begin{document}
+
+\begin{SCfigure}[0.5][h]
+	\caption*{
+	    $\sqrt{2} = 1 + \frac{1}{2+ \cdots}$ \\ 
+	    \\\\
+	    $\frac{2}{3-\sqrt{2}} = 1 + \frac{1}{3+\frac{1}{1+\frac{1}{4 + \cdots}}}$
+	}
+	\includegraphics[width=0.6\textwidth]{cf_transform_tab1.png}
+\end{SCfigure}
+
+\end{document}

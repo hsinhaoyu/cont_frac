@@ -1,0 +1,18 @@
+\documentclass[preview]{standalone}
+\usepackage{graphicx}
+\usepackage[rightcaption]{sidecap}
+\usepackage{caption}
+\graphicspath{ {/Users/hhyu/projects/cont_frac/figs} }
+\sidecaptionvpos{figure}{c}
+\begin{document}
+
+\begin{SCfigure}[0.5][h]
+	\caption*{
+	    $e = 2 + \frac{1}{1+ \frac{1}{(2k+2)+\frac{1}{1+ \cdots}}}$ \\ 
+	    \\\\
+	    $\frac{e-1}{e+1} = \frac{1}{(4k+2) + \frac{1}{\cdots}}$
+	}
+	\includegraphics[width=0.6\textwidth]{cf_transform_tab2.png}
+\end{SCfigure}
+
+\end{document}
