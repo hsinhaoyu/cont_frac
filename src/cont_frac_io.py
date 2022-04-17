@@ -130,27 +130,21 @@ def cf_transform_tab(cf: Iterator[int],
     if n:
         cf = islice(cf, n)
 
-    (cf1, cf2) = tee(cf)
-
-    res = cf_transform_(cf2, m0)
+    res = cf_transform_(cf, m0)
     # res may be longer than cf1, res might not be empty after this loop
-    for (a, (q, r, m)) in zip(cf1, res):
-        chart.push_column(m, a)
+    for (q, r, m, a, new_a) in res:
+        if new_a:
+            chart.push_column(m, a)
         if q is None:
             # this means that no euclid step was performed
             # do nothing
             pass
         else:
-            chart.push_row(r, q)
-
-    for item in res:
-        # at this point, the quotients are quotients for rational numbers rather than matrices
-        # so r should be None
-        (q, r, m) = item
-        assert r is None
-        chart.push_right(q)
-        pass
-
+            if r is not None:
+                chart.push_row(r, q)
+            else:
+                # r is None, meaning that the quotients are for rational numbers rathen than matrices
+                chart.push_right(q)
     return chart
 
 

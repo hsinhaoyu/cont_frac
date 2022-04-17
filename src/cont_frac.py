@@ -169,31 +169,32 @@ def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
 
 def cf_transform_(
     cf: Iterator[int], m0: np.ndarray = np.identity(2, int)
-) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
+) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray, int,
+                    bool]]:
     """Transform the input continued fraction by matrix m
     returns another continued fraction"""
     m = m0
     for a in cf:
         m = np.matmul(m, h(a))
-        q = None
+        new_a = True
         for (q, r) in euclid_matrix_(m):
-            if q is not None:
-                yield q, r, m
-                m = r
-        if q is None:
+            yield q, r, m, a, new_a
+            new_a = False
+            m = r
+        if new_a:
             # Nothing was yielded. That means for this convergent cannot be turned into a continued fraction
-            yield (None, None, m)
+            yield (None, None, m, a, new_a)
 
     # we will only reach this point if the series is finite
     if m[1][0] != 0:
         for s in r2cf(Rational(m[0][0], m[1][0])):
-            yield s, None, m
+            yield s, None, m, a, False
 
 
 def cf_transform(
     cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
     for res in cf_transform_(cf, m0):
-        (q, r, m) = res
+        (q, r, m, a, new_a) = res
         if q is not None:
             yield q
             # q can be None, indicating that more coefficients are needed

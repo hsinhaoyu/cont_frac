@@ -442,29 +442,29 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
-  def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray]]:
+  def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray, int, bool]]:
       """Transform the input continued fraction by matrix m
       returns another continued fraction"""
       m = m0
       for a in cf:
           m = np.matmul(m, h(a))
-          q = None
+          new_a = True
           for (q, r) in euclid_matrix_(m):
-              if q is not None:
-                  yield q, r, m
-                  m = r
-          if q is None:
+              yield q, r, m, a, new_a
+              new_a = False
+              m = r
+          if new_a:
               # Nothing was yielded. That means for this convergent cannot be turned into a continued fraction
-              yield (None, None, m)
+              yield (None, None, m, a, new_a)
 
       # we will only reach this point if the series is finite
       if m[1][0] != 0:
           for s in r2cf(Rational(m[0][0], m[1][0])):
-              yield s, None, m
+              yield s, None, m, a, False
 
   def cf_transform(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
       for res in cf_transform_(cf, m0):
-          (q, r, m) = res
+          (q, r, m, a, new_a) = res
           if q is not None:
               yield q
               # q can be None, indicating that more coefficients are needed
@@ -537,6 +537,7 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
 :        10  6  4  2  0   
 :  13 11  2  1  1  0  1  5 
 :   1  1  0  1           13
+
 
 Take the term $\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}$ for example. The range is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore has to wait for the next coefficient to resolve it. That's why the transformed continued fraction has a smaller number of terms. 
 
@@ -619,6 +620,7 @@ Another example: what is $\tanh{\frac{1}{2}} = \frac{e-1}{e+1}$? We have already
  17  2  1  1  0  1                          14
   1  0  1                                   17
 #+end_example
+
 The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term.
 
 * Arithmetic: bilinear homographic functions

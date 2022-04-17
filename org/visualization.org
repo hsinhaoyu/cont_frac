@@ -120,6 +120,18 @@
   1  0  1                                                     25
 #+end_example
 
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = np.array([[2, 0], [0, 1]], int)
+  #zz = islice(cf_transform(cf_e(), m0=m0), 10)
+  #print(list(zz))
+  zz = cf_transform_tab(cf_e(), m0=m0, n=30, field_width=3)
+  #print(zz)
+  zz.export_csv('../exports/cf_transform_tab_3.csv')
+#+end_src
+
+#+RESULTS:
+
 * Imports
 #+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
   from cont_frac import *
