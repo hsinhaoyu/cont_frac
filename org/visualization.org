@@ -1,4 +1,58 @@
-* Convergents
+* Plot convergent function
+#+begin_src python :results file :var filename="../figs/fig1.png"
+  import numpy as np
+  import matplotlib.pyplot as plt
+
+  @np.vectorize
+  def f(x):
+      return (29.0 * x + 6) / (5.0 * x + 1)
+
+  x = np.linspace(0, 20, 20)
+  y1 = f(x)
+  y2 = [6.0] * len(x)
+  y3 = [5.8] * len(x)
+
+  f, ax = plt.subplots()
+  ax.plot(x, y1, color = 'orange')
+  ax.plot(x, y2, "k--")
+  ax.plot(x, y3, "k--")  
+  ax.set_xlabel('x')
+  ax.set_ylabel('f(x)')
+  ax.set_yticks([5.8, 6.0])
+  ax.set_title(r'$f(x)=\frac{29x+6}{5x+1}$')
+  plt.savefig(filename)  
+#+end_src
+
+#+RESULTS:
+[[file:None]]
+
+* Plot bilinear convergent function
+#+begin_src python :results file :var filename="../figs/fig2.png"
+  import matplotlib.pyplot as plt
+  import numpy as np
+  fig = plt.figure()
+  ax = fig.add_subplot(projection='3d')
+
+  @np.vectorize
+  def f(x, y):
+      return (109.0 * x * y + 21.0 * x + 26.0 * y + 5.0) / (20.0 * x * y + 4 * x + 5 * y + 1)
+
+  X = np.arange(0, 10, 0.1)
+  Y = np.arange(0, 10, 0.1)
+  X, Y = np.meshgrid(X, Y)
+  Z = f(X, Y)
+  surf = ax.plot_surface(X, Y, Z)
+  ax.set_xlabel('x')
+  ax.set_ylabel('y')
+  ax.set_zlabel('f(x, y)')
+  ax.set_title(r'$f(x, y)=\frac{109xy + 21x + 26y + 5}{20xy + 4x + 5y + 1}$')
+  plt.savefig(filename)
+#+end_src
+
+#+RESULTS:
+[[file:None]]
+
+* Export for convergent tabs
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
@@ -18,7 +72,7 @@
   from itertools import islice
 #+end_src
 
-** Transformations
+* Export for transformations
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>

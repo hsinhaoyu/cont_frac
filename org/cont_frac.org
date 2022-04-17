@@ -376,6 +376,10 @@ The first step is to symbolically represent the function as a quotient and a rem
 
 This means that $f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}$. Why is the quotient 5? Since $\lim_{x \to 0} f_3(x) = 6$ and $\lim_{x \to \infty} f_3(x) = \frac{29}{5} = 5.8$, the function is bounded by $5.8 < f_3(x) < 6$ (note that $0 < x < \infty$). The quotient therefore has to be 5.
 
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:../figs/fig1.png]]
+
 Now, we are ready to implement the symbolic form of the Euclidean algorithm by calling =qr_matrix= repeatedly:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
@@ -686,6 +690,10 @@ To make sure that it works:
 :  [ 20   4   5   1]]
 
 $\begin{bmatrix} 109 & 21 & 26 & 5 \\ 20 & 4 & 5 & 1 \end{bmatrix}$ means $\frac{109xy + 21x + 26y + 5}{20xy + 4x + 5y + 1}$, which equals $(2+\frac{1}{4+\frac{1}{x}}) + (3+\frac{1}{5+\frac{1}{y}})$. That's correct.
+
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:../figs/fig2.png]]
 
 Let's try multiplication:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/

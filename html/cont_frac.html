@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-04-17 Sun 15:31 -->
+<!-- 2022-04-17 Sun 16:28 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)</title>
@@ -228,33 +228,33 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgf62f71f">1. Representing rational numbers as continued fractions</a></li>
-<li><a href="#org8375251">2. Calculating the convergents of a continued fraction</a></li>
-<li><a href="#orgce37a19">3. Continued fraction approximation as function compositions</a></li>
-<li><a href="#orgd616e7e">4. Calculating convergents using the matrix notation</a></li>
-<li><a href="#orgf651a0b">5. Turning convergents into continued fractions</a></li>
-<li><a href="#org38cc541">6. Simple transformations of continued fractions</a></li>
-<li><a href="#org12a50ec">7. Arithmetic: bilinear homographic functions</a></li>
-<li><a href="#orge6d1e2e">8. Appendix: Calculating the quotient and the remainder of a convergent in matrix form</a></li>
-<li><a href="#orgf11e01f">9. Appendix: Tests</a>
+<li><a href="#orgfbce3a4">1. Representing rational numbers as continued fractions</a></li>
+<li><a href="#org3abc014">2. Calculating the convergents of a continued fraction</a></li>
+<li><a href="#org8b9a39a">3. Continued fraction approximation as function compositions</a></li>
+<li><a href="#orga9feb63">4. Calculating convergents using the matrix notation</a></li>
+<li><a href="#orgfaf05db">5. Turning convergents into continued fractions</a></li>
+<li><a href="#orgc0a290f">6. Simple transformations of continued fractions</a></li>
+<li><a href="#org4f2afbe">7. Arithmetic: bilinear homographic functions</a></li>
+<li><a href="#orged6c843">8. Appendix: Calculating the quotient and the remainder of a convergent in matrix form</a></li>
+<li><a href="#org9ae24ab">9. Appendix: Tests</a>
 <ul>
-<li><a href="#orged693ad">9.1. Using continued fractions to represent rational numbers</a></li>
-<li><a href="#orgcb1e9e5">9.2. Convergents</a></li>
-<li><a href="#org467dd26">9.3. Symbolic Euclidean algorithm</a></li>
-<li><a href="#org0ea57bf">9.4. Transformations of continued fractions</a></li>
-<li><a href="#org1293701">9.5. Bihomography</a></li>
-<li><a href="#org3735ae1">9.6. Imports</a></li>
+<li><a href="#orgaec9f93">9.1. Using continued fractions to represent rational numbers</a></li>
+<li><a href="#org37fe709">9.2. Convergents</a></li>
+<li><a href="#org7bae5ba">9.3. Symbolic Euclidean algorithm</a></li>
+<li><a href="#org080ef29">9.4. Transformations of continued fractions</a></li>
+<li><a href="#orgda85bb0">9.5. Bihomography</a></li>
+<li><a href="#org4d3062a">9.6. Imports</a></li>
 </ul>
 </li>
-<li><a href="#org34d51a8">10. Appendix: Display utilities</a>
+<li><a href="#orgfbc38e0">10. Appendix: Display utilities</a>
 <ul>
-<li><a href="#orgf63c9e4">10.1. Chart utilities</a></li>
-<li><a href="#orgefa53ac">10.2. Tabulated displays</a></li>
-<li><a href="#org493b461">10.3. LaTeX utilities</a></li>
-<li><a href="#org6201820">10.4. Imports</a></li>
+<li><a href="#org29d6b23">10.1. Chart utilities</a></li>
+<li><a href="#org20e1477">10.2. Tabulated displays</a></li>
+<li><a href="#orga17a66c">10.3. LaTeX utilities</a></li>
+<li><a href="#orgc8466fc">10.4. Imports</a></li>
 </ul>
 </li>
-<li><a href="#org903b0c0">11. Appendix: Imports</a></li>
+<li><a href="#orgcefeba2">11. Appendix: Imports</a></li>
 </ul>
 </div>
 </div>
@@ -271,8 +271,8 @@
 </pre>
 </div>
 
-<div id="outline-container-orgf62f71f" class="outline-2">
-<h2 id="orgf62f71f"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
+<div id="outline-container-orgfbce3a4" class="outline-2">
+<h2 id="orgfbce3a4"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Since we'll use rational numbers a lot, let's define a class:
@@ -401,8 +401,8 @@ It's the same sequence with an additional 0 at the beginning! This is our first 
 </div>
 </div>
 
-<div id="outline-container-org8375251" class="outline-2">
-<h2 id="org8375251"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
+<div id="outline-container-org3abc014" class="outline-2">
+<h2 id="org3abc014"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
@@ -515,7 +515,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 </pre>
 </div>
 
-<pre class="example" id="orgc316d78">
+<pre class="example" id="org1f98a5b">
 2/1                  2.00000000
 3/1                  3.00000000
 8/3                  2.66666667
@@ -536,8 +536,8 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 </div>
 </div>
 
-<div id="outline-container-orgce37a19" class="outline-2">
-<h2 id="orgce37a19"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
+<div id="outline-container-org8b9a39a" class="outline-2">
+<h2 id="org8b9a39a"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Given the first 3 terms in a continued fraction \([5, 1, 4...]\), let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
@@ -719,8 +719,8 @@ Multiplying the matrix with
 </div>
 </div>
 
-<div id="outline-container-orgd616e7e" class="outline-2">
-<h2 id="orgd616e7e"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
+<div id="outline-container-orga9feb63" class="outline-2">
+<h2 id="orga9feb63"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matrix multiplications:
@@ -747,7 +747,7 @@ Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matr
 </div>
 
 <p>
-Let's try it on the example given in the <a href="#orgce37a19">previous section</a>:
+Let's try it on the example given in the <a href="#org8b9a39a">previous section</a>:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -761,7 +761,7 @@ Let's try it on the example given in the <a href="#orgce37a19">previous section<
 
 
 <p>
-Here's a longer sequence that we used <a href="#org8375251">previously</a>:
+Here's a longer sequence that we used <a href="#org3abc014">previously</a>:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -874,15 +874,15 @@ As before, we define a specialized version of <code>cf_convergents1</code> just 
 </div>
 </div>
 
-<div id="outline-container-orgf651a0b" class="outline-2">
-<h2 id="orgf651a0b"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
+<div id="outline-container-orgfaf05db" class="outline-2">
+<h2 id="orgfaf05db"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 In this section, we'll develop code that calculates convergents as in <code>cf_convergent1</code>, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that the code receives a continued fraction, and just returns the same series. However, this code will become useful in the coming sections.
 </p>
 
 <p>
-Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the last section that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
+Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the <a href="#orga9feb63">last section</a> that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
 \(\begin{bmatrix}
     29 & 6 \\
      5 & 1
@@ -894,9 +894,8 @@ How? The answer is still the Euclidean algorithm, but we have to use it symbolic
 </p>
 
 <p>
-The first step is to symbolically represent the function as a quotient and a remainder (see <code>qr()</code> in <code>r2cf_</code>). I implemented this operation in <code>qr_matrix</code> in the Appendix. We can use it on the third convergent:
+The first step is to symbolically represent the function as a quotient and a remainder (see <code>qr()</code> in <code>r2cf_</code>). I implemented this operation in <code>qr_matrix</code> in the . We can use it on the third convergent:
 </p>
-
 <div class="org-src-container">
 <pre class="src src-python">
 pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
@@ -912,6 +911,12 @@ pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
 <p>
 This means that \(f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}\). Why is the quotient 5? Since \(\lim_{x \to 0} f_3(x) = 6\) and \(\lim_{x \to \infty} f_3(x) = \frac{29}{5} = 5.8\), the function is bounded by \(5.8 < f_3(x) < 6\) (note that \(0 < x < \infty\)). The quotient therefore has to be 5.
 </p>
+
+
+<div id="org9f487bb" class="figure">
+<p><img src="../figs/fig1.png" alt="fig1.png" width="400" />
+</p>
+</div>
 
 <p>
 Now, we are ready to implement the symbolic form of the Euclidean algorithm by calling <code>qr_matrix</code> repeatedly:
@@ -1065,8 +1070,8 @@ The numbers on the right are the outputs of <code>cf_transform</code>.
 </div>
 </div>
 
-<div id="outline-container-org38cc541" class="outline-2">
-<h2 id="org38cc541"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
+<div id="outline-container-orgc0a290f" class="outline-2">
+<h2 id="orgc0a290f"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 The beauty of representing convergents as matrices is that we can transform it with a function of the form \(f(x) = \frac{ax+b}{cx+d}\). All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving <code>cf_transform</code> an initial matrix.
@@ -1133,7 +1138,7 @@ Previously, we saw that the reciprocal of a continuous fraction has an addition 
 </pre>
 </div>
 
-<pre class="example" id="org629c777">
+<pre class="example" id="orgf3cf646">
 The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1] 
 
      1  5  1  1  2   
@@ -1170,7 +1175,7 @@ Then, we just need to run <code>cf_transform</code> with \(\begin{bmatrix} 0 & 2
 </pre>
 </div>
 
-<pre class="example" id="org9a7e028">
+<pre class="example" id="org9cf7083">
 2 / (3 - sqrt(2)) is  [1,3,1,4,1,4...] 
 
     2  2  2  2  2  1   
@@ -1199,7 +1204,7 @@ Another example: what is \(\tanh{\frac{1}{2}} = \frac{e-1}{e+1}\)? We have alrea
 </pre>
 </div>
 
-<pre class="example" id="orga013d8e">
+<pre class="example" id="orga7b75a0">
 (e-1)/(e+1) is  [0,2,6,10,14,18...] 
 
      8  1  1  6  1  1  4  1  1  2  1  2   
@@ -1217,15 +1222,15 @@ The answer is a continued fraction with a simple pattern: after the second term,
 </div>
 </div>
 
-<div id="outline-container-org12a50ec" class="outline-2">
-<h2 id="org12a50ec"><span class="section-number-2">7.</span> Arithmetic: bilinear homographic functions</h2>
+<div id="outline-container-org4f2afbe" class="outline-2">
+<h2 id="org4f2afbe"><span class="section-number-2">7.</span> Arithmetic: bilinear homographic functions</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 When there is just one continued fraction \(a\), the action is on the convergent of the form \(f(x) = \frac{px+q}{rx+s}\), which can be represented with by a matrix \(M = \begin{bmatrix} p & q \\ r & s \end{bmatrix}\). With two continued fractions \(a\) and \(b\), the function generalizes to \(f(x, y) = \frac{axy + bx + cy + d}{exy + fx + gy + h}\), where \(x\) and \(y\) are the unknown terms for \(a\) and \(b\) respectively. This bilinear function can be represented by the 2x2x2 tensor \(T=\begin{bmatrix}\begin{bmatrix} b & d \\ a & c \end{bmatrix}\begin{bmatrix} f & h \\ e & g \end{bmatrix}\end{bmatrix}\), where the first matrix encodes terms in the numerator, and the second encodes terms in the denominator. This particular representation is not necessary for the computation, but it gives the update rules a very nice visual interpretation. When the tensor is viewed as a 2x2x2 cube in 3D, it moves to leftwards when it receives a term of \(a\), and it moves downwards when it receives a term of \(b\). The following figure illustrates this for \(a + b\). For each row, the table on the left illustrates the matrix encoding terms in the numerator, and the table on the right illustrates terms in the denominator. When the two matrices are combined, they describes the function in the middle panel. We start at the initial condition in the first row, add the first coefficient of \(a\) in the second row, and then add the first coefficient of \(b\) in the third row.
 </p>
 
 
-<div id="org45990fe" class="figure">
+<div id="org4bc91ba" class="figure">
 <p><img src="../figs/addition.png" alt="addition.png" width="500px" />
 </p>
 </div>
@@ -1235,7 +1240,7 @@ Given what we have learned in the previous section, it shouldn't be too surprisi
 </p>
 
 
-<div id="org55c613d" class="figure">
+<div id="org11a616e" class="figure">
 <p><img src="../figs/multiplication.png" alt="multiplication.png" width="500px" />
 </p>
 </div>
@@ -1313,6 +1318,12 @@ To make sure that it works:
 \(\begin{bmatrix} 109 & 21 & 26 & 5 \\ 20 & 4 & 5 & 1 \end{bmatrix}\) means \(\frac{109xy + 21x + 26y + 5}{20xy + 4x + 5y + 1}\), which equals \((2+\frac{1}{4+\frac{1}{x}}) + (3+\frac{1}{5+\frac{1}{y}})\). That's correct.
 </p>
 
+
+<div id="orgd7a3f61" class="figure">
+<p><img src="../figs/fig2.png" alt="fig2.png" width="400" />
+</p>
+</div>
+
 <p>
 Let's try multiplication:
 </p>
@@ -1345,8 +1356,8 @@ Let's try multiplication:
 </div>
 </div>
 
-<div id="outline-container-orge6d1e2e" class="outline-2">
-<h2 id="orge6d1e2e"><span class="section-number-2">8.</span> Appendix: Calculating the quotient and the remainder of a convergent in matrix form</h2>
+<div id="outline-container-orged6c843" class="outline-2">
+<h2 id="orged6c843"><span class="section-number-2">8.</span> Appendix: Calculating the quotient and the remainder of a convergent in matrix form</h2>
 <div class="outline-text-2" id="text-8">
 <p>
 This is just calculus
@@ -1409,8 +1420,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orgf11e01f" class="outline-2">
-<h2 id="orgf11e01f"><span class="section-number-2">9.</span> Appendix: Tests</h2>
+<div id="outline-container-org9ae24ab" class="outline-2">
+<h2 id="org9ae24ab"><span class="section-number-2">9.</span> Appendix: Tests</h2>
 <div class="outline-text-2" id="text-9">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;TEST_IMPORTS&gt;&gt;
@@ -1424,8 +1435,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orged693ad" class="outline-3">
-<h3 id="orged693ad"><span class="section-number-3">9.1.</span> Using continued fractions to represent rational numbers</h3>
+<div id="outline-container-orgaec9f93" class="outline-3">
+<h3 id="orgaec9f93"><span class="section-number-3">9.1.</span> Using continued fractions to represent rational numbers</h3>
 <div class="outline-text-3" id="text-9-1">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestR2cf</span>(<span class="org-builtin">object</span>):
@@ -1437,8 +1448,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orgcb1e9e5" class="outline-3">
-<h3 id="orgcb1e9e5"><span class="section-number-3">9.2.</span> Convergents</h3>
+<div id="outline-container-org37fe709" class="outline-3">
+<h3 id="org37fe709"><span class="section-number-3">9.2.</span> Convergents</h3>
 <div class="outline-text-3" id="text-9-2">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Apply this test to two functions, because they should be equivalent</span>
@@ -1477,8 +1488,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org467dd26" class="outline-3">
-<h3 id="org467dd26"><span class="section-number-3">9.3.</span> Symbolic Euclidean algorithm</h3>
+<div id="outline-container-org7bae5ba" class="outline-3">
+<h3 id="org7bae5ba"><span class="section-number-3">9.3.</span> Symbolic Euclidean algorithm</h3>
 <div class="outline-text-3" id="text-9-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestQRMatrix</span>(<span class="org-builtin">object</span>):
@@ -1570,8 +1581,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org0ea57bf" class="outline-3">
-<h3 id="org0ea57bf"><span class="section-number-3">9.4.</span> Transformations of continued fractions</h3>
+<div id="outline-container-org080ef29" class="outline-3">
+<h3 id="org080ef29"><span class="section-number-3">9.4.</span> Transformations of continued fractions</h3>
 <div class="outline-text-3" id="text-9-4">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestCFTransform</span>(<span class="org-builtin">object</span>):
@@ -1593,8 +1604,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org1293701" class="outline-3">
-<h3 id="org1293701"><span class="section-number-3">9.5.</span> Bihomography</h3>
+<div id="outline-container-orgda85bb0" class="outline-3">
+<h3 id="orgda85bb0"><span class="section-number-3">9.5.</span> Bihomography</h3>
 <div class="outline-text-3" id="text-9-5">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestBiho</span>(<span class="org-builtin">object</span>):
@@ -1613,8 +1624,8 @@ This is just calculus
 </div>
 </div>
 </div>
-<div id="outline-container-org3735ae1" class="outline-3">
-<h3 id="org3735ae1"><span class="section-number-3">9.6.</span> Imports</h3>
+<div id="outline-container-org4d3062a" class="outline-3">
+<h3 id="org4d3062a"><span class="section-number-3">9.6.</span> Imports</h3>
 <div class="outline-text-3" id="text-9-6">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
@@ -1625,8 +1636,8 @@ This is just calculus
 </div>
 </div>
 </div>
-<div id="outline-container-org34d51a8" class="outline-2">
-<h2 id="org34d51a8"><span class="section-number-2">10.</span> Appendix: Display utilities</h2>
+<div id="outline-container-orgfbc38e0" class="outline-2">
+<h2 id="orgfbc38e0"><span class="section-number-2">10.</span> Appendix: Display utilities</h2>
 <div class="outline-text-2" id="text-10">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;IO_IMPORTS&gt;&gt;
@@ -1638,8 +1649,8 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orgf63c9e4" class="outline-3">
-<h3 id="orgf63c9e4"><span class="section-number-3">10.1.</span> Chart utilities</h3>
+<div id="outline-container-org29d6b23" class="outline-3">
+<h3 id="org29d6b23"><span class="section-number-3">10.1.</span> Chart utilities</h3>
 <div class="outline-text-3" id="text-10-1">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">A class to facilitate tabular displays</span>
@@ -1760,8 +1771,8 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 
-<div id="outline-container-orgefa53ac" class="outline-3">
-<h3 id="orgefa53ac"><span class="section-number-3">10.2.</span> Tabulated displays</h3>
+<div id="outline-container-org20e1477" class="outline-3">
+<h3 id="org20e1477"><span class="section-number-3">10.2.</span> Tabulated displays</h3>
 <div class="outline-text-3" id="text-10-2">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">r2cf_tab</span>(rn: Rational):
@@ -1824,8 +1835,8 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 </div>
-<div id="outline-container-org493b461" class="outline-3">
-<h3 id="org493b461"><span class="section-number-3">10.3.</span> LaTeX utilities</h3>
+<div id="outline-container-orga17a66c" class="outline-3">
+<h3 id="orga17a66c"><span class="section-number-3">10.3.</span> LaTeX utilities</h3>
 <div class="outline-text-3" id="text-10-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Utilities functions for LaTeX displays</span>
@@ -1859,8 +1870,8 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 
-<div id="outline-container-org6201820" class="outline-3">
-<h3 id="org6201820"><span class="section-number-3">10.4.</span> Imports</h3>
+<div id="outline-container-orgc8466fc" class="outline-3">
+<h3 id="orgc8466fc"><span class="section-number-3">10.4.</span> Imports</h3>
 <div class="outline-text-3" id="text-10-4">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">from</span> cont_frac <span class="org-keyword">import</span> *
@@ -1871,8 +1882,8 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 </div>
-<div id="outline-container-org903b0c0" class="outline-2">
-<h2 id="org903b0c0"><span class="section-number-2">11.</span> Appendix: Imports</h2>
+<div id="outline-container-orgcefeba2" class="outline-2">
+<h2 id="orgcefeba2"><span class="section-number-2">11.</span> Appendix: Imports</h2>
 <div class="outline-text-2" id="text-11">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> math
@@ -1894,7 +1905,7 @@ Some miscellaneous pretty printing utilities:
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Hsin-Hao Yu</p>
-<p class="date">Created: 2022-04-17 Sun 15:31</p>
+<p class="date">Created: 2022-04-17 Sun 16:28</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
