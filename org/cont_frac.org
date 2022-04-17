@@ -261,7 +261,7 @@ Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multipli
           yield Rational(m[0, 0], m[1, 0])
 #+end_src
 
-Let's try it on the example given in the previous section:
+Let's try it on the example given in the [[*Continued fraction approximation as function compositions][previous section]]:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents1(iter([5, 1, 4]))))
@@ -270,7 +270,7 @@ Let's try it on the example given in the previous section:
 #+RESULTS:
 : [5/1, 6/1, 29/5]
 
-Here's a longer sequence that we used previously:
+Here's a longer sequence that we used [[*Calculating the convergents of a continued fraction][previously]]:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents1(iter([2, 1, 1, 5, 1, 3]))))
@@ -356,7 +356,7 @@ As before, we define a specialized version of =cf_convergents1= just for finite-
 * Turning convergents into continued fractions
 In this section, we'll develop code that calculates convergents as in =cf_convergent1=, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that the code receives a continued fraction, and just returns the same series. However, this code will become useful in the coming sections.
 
-Let's take the continued fraction $[5, 1, 4... ]$ as an example. Since we already know from the last section that the third convergent of $[5, 1, 4]$ is $\frac{29}{5}$, can't we just turn $\frac{29}{5}$ into a continued fraction? It is not as simple as that, because $[5, 1, 4]$ and $[5, 1, 4...]$ are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
+Let's take the continued fraction $[5, 1, 4... ]$ as an example. Since we already know from the [[*Calculating convergents using the matrix notation][last section]] that the third convergent of $[5, 1, 4]$ is $\frac{29}{5}$, can't we just turn $\frac{29}{5}$ into a continued fraction? It is not as simple as that, because $[5, 1, 4]$ and $[5, 1, 4...]$ are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
 $\begin{bmatrix}
     29 & 6 \\
      5 & 1
@@ -364,8 +364,7 @@ $\begin{bmatrix}
 
 How? The answer is still the Euclidean algorithm, but we have to use it symbolically rather than numerically.
 
-The first step is to symbolically represent the function as a quotient and a remainder (see =qr()= in =r2cf_=). I implemented this operation in =qr_matrix= in the Appendix. We can use it on the third convergent:
-
+The first step is to symbolically represent the function as a quotient and a remainder (see =qr()= in =r2cf_=). I implemented this operation in =qr_matrix= in the [[*Calculating the quotient and the remainder of a convergent in matrix form][Appendix]]. We can use it on the third convergent:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
