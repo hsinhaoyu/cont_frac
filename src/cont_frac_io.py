@@ -3,126 +3,50 @@ from functools import reduce
 import csv
 
 
-# A class to facilitate tabular displays
-class Chart(object):
-    def __init__(self,
-                 m=np.identity(2, int),
-                 display_top=True,
-                 display_right=True,
-                 field_width=4):
-        self.display_top = display_top
-        self.display_right = display_right
-        self.top = [None]
-        self.right = [None]
-        self.board = [[m[0][0], m[0][1]], [m[1][0], m[1][1]]]
-        self.field_width = field_width
-
-    def pp_item(self, item, right=False):
-        if item is None:
-            return " " * self.field_width
-        else:
-            if right:
-                return f" {item : < {self.field_width}}"
-            else:
-                return f"{item : > {self.field_width}}"
-
-    def pp_row(self, row):
-        return reduce(lambda s, item: s + self.pp_item(item), row, "")
-
-    def last_column(self):
-        return (self.board[-2][0], self.board[-1][0])
-
-    def push_top(self, i):
-        self.top = [i] + self.top
-
-    def push_right(self, i):
-        self.right.append(i)
-
-    def push_column(self, m, a):
-        self.push_top(a)
-        assert self.last_column() == (m[0][1], m[1][1])
-        for i in range(len(self.board)):
-            self.board[i] = [None] + self.board[i]
-        self.board[-2][0] = m[0][0]
-        self.board[-1][0] = m[1][0]
-
-    def push_row(self, m, q):
-        assert self.board[-1][0] == m[0][0]
-        assert self.board[-1][1] == m[0][1]
-        new_row = [None] * len(self.board[-1])
-        new_row[0] = m[1][0]
-        new_row[1] = m[1][1]
-        self.board.append(new_row)
-        self.right.append(q)
-
-    def __repr__(self):
-        s = ""
-        if self.display_top:
-            s = s + self.pp_row([None] + self.top) + "\n"
-
-        for (i, row) in enumerate(self.board):
-            s = s + self.pp_row(row)
-            try:
-                if self.display_right:
-                    r = self.pp_item(self.right[i], right=True)
-                else:
-                    r = ""
-                s = s + r + "\n"
-            except IndexError:
-                s = s + "\n"
-        s = s[:-1]  # remove the last "\n"
-        return s
-
-    def to_array(self):
-        main_content = self.board.copy()
-        top_content = self.top.copy()
-        right_content = self.right.copy()
-        m = len(main_content)
-        n = len(main_content[0])
-
-        delta = n - len(top_content)
-        top_content = [None] * delta + top_content + [None]
-
-        delta = m - len(right_content)
-        right_content = right_content + [None] * delta
-
-        zz = [top_content]
-        for i in range(m):
-            zz = zz + [main_content[i] + [right_content[i]]]
-        return zz
-
-    def export_csv(self, filename):
-        array = self.to_array()
-        with open(filename, mode='w') as out_file:
-            writer = csv.writer(out_file)
-            writer.writerows(array)
-
-
 class Chart3D(object):
     def __init__(self, m=tForAddition):
+        if len(m.shape) == 2:
+            # if initialized with a matrix intead of a tensor
+            self.include_b = False
+            self.mode2D = True
+            self.current_tensor = Chart3D.m2t(m)
+            self.boards = self.current_tensor.tolist()
+        else:
+            self.boards = m.tolist()
+            self.include_b = True
+            self.mode2D = False
+            self.current_tensor = m.copy()
+
         self.output = [None]
-        self.boards = m.tolist()
         self.a = []
         self.b = [[]]
-        self.current_tensor = m.copy()
         self.include_a = True
-        self.include_b = True
         self.include_out = True
 
+    @staticmethod
+    def m2t(m):
+        return np.array([[[m[0, 0], m[0, 1]], [0, 0]],
+                         [[m[1, 0], m[1, 1]], [0, 0]]])
+
     def move_left(self, t, a):
-        assert tensor_ref(t, 'y') == tensor_ref(self.current_tensor, 'xy')
-        assert tensor_ref(t, '1') == tensor_ref(self.current_tensor, 'x')
-        self.current_tensor = t
+        if len(t.shape) == 2 and self.mode2D:
+            t2 = Chart3D.m2t(t)
+        else:
+            t2 = t
+
+        assert tensor_ref(t2, 'y') == tensor_ref(self.current_tensor, 'xy')
+        assert tensor_ref(t2, '1') == tensor_ref(self.current_tensor, 'x')
+        self.current_tensor = t2
 
         # add a new column for all boards
         for i in range(len(self.boards)):
             for j in range(len(self.boards[0])):
                 self.boards[i][j] = [None] + self.boards[i][j]
 
-        self.boards[-2][-2][0] = tensor_ref(t, 'b')
-        self.boards[-2][-1][0] = tensor_ref(t, 'a')
-        self.boards[-1][-2][0] = tensor_ref(t, 'f')
-        self.boards[-1][-1][0] = tensor_ref(t, 'e')
+        self.boards[-2][-2][0] = tensor_ref(t2, 'b')
+        self.boards[-2][-1][0] = tensor_ref(t2, 'a')
+        self.boards[-1][-2][0] = tensor_ref(t2, 'f')
+        self.boards[-1][-1][0] = tensor_ref(t2, 'e')
         self.a = [a] + self.a
 
     def move_down(self, t, b):
@@ -144,11 +68,16 @@ class Chart3D(object):
             self.boards[i] = self.boards[i] + [[None] * len(new_row_numerator)]
 
     def move_under(self, t, output):
-        assert tensor_ref(self.current_tensor, 'f') == tensor_ref(t, 'b')
-        assert tensor_ref(self.current_tensor, 'h') == tensor_ref(t, 'd')
-        assert tensor_ref(self.current_tensor, 'e') == tensor_ref(t, 'a')
-        assert tensor_ref(self.current_tensor, 'g') == tensor_ref(t, 'c')
-        self.current_tensor = t
+        if len(t.shape) == 2 and self.mode2D:
+            t2 = Chart3D.m2t(t)
+        else:
+            t2 = t
+
+        assert tensor_ref(self.current_tensor, 'f') == tensor_ref(t2, 'b')
+        assert tensor_ref(self.current_tensor, 'h') == tensor_ref(t2, 'd')
+        assert tensor_ref(self.current_tensor, 'e') == tensor_ref(t2, 'a')
+        assert tensor_ref(self.current_tensor, 'g') == tensor_ref(t2, 'c')
+        self.current_tensor = t2
 
         n_rows = len(self.boards[0])
         n_cols = len(self.boards[0][0])
@@ -158,10 +87,10 @@ class Chart3D(object):
 
         new_boards = [new_row() for i in range(n_rows)]
 
-        new_boards[-2][0] = tensor_ref(t, 'f')
-        new_boards[-2][1] = tensor_ref(t, 'h')
-        new_boards[-1][0] = tensor_ref(t, 'e')
-        new_boards[-1][1] = tensor_ref(t, 'g')
+        new_boards[-2][0] = tensor_ref(t2, 'f')
+        new_boards[-2][1] = tensor_ref(t2, 'h')
+        new_boards[-1][0] = tensor_ref(t2, 'e')
+        new_boards[-1][1] = tensor_ref(t2, 'g')
         self.boards = self.boards + [new_boards]
 
         new_b = [None] * len(self.b[-1])
@@ -172,25 +101,30 @@ class Chart3D(object):
     def board_to_array(self, board, b, out):
         new_content = []
         for i, row in enumerate(board):
-            new_row = row.copy()
+            skip = False
+            if self.mode2D and i % 2 == 1:
+                skip = True
 
-            if self.include_b:
-                if i == 0:
-                    new_row = new_row + [None]
-                elif b is None:
-                    new_row = new_row + [None]
-                elif i <= len(b):
-                    new_row = new_row + [b[i - 1]]
-                else:
-                    new_row = new_row + [None]
+            if not skip:
+                new_row = row.copy()
 
-            if self.include_out:
-                if i == len(board) - 1:
-                    new_row = new_row + [out]
-                else:
-                    new_row = new_row + [None]
+                if self.include_b:
+                    if i == 0:
+                        new_row = new_row + [None]
+                    elif b is None:
+                        new_row = new_row + [None]
+                    elif i <= len(b):
+                        new_row = new_row + [b[i - 1]]
+                    else:
+                        new_row = new_row + [None]
 
-            new_content = new_content + [new_row]
+                if self.include_out:
+                    if i == len(board) - 2:
+                        new_row = new_row + [out]
+                    else:
+                        new_row = new_row + [None]
+
+                new_content = new_content + [new_row]
         return new_content
 
     def to_array(self):
@@ -258,43 +192,40 @@ def r2cf_tab(rn: Rational):
 
 
 def cf_convergents1_tab(cf: Iterator[int]):
-    chart = Chart(display_right=False)
+    chart = Chart3D(m=np.identity(2, int))
+    chart.include_out = False
     (cf1, cf2) = tee(cf)
     for (mat, a) in zip(cf_convergents1_(cf1), cf2):
-        chart.push_column(mat, a)
+        chart.move_left(mat, a)
     return chart
 
 
 def euclid_matrix_tab(m):
-    chart = Chart(m=m, display_top=True)
+    chart = Chart3D(m=m)
     for (q, r) in euclid_matrix_(m):
-        chart.push_row(r, q)
-    print(chart)
+        chart.move_under(r, q)
+    return chart
 
 
-def cf_transform_tab(cf: Iterator[int],
-                     m0=np.identity(2, int),
-                     n=None,
-                     field_width=4):
-    chart = Chart(m=m0, field_width=field_width)
+def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int), n=None):
+    chart = Chart3D(m=m0)
     if n:
         cf = islice(cf, n)
 
     res = cf_transform_(cf, m0)
-    # res may be longer than cf1, res might not be empty after this loop
     for (q, r, m, a, new_a) in res:
         if new_a:
-            chart.push_column(m, a)
+            chart.move_left(m, a)
         if q is None:
             # this means that no euclid step was performed
             # do nothing
             pass
         else:
             if r is not None:
-                chart.push_row(r, q)
+                chart.move_under(r, q)
             else:
                 # r is None, meaning that the quotients are for rational numbers rathen than matrices
-                chart.push_right(q)
+                chart.output = chart.output + [q]
     return chart
 
 
@@ -306,6 +237,24 @@ def tabs3d(a, b, t0=tForAddition):
         else:
             c.move_down(t, coefficient)
     return c
+
+
+# Pretty printing utilities
+
+
+def pp_qr(qr: Tuple[int, np.ndarray]) -> None:
+    """Pretty print a tuple of a quotient and a remainder matrix"""
+    q, r = qr
+    print(f"{q:>2} {r[0][0]:2} {r[0][1]:2}")
+    print(f"   {r[1][0]:2} {r[1][1]:2}")
+
+
+def pp_inf_cf(cf: list) -> None:
+    """Pretty print a list representing the first couple terms of a longer continued fraction"""
+    res = "["
+    res = res + reduce(lambda s, n: s + str(n) + ",", cf, "")
+    res = res[:-1] + "...]"
+    return res
 
 
 # Utilities functions for LaTeX displays
@@ -337,21 +286,3 @@ def show_rational_series(itr: Iterator[int]):
         s = s + "$" + latex_rational(r) + "$" + ","
 
     print(s[:-1])
-
-
-# Pretty printing utilities
-
-
-def pp_qr(qr: Tuple[int, np.ndarray]) -> None:
-    """Pretty print a tuple of a quotient and a remainder matrix"""
-    q, r = qr
-    print(f"{q:>2} {r[0][0]:2} {r[0][1]:2}")
-    print(f"   {r[1][0]:2} {r[1][1]:2}")
-
-
-def pp_inf_cf(cf: list) -> None:
-    """Pretty print a list representing the first couple terms of a longer continued fraction"""
-    res = "["
-    res = res + reduce(lambda s, n: s + str(n) + ",", cf, "")
-    res = res[:-1] + "...]"
-    return res
