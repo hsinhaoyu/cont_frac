@@ -98,6 +98,156 @@ class Chart(object):
             writer.writerows(array)
 
 
+class Chart3D(object):
+    def __init__(self, m=tForAddition):
+        self.output = [None]
+        self.boards = m.tolist()
+        self.a = []
+        self.b = [[]]
+        self.current_tensor = m.copy()
+        self.include_a = True
+        self.include_b = True
+        self.include_out = True
+
+    def move_left(self, t, a):
+        assert tensor_ref(t, 'y') == tensor_ref(self.current_tensor, 'xy')
+        assert tensor_ref(t, '1') == tensor_ref(self.current_tensor, 'x')
+        self.current_tensor = t
+
+        # add a new column for all boards
+        for i in range(len(self.boards)):
+            for j in range(len(self.boards[0])):
+                self.boards[i][j] = [None] + self.boards[i][j]
+
+        self.boards[-2][-2][0] = tensor_ref(t, 'b')
+        self.boards[-2][-1][0] = tensor_ref(t, 'a')
+        self.boards[-1][-2][0] = tensor_ref(t, 'f')
+        self.boards[-1][-1][0] = tensor_ref(t, 'e')
+        self.a = [a] + self.a
+
+    def move_down(self, t, b):
+        assert tensor_ref(t, 'x') == tensor_ref(self.current_tensor, 'xy')
+        assert tensor_ref(t, '1') == tensor_ref(self.current_tensor, 'y')
+        self.current_tensor = t
+        new_row_numerator = [None] * len(self.boards[0][0])
+        new_row_denominator = [None] * len(self.boards[1][0])
+        new_row_numerator[0] = tensor_ref(t, 'a')
+        new_row_numerator[1] = tensor_ref(t, 'c')
+        new_row_denominator[0] = tensor_ref(t, 'e')
+        new_row_denominator[1] = tensor_ref(t, 'g')
+        self.boards[-2] = self.boards[-2] + [new_row_numerator]
+        self.boards[-1] = self.boards[-1] + [new_row_denominator]
+        self.b[-1] = self.b[-1] + [b]
+
+        # all boards under have to be expanded
+        for i in range(0, len(self.boards) - 2):
+            self.boards[i] = self.boards[i] + [[None] * len(new_row_numerator)]
+
+    def move_under(self, t, output):
+        assert tensor_ref(self.current_tensor, 'f') == tensor_ref(t, 'b')
+        assert tensor_ref(self.current_tensor, 'h') == tensor_ref(t, 'd')
+        assert tensor_ref(self.current_tensor, 'e') == tensor_ref(t, 'a')
+        assert tensor_ref(self.current_tensor, 'g') == tensor_ref(t, 'c')
+        self.current_tensor = t
+
+        n_rows = len(self.boards[0])
+        n_cols = len(self.boards[0][0])
+
+        def new_row():
+            return [None] * n_cols
+
+        new_boards = [new_row() for i in range(n_rows)]
+
+        new_boards[-2][0] = tensor_ref(t, 'f')
+        new_boards[-2][1] = tensor_ref(t, 'h')
+        new_boards[-1][0] = tensor_ref(t, 'e')
+        new_boards[-1][1] = tensor_ref(t, 'g')
+        self.boards = self.boards + [new_boards]
+
+        new_b = [None] * len(self.b[-1])
+        self.b = self.b + [new_b]
+
+        self.output = self.output + [output]
+
+    def board_to_array(self, board, b, out):
+        new_content = []
+        for i, row in enumerate(board):
+            new_row = row.copy()
+
+            if self.include_b:
+                if i == 0:
+                    new_row = new_row + [None]
+                elif b is None:
+                    new_row = new_row + [None]
+                elif i <= len(b):
+                    new_row = new_row + [b[i - 1]]
+                else:
+                    new_row = new_row + [None]
+
+            if self.include_out:
+                if i == len(board) - 1:
+                    new_row = new_row + [out]
+                else:
+                    new_row = new_row + [None]
+
+            new_content = new_content + [new_row]
+        return new_content
+
+    def to_array(self):
+        content = []
+        row = []
+        n_rows = len(self.boards[0])
+        n_cols = len(self.boards[0][0])
+
+        if self.include_a:
+            row = row + [None]
+            if self.include_b:
+                row = row + [None]
+            if self.include_out:
+                row = row + [None]
+            row = self.a + row
+            row = [None] * (n_cols - len(self.a) - 1) + row
+            content = content + [row]
+
+        for i in range(len(self.boards)):
+            board = self.boards[i]
+            b = self.b[i] if i < len(self.b) else None
+            out = self.output[i] if i < len(self.output) else None
+            content = content + self.board_to_array(board, b, out)
+
+        return content
+
+    @staticmethod
+    def pp_item(item, field_width):
+        if item is None:
+            return " " * field_width
+        else:
+            return f"{item : > {field_width}}"
+
+    @staticmethod
+    def pp_row(row, field_width):
+        return reduce(lambda s, item: s + Chart3D.pp_item(item, field_width),
+                      row, "") + "\n"
+
+    def __repr__(self):
+        content = self.to_array()
+
+        content_nonone = [[c for c in row if c is not None] for row in content]
+        content_nonone = [r for r in content_nonone if r != []]
+        mx = max(map(max, content_nonone))
+        field_width = len(str(mx)) + 1
+
+        s = reduce(lambda s, r: s + Chart3D.pp_row(r, field_width), content,
+                   "")
+        return s
+
+    def export_csv(self, filename):
+        content = self.to_array()
+        with open(filename, mode='w') as outfile:
+            writer = csv.writer(outfile)
+            writer.writerows(content)
+
+
 def r2cf_tab(rn: Rational):
     def row(st: str, x: tuple):
         b, q = x
@@ -146,6 +296,16 @@ def cf_transform_tab(cf: Iterator[int],
                 # r is None, meaning that the quotients are for rational numbers rathen than matrices
                 chart.push_right(q)
     return chart
+
+
+def tabs3d(a, b, t0=tForAddition):
+    c = Chart3D(t0)
+    for direction, coefficient, t in arithmetic_convergents_(a, b, t0):
+        if direction == 'a':
+            c.move_left(t, coefficient)
+        else:
+            c.move_down(t, coefficient)
+    return c
 
 
 # Utilities functions for LaTeX displays

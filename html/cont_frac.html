@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-04-17 Sun 16:28 -->
+<!-- 2022-04-23 Sat 21:31 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)</title>
@@ -228,33 +228,38 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgfbce3a4">1. Representing rational numbers as continued fractions</a></li>
-<li><a href="#org3abc014">2. Calculating the convergents of a continued fraction</a></li>
-<li><a href="#org8b9a39a">3. Continued fraction approximation as function compositions</a></li>
-<li><a href="#orga9feb63">4. Calculating convergents using the matrix notation</a></li>
-<li><a href="#orgfaf05db">5. Turning convergents into continued fractions</a></li>
-<li><a href="#orgc0a290f">6. Simple transformations of continued fractions</a></li>
-<li><a href="#org4f2afbe">7. Arithmetic: bilinear homographic functions</a></li>
-<li><a href="#orged6c843">8. Appendix: Calculating the quotient and the remainder of a convergent in matrix form</a></li>
-<li><a href="#org9ae24ab">9. Appendix: Tests</a>
+<li><a href="#orgb67d97b">1. Representing rational numbers as continued fractions</a></li>
+<li><a href="#orgf259880">2. Calculating the convergents of a continued fraction</a></li>
+<li><a href="#org786849f">3. Continued fraction approximation as function compositions</a></li>
+<li><a href="#orgd33df0a">4. Calculating convergents using the matrix notation</a></li>
+<li><a href="#org97ac6e3">5. Turning convergents into continued fractions</a></li>
+<li><a href="#orgb335ce0">6. Simple transformations of continued fractions</a></li>
+<li><a href="#orge201de3">7. Continued fraction arithmetic - bihomographic functions</a></li>
+<li><a href="#orga91ddb6">8. Bihomographic functions - implementation</a></li>
+<li><a href="#orgaee0ae6">9. Convergents</a></li>
+<li><a href="#org4d7c59b">10. Appendix: Quotients/remainders for matrices</a></li>
+<li><a href="#org71f0d90">11. Appendix: Quotients/remainders for tensors</a></li>
+<li><a href="#org3f7e3fd">12. Appendix: Tests</a>
 <ul>
-<li><a href="#orgaec9f93">9.1. Using continued fractions to represent rational numbers</a></li>
-<li><a href="#org37fe709">9.2. Convergents</a></li>
-<li><a href="#org7bae5ba">9.3. Symbolic Euclidean algorithm</a></li>
-<li><a href="#org080ef29">9.4. Transformations of continued fractions</a></li>
-<li><a href="#orgda85bb0">9.5. Bihomography</a></li>
-<li><a href="#org4d3062a">9.6. Imports</a></li>
+<li><a href="#org55e20aa">12.1. Using continued fractions to represent rational numbers</a></li>
+<li><a href="#orge5b92fb">12.2. Convergents</a></li>
+<li><a href="#orgd2f2206">12.3. Symbolic Euclidean algorithm</a></li>
+<li><a href="#orgf66ccb5">12.4. Transformations of continued fractions</a></li>
+<li><a href="#org3ce412c">12.5. Bihomography</a></li>
+<li><a href="#orgb7ef9a2">12.6. Imports</a></li>
 </ul>
 </li>
-<li><a href="#orgfbc38e0">10. Appendix: Display utilities</a>
+<li><a href="#orga7d044e">13. Appendix: Display utilities</a>
 <ul>
-<li><a href="#org29d6b23">10.1. Chart utilities</a></li>
-<li><a href="#org20e1477">10.2. Tabulated displays</a></li>
-<li><a href="#orga17a66c">10.3. LaTeX utilities</a></li>
-<li><a href="#orgc8466fc">10.4. Imports</a></li>
+<li><a href="#orgf0f4f0d">13.1. Chart utilities</a></li>
+<li><a href="#org5186cb1">13.2. Tabulated displays</a></li>
+<li><a href="#org676d0fb">13.3. LaTeX utilities</a></li>
+<li><a href="#orga237b7b">13.4. Chart3D utilities</a></li>
+<li><a href="#org99f8dc3">13.5. Tabulated displays: 3D</a></li>
+<li><a href="#org6306991">13.6. Imports</a></li>
 </ul>
 </li>
-<li><a href="#orgcefeba2">11. Appendix: Imports</a></li>
+<li><a href="#org3b21e3c">14. Appendix: Imports</a></li>
 </ul>
 </div>
 </div>
@@ -266,13 +271,14 @@
 &lt;&lt;CONVERGENTS1&gt;&gt;
 &lt;&lt;QR_MATRIX&gt;&gt;
 &lt;&lt;CF_TRANSFORM&gt;&gt;
+&lt;&lt;BIHOMOGRAPHY&gt;&gt;  
+&lt;&lt;QR_TENSOR&gt;&gt;
 &lt;&lt;CF_EXAMPLES&gt;&gt;
-&lt;&lt;BIHOMOGRAPHY&gt;&gt;
 </pre>
 </div>
 
-<div id="outline-container-orgfbce3a4" class="outline-2">
-<h2 id="orgfbce3a4"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
+<div id="outline-container-orgb67d97b" class="outline-2">
+<h2 id="orgb67d97b"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Since we'll use rational numbers a lot, let's define a class:
@@ -401,8 +407,8 @@ It's the same sequence with an additional 0 at the beginning! This is our first 
 </div>
 </div>
 
-<div id="outline-container-org3abc014" class="outline-2">
-<h2 id="org3abc014"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
+<div id="outline-container-orgf259880" class="outline-2">
+<h2 id="orgf259880"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
@@ -515,7 +521,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 </pre>
 </div>
 
-<pre class="example" id="org1f98a5b">
+<pre class="example" id="org90b1797">
 2/1                  2.00000000
 3/1                  3.00000000
 8/3                  2.66666667
@@ -536,8 +542,8 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 </div>
 </div>
 
-<div id="outline-container-org8b9a39a" class="outline-2">
-<h2 id="org8b9a39a"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
+<div id="outline-container-org786849f" class="outline-2">
+<h2 id="org786849f"><span class="section-number-2">3.</span> Continued fraction approximation as function compositions</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Given the first 3 terms in a continued fraction \([5, 1, 4...]\), let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
@@ -684,7 +690,7 @@ So, the 2-by-2 matrix
 </p>
 
 <p>
-represents a function that approximates a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If the continued fractions has only 3 terms, we terminate the process by evaluating
+represents a function that approximates a continued fraction with more terms. If the continued fractions has only 3 terms, we terminate the process by evaluating
 </p>
 
 \begin{equation*}
@@ -719,8 +725,8 @@ Multiplying the matrix with
 </div>
 </div>
 
-<div id="outline-container-orga9feb63" class="outline-2">
-<h2 id="orga9feb63"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
+<div id="outline-container-orgd33df0a" class="outline-2">
+<h2 id="orgd33df0a"><span class="section-number-2">4.</span> Calculating convergents using the matrix notation</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matrix multiplications:
@@ -747,7 +753,7 @@ Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matr
 </div>
 
 <p>
-Let's try it on the example given in the <a href="#org8b9a39a">previous section</a>:
+Let's try it on the example given in the <a href="#org786849f">previous section</a>:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -761,7 +767,7 @@ Let's try it on the example given in the <a href="#org8b9a39a">previous section<
 
 
 <p>
-Here's a longer sequence that we used <a href="#org3abc014">previously</a>:
+Here's a longer sequence that we used <a href="#orgf259880">previously</a>:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -821,22 +827,22 @@ The first row represents the coefficients of the continued fraction. To understa
 <p>
 You can see these matrices shift leftwards in the tabular representation, with adjacent matrices sharing a column. To see why, suppose that the current matrix is
 \(\begin{bmatrix}
-    x_{11} & x_{12} \\
-    x_{21} & x_{22}
-\end{bmatrix}\), and we have to update it with a new term \(a\) in the continued fraction. The updated matrix is
+    p & q \\
+    r & s
+\end{bmatrix}\), and we have to update it with a new term \(a_n\) in the continued fraction. The updated matrix is
 </p>
 \begin{equation*}
     \begin{bmatrix}
-        x_{11} & x_{12} \\
-        x_{21} & x_{22}
+        p & q \\
+        r & s
     \end{bmatrix}
     \begin{bmatrix}
-        a & 1 \\
+        a_n & 1 \\
         1 & 0
     \end{bmatrix} =
     \begin{bmatrix}
-        ax_{11} & x_{11} \\
-        ax_{21} & x_{21}
+        a_n p + q & p \\
+        a_n r + s & r
     \end{bmatrix}
 \end{equation*}
 
@@ -874,15 +880,15 @@ As before, we define a specialized version of <code>cf_convergents1</code> just 
 </div>
 </div>
 
-<div id="outline-container-orgfaf05db" class="outline-2">
-<h2 id="orgfaf05db"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
+<div id="outline-container-org97ac6e3" class="outline-2">
+<h2 id="org97ac6e3"><span class="section-number-2">5.</span> Turning convergents into continued fractions</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 In this section, we'll develop code that calculates convergents as in <code>cf_convergent1</code>, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that the code receives a continued fraction, and just returns the same series. However, this code will become useful in the coming sections.
 </p>
 
 <p>
-Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the <a href="#orga9feb63">last section</a> that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
+Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the <a href="#orgd33df0a">last section</a> that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
 \(\begin{bmatrix}
     29 & 6 \\
      5 & 1
@@ -913,7 +919,7 @@ This means that \(f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}\
 </p>
 
 
-<div id="org9f487bb" class="figure">
+<div id="orged268a8" class="figure">
 <p><img src="../figs/fig1.png" alt="fig1.png" width="400" />
 </p>
 </div>
@@ -997,29 +1003,29 @@ euclid_matrix_tab(np.array([[70, 29], [12, 5]]))
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 </p>
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_transform_</span>(cf: Iterator[<span class="org-builtin">int</span>], m0: np.ndarray = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator[Tuple[Optional[<span class="org-builtin">int</span>], Optional[np.ndarray], np.ndarray]]:
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_transform_</span>(cf: Iterator[<span class="org-builtin">int</span>], m0: np.ndarray = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator[Tuple[Optional[<span class="org-builtin">int</span>], Optional[np.ndarray], np.ndarray, <span class="org-builtin">int</span>, <span class="org-builtin">bool</span>]]:
     <span class="org-doc">"""Transform the input continued fraction by matrix m</span>
 <span class="org-doc">    returns another continued fraction"""</span>
     <span class="org-variable-name">m</span> = m0
     <span class="org-keyword">for</span> a <span class="org-keyword">in</span> cf:
         <span class="org-variable-name">m</span> = np.matmul(m, h(a))
-        <span class="org-variable-name">q</span> = <span class="org-constant">None</span>
+        <span class="org-variable-name">new_a</span> = <span class="org-constant">True</span>
         <span class="org-keyword">for</span> (q, r) <span class="org-keyword">in</span> euclid_matrix_(m):
-            <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
-                <span class="org-keyword">yield</span> q, r, m
-                <span class="org-variable-name">m</span> = r
-        <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">yield</span> q, r, m, a, new_a
+            <span class="org-variable-name">new_a</span> = <span class="org-constant">False</span>
+            <span class="org-variable-name">m</span> = r
+        <span class="org-keyword">if</span> new_a:
             <span class="org-comment-delimiter"># </span><span class="org-comment">Nothing was yielded. That means for this convergent cannot be turned into a continued fraction</span>
-            <span class="org-keyword">yield</span> (<span class="org-constant">None</span>, <span class="org-constant">None</span>, m)
+            <span class="org-keyword">yield</span> (<span class="org-constant">None</span>, <span class="org-constant">None</span>, m, a, new_a)
 
     <span class="org-comment-delimiter"># </span><span class="org-comment">we will only reach this point if the series is finite</span>
     <span class="org-keyword">if</span> m[1][0] != 0:
         <span class="org-keyword">for</span> s <span class="org-keyword">in</span> r2cf(Rational(m[0][0], m[1][0])):
-            <span class="org-keyword">yield</span> s, <span class="org-constant">None</span>, m
+            <span class="org-keyword">yield</span> s, <span class="org-constant">None</span>, m, a, <span class="org-constant">False</span>
 
 <span class="org-keyword">def</span> <span class="org-function-name">cf_transform</span>(cf: Iterator[<span class="org-builtin">int</span>], m0: np.ndarray = np.identity(2, <span class="org-builtin">int</span>)) -&gt; Iterator[<span class="org-builtin">int</span>]:
     <span class="org-keyword">for</span> res <span class="org-keyword">in</span> cf_transform_(cf, m0):
-        (q, r, m) = res
+        (q, r, m, a, new_a) = res
         <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
             <span class="org-keyword">yield</span> q
             <span class="org-comment-delimiter"># </span><span class="org-comment">q can be None, indicating that more coefficients are needed</span>
@@ -1070,11 +1076,11 @@ The numbers on the right are the outputs of <code>cf_transform</code>.
 </div>
 </div>
 
-<div id="outline-container-orgc0a290f" class="outline-2">
-<h2 id="orgc0a290f"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
+<div id="outline-container-orgb335ce0" class="outline-2">
+<h2 id="orgb335ce0"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
 <div class="outline-text-2" id="text-6">
 <p>
-The beauty of representing convergents as matrices is that we can transform it with a function of the form \(f(x) = \frac{ax+b}{cx+d}\). All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving <code>cf_transform</code> an initial matrix.
+The beauty of representing convergents as matrices is that we can transform it with a function of the form \(f(x) = \frac{px+q}{rx+s}\). All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving <code>cf_transform</code> an initial matrix.
 </p>
 
 <p>
@@ -1122,6 +1128,7 @@ According to the above, \(2 * [2, 1, 1, 5, 1]\) is \([5, 13]\). How do we end up
 </pre>
 
 
+
 <p>
 Take the term \(\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}\) for example. The range is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore has to wait for the next coefficient to resolve it. That's why the transformed continued fraction has a smaller number of terms. 
 </p>
@@ -1138,7 +1145,7 @@ Previously, we saw that the reciprocal of a continuous fraction has an addition 
 </pre>
 </div>
 
-<pre class="example" id="orgf3cf646">
+<pre class="example" id="org8b327f6">
 The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1] 
 
      1  5  1  1  2   
@@ -1175,7 +1182,7 @@ Then, we just need to run <code>cf_transform</code> with \(\begin{bmatrix} 0 & 2
 </pre>
 </div>
 
-<pre class="example" id="org9cf7083">
+<pre class="example" id="orgf88058c">
 2 / (3 - sqrt(2)) is  [1,3,1,4,1,4...] 
 
     2  2  2  2  2  1   
@@ -1204,7 +1211,7 @@ Another example: what is \(\tanh{\frac{1}{2}} = \frac{e-1}{e+1}\)? We have alrea
 </pre>
 </div>
 
-<pre class="example" id="orga7b75a0">
+<pre class="example" id="orgd752998">
 (e-1)/(e+1) is  [0,2,6,10,14,18...] 
 
      8  1  1  6  1  1  4  1  1  2  1  2   
@@ -1216,63 +1223,148 @@ Another example: what is \(\tanh{\frac{1}{2}} = \frac{e-1}{e+1}\)? We have alrea
  17  2  1  1  0  1                          14
   1  0  1                                   17
 </pre>
+
 <p>
 The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org4f2afbe" class="outline-2">
-<h2 id="org4f2afbe"><span class="section-number-2">7.</span> Arithmetic: bilinear homographic functions</h2>
+<div id="outline-container-orge201de3" class="outline-2">
+<h2 id="orge201de3"><span class="section-number-2">7.</span> Continued fraction arithmetic - bihomographic functions</h2>
 <div class="outline-text-2" id="text-7">
 <p>
-When there is just one continued fraction \(a\), the action is on the convergent of the form \(f(x) = \frac{px+q}{rx+s}\), which can be represented with by a matrix \(M = \begin{bmatrix} p & q \\ r & s \end{bmatrix}\). With two continued fractions \(a\) and \(b\), the function generalizes to \(f(x, y) = \frac{axy + bx + cy + d}{exy + fx + gy + h}\), where \(x\) and \(y\) are the unknown terms for \(a\) and \(b\) respectively. This bilinear function can be represented by the 2x2x2 tensor \(T=\begin{bmatrix}\begin{bmatrix} b & d \\ a & c \end{bmatrix}\begin{bmatrix} f & h \\ e & g \end{bmatrix}\end{bmatrix}\), where the first matrix encodes terms in the numerator, and the second encodes terms in the denominator. This particular representation is not necessary for the computation, but it gives the update rules a very nice visual interpretation. When the tensor is viewed as a 2x2x2 cube in 3D, it moves to leftwards when it receives a term of \(a\), and it moves downwards when it receives a term of \(b\). The following figure illustrates this for \(a + b\). For each row, the table on the left illustrates the matrix encoding terms in the numerator, and the table on the right illustrates terms in the denominator. When the two matrices are combined, they describes the function in the middle panel. We start at the initial condition in the first row, add the first coefficient of \(a\) in the second row, and then add the first coefficient of \(b\) in the third row.
+We have been dealing with one continued fraction at a time. In those situations, all operations involve functions of the form \(f(x) = \frac{px+q}{rx+s}\). They are known as homographic functions, and they can be represented by the matrix \(\begin{bmatrix} p & q \\ r & s \end{bmatrix}\). How do we generalize it to operations involving two continued fractions?
+</p>
+
+<p>
+The problem is solved with bihomographic functions of the form \(f(x, y) = \frac{axy + bx + cy + d}{exy + fx + gy + h}\), where \(x\) and \(y\) are the unknown terms for the two continued fractions \(a\) and \(b\) respectively. We can write it in matrix form as:
+</p>
+
+\begin{equation*}
+f(x, y) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} b & d \\ a & c \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg/
+          \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} f & h \\ e & g \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix}
+\end{equation*}
+
+<p>
+What happens when a new term \(a_n\) of \(a\) is received?
+</p>
+
+\begin{equation*}
+f(a_n + \frac{1}{x}, y) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a_n b  + d & b \\ a_n a + c & a \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg /
+                          \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a_n f  + h & f \\ a_n e + g & e \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} 
+\end{equation*}
+
+<p>
+This is familiar, isn't it? It's exactly the same update rule that we use for updating the convergents! All we need to do is to right-multiply \(\begin{bmatrix} a_n & 1 \\ 1 & 0\end{bmatrix}\) the two matrices.
+</p>
+
+<p>
+We can do the same with a new term \(b_n\) for \(b\):
+</p>
+
+\begin{equation*}
+f(x, b_n + \frac{1}{y}) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a & c \\ b_n a + b & b_n c + d \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg /
+                          \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} e & g \\ b_n e + f & b_n g + h \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} 
+\end{equation*}
+
+<p>
+This is basically the same thing, except that the direction is different. This corresponds to left-multiplying \(\begin{bmatrix} 0 & 1 \\ 1 & b_n\end{bmatrix}\).
+</p>
+
+<p>
+The above suggests an elegant way to visualize continued fraction arithmetic: if we imagine that two matrices form a 2x2x2 cube, this cube moves leftwards upon receiving a new term of \(a\), and it moves downwards upon receiving a new term of \(b\). As before, we'll also use the Euclidean algorithm to convert the bihomographic function into continued fractions. When we get to perform the Euclidean step, the 2x2x2 cube moves in the third dimension. The following figure illustrates that continued fraction arithmetic is a direct generalization of the 2D case:
 </p>
 
 
-<div id="org4bc91ba" class="figure">
+<div id="orgd5a7f8f" class="figure">
+<p><img src="../figs/cf_space.png" alt="cf_space.png" width="500px" />
+</p>
+</div>
+
+<p>
+Something is curious about the discussion so far. We have a generic method for ingest two continued fractions, but how do we actually do any computation on them? It's not hard to see that it all depends on the initial matrices. With appropriated chosen initial matrices, we can do multiplication, addition, division, subtraction, and their combinations. I think it's quite a remarkable result, because when we are dealing with numbers with multiple terms, multiplication is usually harder than addition. With continued fraction, the computational steps are exactly the same!
+</p>
+
+<p>
+I made the following two figures to explain how addition and multiplication are done. Here's \(a+b\). We begin with just the initial matrices (first row), add the first term of \(a\), and then add the first term of \(b\). 
+</p>
+
+
+<div id="orgf2fbfd2" class="figure">
 <p><img src="../figs/addition.png" alt="addition.png" width="500px" />
 </p>
 </div>
 
 <p>
-Given what we have learned in the previous section, it shouldn't be too surprising that multiplication can be performed with a different initial tensor (but it's still quite remarkable!)
+Here's the same process for multiplication:
 </p>
 
 
-<div id="org11a616e" class="figure">
+<div id="org3a6bc36" class="figure">
 <p><img src="../figs/multiplication.png" alt="multiplication.png" width="500px" />
 </p>
 </div>
+</div>
+</div>
 
+<div id="outline-container-orga91ddb6" class="outline-2">
+<h2 id="orga91ddb6"><span class="section-number-2">8.</span> Bihomographic functions - implementation</h2>
+<div class="outline-text-2" id="text-8">
 <p>
-Let's implement this with Numpy tensors:
+Let's represent bihomographic functions with Numpy tensors:
 </p>
-
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">tFrom2x4</span>(m: np.ndarray) -&gt; np.ndarray:
+<pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Tensor representations of bihomographic functions</span>
+
+<span class="org-keyword">def</span> <span class="org-function-name">tFrom2x4</span>(m: np.ndarray) -&gt; np.ndarray:
     ((a, b, c, d), (e, f, g, h)) = m.tolist()
     <span class="org-keyword">return</span> np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
 
 <span class="org-keyword">def</span> <span class="org-function-name">tTo2x4</span>(m: np.ndarray) -&gt; np.ndarray:
-     (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
-     <span class="org-keyword">return</span> np.array([[a, b, c, d], [e, f, g, h]])
+    (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
+    <span class="org-keyword">return</span> np.array([[a, b, c, d], [e, f, g, h]])
 </pre>
 </div>
 
+<p>
+A utility function for easy accessing elements of the matrices:
+</p>
 <div class="org-src-container">
-<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">tForAddition</span>() -&gt; np.ndarray:
-    <span class="org-keyword">return</span> np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">tensor_ref</span>(t: np.ndarray, label: <span class="org-builtin">str</span>):
+    <span class="org-keyword">assert</span> t.shape == (2, 2, 2)
+    <span class="org-keyword">assert</span> label <span class="org-keyword">in</span> [<span class="org-string">'a'</span>, <span class="org-string">'b'</span>, <span class="org-string">'c'</span>, <span class="org-string">'d'</span>, <span class="org-string">'e'</span>, <span class="org-string">'f'</span>, <span class="org-string">'g'</span>, <span class="org-string">'h'</span>, <span class="org-string">'xy'</span>, <span class="org-string">'x'</span>, <span class="org-string">'y'</span>, <span class="org-string">'1'</span>]
+    <span class="org-variable-name">lookup</span> = {}
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'a'</span>]  = t[0,1,0]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'b'</span>]  = t[0,0,0]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'c'</span>]  = t[0,1,1]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'d'</span>]  = t[0,0,1]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'e'</span>]  = t[1,1,0]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'f'</span>]  = t[1,0,0]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'g'</span>]  = t[1,1,1]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'h'</span>]  = t[1,0,1]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'xy'</span>] = lookup[<span class="org-string">'a'</span>], lookup[<span class="org-string">'e'</span>]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'x'</span>]  = lookup[<span class="org-string">'b'</span>], lookup[<span class="org-string">'f'</span>]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'y'</span>]  = lookup[<span class="org-string">'c'</span>], lookup[<span class="org-string">'g'</span>]
+    <span class="org-variable-name">lookup</span>[<span class="org-string">'1'</span>]  = lookup[<span class="org-string">'d'</span>], lookup[<span class="org-string">'h'</span>]
+    <span class="org-keyword">return</span> lookup[label]
+</pre>
+</div>
 
-<span class="org-keyword">def</span> <span class="org-function-name">tForMultiplication</span>() -&gt; np.ndarray:
-    <span class="org-keyword">return</span> np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+<p>
+These are the initial tensors needed for arithmetic:
+</p>
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-variable-name">tForAddition</span> = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+<span class="org-variable-name">tForSubtraction</span> = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
+<span class="org-variable-name">tForMultiplication</span> = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+<span class="org-variable-name">tForDivision</span> = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
 </pre>
 </div>
 
 <p>
 Applying new coefficients is implemented with my favorite Numpy function: <code>einsum</code> (Einstein's sum):
 </p>
-
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">apply_a</span>(t: np.ndarray, a: <span class="org-builtin">int</span>):
     <span class="org-variable-name">ha</span> = h(a)
@@ -1292,23 +1384,16 @@ To make sure that it works:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
-<span class="org-variable-name">m</span> = tForAddition()
-<span class="org-variable-name">m</span> = apply_a(m, 2)
-<span class="org-variable-name">m</span> = apply_b(m, 3)
-<span class="org-variable-name">m</span> = apply_a(m, 4)
-<span class="org-variable-name">m</span> = apply_b(m, 5)
-<span class="org-keyword">print</span>(m, <span class="org-string">"\n"</span>)
-<span class="org-keyword">print</span>(tTo2x4(m))
+<span class="org-variable-name">t</span> = tForAddition
+<span class="org-variable-name">t</span> = apply_a(t, 2)
+<span class="org-variable-name">t</span> = apply_b(t, 3)
+<span class="org-variable-name">t</span> = apply_a(t, 4)
+<span class="org-variable-name">t</span> = apply_b(t, 5)
+<span class="org-keyword">print</span>(tTo2x4(t))
 </pre>
 </div>
 
 <pre class="example">
-[[[ 21   5]
-  [109  26]]
-
- [[  4   1]
-  [ 20   5]]] 
-
 [[109  21  26   5]
  [ 20   4   5   1]]
 </pre>
@@ -1319,7 +1404,7 @@ To make sure that it works:
 </p>
 
 
-<div id="orgd7a3f61" class="figure">
+<div id="org49d5245" class="figure">
 <p><img src="../figs/fig2.png" alt="fig2.png" width="400" />
 </p>
 </div>
@@ -1329,22 +1414,15 @@ Let's try multiplication:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
-<span class="org-variable-name">m</span> = tForMultiplication()
-<span class="org-variable-name">m</span> = apply_a(m, 2)
-<span class="org-variable-name">m</span> = apply_b(m, 3)
-<span class="org-variable-name">m</span> = apply_a(m, 4)
-<span class="org-keyword">print</span>(m, <span class="org-string">"\n"</span>)
-<span class="org-keyword">print</span>(tTo2x4(m))
+<span class="org-variable-name">t</span> = tForMultiplication
+<span class="org-variable-name">t</span> = apply_a(t, 2)
+<span class="org-variable-name">t</span> = apply_b(t, 3)
+<span class="org-variable-name">t</span> = apply_a(t, 4)
+<span class="org-keyword">print</span>(tTo2x4(t))
 </pre>
 </div>
 
 <pre class="example">
-[[[ 9  2]
-  [27  6]]
-
- [[ 0  0]
-  [ 4  1]]] 
-
 [[27  9  6  2]
  [ 4  0  1  0]]
 </pre>
@@ -1356,9 +1434,78 @@ Let's try multiplication:
 </div>
 </div>
 
-<div id="outline-container-orged6c843" class="outline-2">
-<h2 id="orged6c843"><span class="section-number-2">8.</span> Appendix: Calculating the quotient and the remainder of a convergent in matrix form</h2>
-<div class="outline-text-2" id="text-8">
+<div id="outline-container-orgaee0ae6" class="outline-2">
+<h2 id="orgaee0ae6"><span class="section-number-2">9.</span> Convergents</h2>
+<div class="outline-text-2" id="text-9">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">arithmetic_convergents_</span>(a: Iterator[<span class="org-builtin">int</span>], b: Iterator[<span class="org-builtin">int</span>], t0 = tForAddition) -&gt; Iterator[np.ndarray]:
+    <span class="org-variable-name">res</span> = t0.copy()
+    <span class="org-keyword">while</span> <span class="org-constant">True</span>:
+        <span class="org-variable-name">an</span> = <span class="org-builtin">next</span>(a, <span class="org-constant">None</span>)
+        <span class="org-variable-name">bn</span> = <span class="org-builtin">next</span>(b, <span class="org-constant">None</span>)
+
+        <span class="org-keyword">if</span> an <span class="org-keyword">is</span> <span class="org-constant">None</span> <span class="org-keyword">and</span> bn <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">break</span>
+
+        <span class="org-keyword">if</span> an <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+            <span class="org-variable-name">res</span> = apply_a(res, an)
+            <span class="org-keyword">yield</span> <span class="org-string">'a'</span>, an, res
+        <span class="org-keyword">if</span> bn <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+            <span class="org-variable-name">res</span> = apply_b(res, bn)
+            <span class="org-keyword">yield</span> <span class="org-string">'b'</span>, bn, res
+
+<span class="org-keyword">def</span> <span class="org-function-name">arithmetic_convergents</span>(a: Iterator[<span class="org-builtin">int</span>], b: Iterator[<span class="org-builtin">int</span>], t0 = tForAddition) -&gt; Iterator[Rational]:
+    <span class="org-variable-name">c</span> = arithmetic_convergents_(a, b, t0)
+    <span class="org-builtin">next</span>(c) <span class="org-comment-delimiter"># </span><span class="org-comment">skip the initial tensor</span>
+    <span class="org-keyword">for</span> _, _, res <span class="org-keyword">in</span> c:
+        <span class="org-variable-name">r</span> = tensor_ref(res, <span class="org-string">'xy'</span>)
+        <span class="org-keyword">yield</span> Rational(*r)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python">
+<span class="org-variable-name">a</span> = <span class="org-builtin">iter</span>([2, 1, 1, 5, 1])
+<span class="org-variable-name">b</span> = <span class="org-builtin">iter</span>([2, 1, 1, 5, 1])
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(arithmetic_convergents(a, b, tForAddition)))
+</pre>
+</div>
+
+<pre class="example">
+[4/1, 5/1, 6/1, 11/2, 20/4, 111/22, 616/121, 727/143, 858/169]
+</pre>
+
+
+<div class="org-src-container">
+<pre class="src src-python">
+<span class="org-variable-name">a</span> = <span class="org-builtin">iter</span>([2, 1, 1, 5, 1])
+<span class="org-variable-name">b</span> = <span class="org-builtin">iter</span>([2, 1, 1, 5, 1])
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(arithmetic_convergents(a, b, tForSubtraction)))
+</pre>
+</div>
+
+<pre class="example">
+[0/1, 1/1, 0/1, -1/2, 0/4, 1/22, 0/121, -1/143, 0/169]
+</pre>
+
+
+<div class="org-src-container">
+<pre class="src src-python">
+<span class="org-variable-name">a</span> = <span class="org-builtin">iter</span>([2, 1, 1, 5, 1])
+<span class="org-variable-name">b</span> = <span class="org-builtin">iter</span>([2, 1, 1, 5, 1])
+<span class="org-keyword">print</span>(<span class="org-builtin">list</span>(arithmetic_convergents(a, b, tForMultiplication)))
+</pre>
+</div>
+
+<pre class="example">
+[4/1, 6/1, 9/1, 15/2, 25/4, 140/22, 784/121, 924/143, 1089/169]
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org4d7c59b" class="outline-2">
+<h2 id="org4d7c59b"><span class="section-number-2">10.</span> Appendix: Quotients/remainders for matrices</h2>
+<div class="outline-text-2" id="text-10">
 <p>
 This is just calculus
 </p>
@@ -1420,9 +1567,51 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org9ae24ab" class="outline-2">
-<h2 id="org9ae24ab"><span class="section-number-2">9.</span> Appendix: Tests</h2>
-<div class="outline-text-2" id="text-9">
+<div id="outline-container-org71f0d90" class="outline-2">
+<h2 id="org71f0d90"><span class="section-number-2">11.</span> Appendix: Quotients/remainders for tensors</h2>
+<div class="outline-text-2" id="text-11">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">tensor_term_ratios</span>(t: np.ndarray) -&gt; <span class="org-builtin">list</span>:
+    <span class="org-doc">""" return</span>
+<span class="org-doc">        [[a/e, floor(a/e), 'xy'],</span>
+<span class="org-doc">         [b/f, floor(b/f), 'x'],</span>
+<span class="org-doc">         [c/g, floor(c/g), 'y'],</span>
+<span class="org-doc">         [d/h, floor(d/h), '1']]"""</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">f</span>(label):
+        <span class="org-variable-name">numerator</span>, <span class="org-variable-name">denominator</span> = tensor_ref(t, label)
+        <span class="org-keyword">return</span> numerator/denominator, math.floor(numerator/denominator), label
+
+    <span class="org-keyword">return</span> [f(<span class="org-string">'xy'</span>), f(<span class="org-string">'x'</span>), f(<span class="org-string">'y'</span>), f(<span class="org-string">'1'</span>)]
+
+<span class="org-keyword">def</span> <span class="org-function-name">qr_tensor</span>(t: np.ndarray):
+    <span class="org-keyword">if</span> (t[1] &lt;= 0).<span class="org-builtin">any</span>():
+        <span class="org-comment-delimiter"># </span><span class="org-comment">if any number in the denominator is smaller or equal to 0, the function is unbounded</span>
+        <span class="org-keyword">pass</span>
+    <span class="org-keyword">else</span>:
+        <span class="org-variable-name">r</span> = tensor_term_ratios(t)
+        <span class="org-variable-name">r_sorted</span> = <span class="org-builtin">sorted</span>(r, key = <span class="org-keyword">lambda</span> terms: terms[1], reverse = <span class="org-constant">True</span>)
+
+        <span class="org-keyword">if</span> r_sorted[0, 0] == r_sorted[0, 1]:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">the max can only be reached at 0 or infinity, so the quotient needed -1 </span>
+            <span class="org-variable-name">r_sorted</span>[0, 1] = r_sorted[0, 1] - 1
+
+        <span class="org-keyword">if</span> r_sorted[0, 1] == r_sorted[-1, 1]:
+            <span class="org-comment-delimiter">#  </span><span class="org-comment">If the floor of the first and the last are the same, the numbers are all the same</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">in this case, the value is the quotient</span>
+            <span class="org-keyword">pass</span>
+        <span class="org-keyword">else</span>:
+            <span class="org-comment-delimiter"># </span><span class="org-comment">the quotient cannot be determined, but suggest which direction to go</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">if one of them is different, go to the dir that is different</span>
+            <span class="org-comment-delimiter"># </span><span class="org-comment">if all three are different, what to do? compare magnitude?</span>
+            <span class="org-keyword">pass</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3f7e3fd" class="outline-2">
+<h2 id="org3f7e3fd"><span class="section-number-2">12.</span> Appendix: Tests</h2>
+<div class="outline-text-2" id="text-12">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;TEST_IMPORTS&gt;&gt;
 &lt;&lt;TEST_R2CF&gt;&gt;
@@ -1435,9 +1624,9 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orgaec9f93" class="outline-3">
-<h3 id="orgaec9f93"><span class="section-number-3">9.1.</span> Using continued fractions to represent rational numbers</h3>
-<div class="outline-text-3" id="text-9-1">
+<div id="outline-container-org55e20aa" class="outline-3">
+<h3 id="org55e20aa"><span class="section-number-3">12.1.</span> Using continued fractions to represent rational numbers</h3>
+<div class="outline-text-3" id="text-12-1">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestR2cf</span>(<span class="org-builtin">object</span>):
     <span class="org-keyword">def</span> <span class="org-function-name">test_basic</span>(<span class="org-keyword">self</span>):
@@ -1448,9 +1637,9 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org37fe709" class="outline-3">
-<h3 id="org37fe709"><span class="section-number-3">9.2.</span> Convergents</h3>
-<div class="outline-text-3" id="text-9-2">
+<div id="outline-container-orge5b92fb" class="outline-3">
+<h3 id="orge5b92fb"><span class="section-number-3">12.2.</span> Convergents</h3>
+<div class="outline-text-3" id="text-12-2">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Apply this test to two functions, because they should be equivalent</span>
 <span class="org-type">@pytest.mark.parametrize</span>(<span class="org-string">'conv_func'</span>, [cf_convergents0, cf_convergents1])
@@ -1488,9 +1677,9 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org7bae5ba" class="outline-3">
-<h3 id="org7bae5ba"><span class="section-number-3">9.3.</span> Symbolic Euclidean algorithm</h3>
-<div class="outline-text-3" id="text-9-3">
+<div id="outline-container-orgd2f2206" class="outline-3">
+<h3 id="orgd2f2206"><span class="section-number-3">12.3.</span> Symbolic Euclidean algorithm</h3>
+<div class="outline-text-3" id="text-12-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestQRMatrix</span>(<span class="org-builtin">object</span>):
     <span class="org-keyword">def</span> <span class="org-function-name">qr</span>(<span class="org-keyword">self</span>, m):
@@ -1581,9 +1770,9 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-org080ef29" class="outline-3">
-<h3 id="org080ef29"><span class="section-number-3">9.4.</span> Transformations of continued fractions</h3>
-<div class="outline-text-3" id="text-9-4">
+<div id="outline-container-orgf66ccb5" class="outline-3">
+<h3 id="orgf66ccb5"><span class="section-number-3">12.4.</span> Transformations of continued fractions</h3>
+<div class="outline-text-3" id="text-12-4">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestCFTransform</span>(<span class="org-builtin">object</span>):
     <span class="org-keyword">def</span> <span class="org-function-name">test_cf_transform_basic1</span>(<span class="org-keyword">self</span>):
@@ -1604,9 +1793,9 @@ This is just calculus
 </div>
 </div>
 
-<div id="outline-container-orgda85bb0" class="outline-3">
-<h3 id="orgda85bb0"><span class="section-number-3">9.5.</span> Bihomography</h3>
-<div class="outline-text-3" id="text-9-5">
+<div id="outline-container-org3ce412c" class="outline-3">
+<h3 id="org3ce412c"><span class="section-number-3">12.5.</span> Bihomography</h3>
+<div class="outline-text-3" id="text-12-5">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestBiho</span>(<span class="org-builtin">object</span>):
     <span class="org-keyword">def</span> <span class="org-function-name">test_biho_basic1</span>(<span class="org-keyword">self</span>):
@@ -1624,9 +1813,9 @@ This is just calculus
 </div>
 </div>
 </div>
-<div id="outline-container-org4d3062a" class="outline-3">
-<h3 id="org4d3062a"><span class="section-number-3">9.6.</span> Imports</h3>
-<div class="outline-text-3" id="text-9-6">
+<div id="outline-container-orgb7ef9a2" class="outline-3">
+<h3 id="orgb7ef9a2"><span class="section-number-3">12.6.</span> Imports</h3>
+<div class="outline-text-3" id="text-12-6">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
 <span class="org-keyword">import</span> pytest
@@ -1636,22 +1825,24 @@ This is just calculus
 </div>
 </div>
 </div>
-<div id="outline-container-orgfbc38e0" class="outline-2">
-<h2 id="orgfbc38e0"><span class="section-number-2">10.</span> Appendix: Display utilities</h2>
-<div class="outline-text-2" id="text-10">
+<div id="outline-container-orga7d044e" class="outline-2">
+<h2 id="orga7d044e"><span class="section-number-2">13.</span> Appendix: Display utilities</h2>
+<div class="outline-text-2" id="text-13">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;IO_IMPORTS&gt;&gt;
 &lt;&lt;CHART_CLASS&gt;&gt;
+&lt;&lt;CHART3D_CLASS&gt;&gt;
 &lt;&lt;TABS&gt;&gt;
+&lt;&lt;TABS3D&gt;&gt;
 &lt;&lt;LATEX_UTILS&gt;&gt;
 &lt;&lt;MISC&gt;&gt;
 </pre>
 </div>
 </div>
 
-<div id="outline-container-org29d6b23" class="outline-3">
-<h3 id="org29d6b23"><span class="section-number-3">10.1.</span> Chart utilities</h3>
-<div class="outline-text-3" id="text-10-1">
+<div id="outline-container-orgf0f4f0d" class="outline-3">
+<h3 id="orgf0f4f0d"><span class="section-number-3">13.1.</span> Chart utilities</h3>
+<div class="outline-text-3" id="text-13-1">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">A class to facilitate tabular displays</span>
 <span class="org-keyword">class</span> <span class="org-type">Chart</span>(<span class="org-builtin">object</span>):
@@ -1771,9 +1962,9 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 
-<div id="outline-container-org20e1477" class="outline-3">
-<h3 id="org20e1477"><span class="section-number-3">10.2.</span> Tabulated displays</h3>
-<div class="outline-text-3" id="text-10-2">
+<div id="outline-container-org5186cb1" class="outline-3">
+<h3 id="org5186cb1"><span class="section-number-3">13.2.</span> Tabulated displays</h3>
+<div class="outline-text-3" id="text-13-2">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">r2cf_tab</span>(rn: Rational):
     <span class="org-keyword">def</span> <span class="org-function-name">row</span>(st: <span class="org-builtin">str</span>, x: <span class="org-builtin">tuple</span>):
@@ -1809,35 +2000,29 @@ Some miscellaneous pretty printing utilities:
     <span class="org-keyword">if</span> n:
         <span class="org-variable-name">cf</span> = islice(cf, n)
 
-    (cf1, cf2) = tee(cf)
-
-    <span class="org-variable-name">res</span> = cf_transform_(cf2, m0)
+    <span class="org-variable-name">res</span> = cf_transform_(cf, m0)
     <span class="org-comment-delimiter"># </span><span class="org-comment">res may be longer than cf1, res might not be empty after this loop</span>
-    <span class="org-keyword">for</span> (a, (q, r, m)) <span class="org-keyword">in</span> <span class="org-builtin">zip</span>(cf1, res):
-        chart.push_column(m, a)
+    <span class="org-keyword">for</span> (q, r, m, a, new_a) <span class="org-keyword">in</span> res:
+        <span class="org-keyword">if</span> new_a:
+            chart.push_column(m, a)
         <span class="org-keyword">if</span> q <span class="org-keyword">is</span> <span class="org-constant">None</span>:
             <span class="org-comment-delimiter"># </span><span class="org-comment">this means that no euclid step was performed</span>
             <span class="org-comment-delimiter"># </span><span class="org-comment">do nothing</span>
             <span class="org-keyword">pass</span>
         <span class="org-keyword">else</span>:
-            chart.push_row(r, q)
-
-    <span class="org-keyword">for</span> item <span class="org-keyword">in</span> res:
-        <span class="org-comment-delimiter"># </span><span class="org-comment">at this point, the quotients are quotients for rational numbers rather than matrices</span>
-        <span class="org-comment-delimiter"># </span><span class="org-comment">so r should be None</span>
-        (q, r, m) = item
-        <span class="org-keyword">assert</span> r <span class="org-keyword">is</span> <span class="org-constant">None</span>
-        chart.push_right(q)
-        <span class="org-keyword">pass</span>
-
+            <span class="org-keyword">if</span> r <span class="org-keyword">is</span> <span class="org-keyword">not</span> <span class="org-constant">None</span>:
+                chart.push_row(r, q)
+            <span class="org-keyword">else</span>:
+                <span class="org-comment-delimiter"># </span><span class="org-comment">r is None, meaning that the quotients are for rational numbers rathen than matrices</span>
+                chart.push_right(q)
     <span class="org-keyword">return</span> chart
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-orga17a66c" class="outline-3">
-<h3 id="orga17a66c"><span class="section-number-3">10.3.</span> LaTeX utilities</h3>
-<div class="outline-text-3" id="text-10-3">
+<div id="outline-container-org676d0fb" class="outline-3">
+<h3 id="org676d0fb"><span class="section-number-3">13.3.</span> LaTeX utilities</h3>
+<div class="outline-text-3" id="text-13-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Utilities functions for LaTeX displays</span>
 <span class="org-keyword">def</span> <span class="org-function-name">latex_cf</span>(lst: <span class="org-builtin">list</span>):
@@ -1870,9 +2055,137 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 
-<div id="outline-container-orgc8466fc" class="outline-3">
-<h3 id="orgc8466fc"><span class="section-number-3">10.4.</span> Imports</h3>
-<div class="outline-text-3" id="text-10-4">
+<div id="outline-container-orga237b7b" class="outline-3">
+<h3 id="orga237b7b"><span class="section-number-3">13.4.</span> Chart3D utilities</h3>
+<div class="outline-text-3" id="text-13-4">
+<p>
+The 3D chart is similar to 2D chart. I decided to write a new class for simplicity. This should be merged with the 3D chart later.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">Chart3D</span>(<span class="org-builtin">object</span>):
+    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>, m = tForAddition):
+        <span class="org-keyword">self</span>.top = [<span class="org-constant">None</span>]
+        <span class="org-keyword">self</span>.right = [<span class="org-constant">None</span>]
+        <span class="org-keyword">self</span>.output = [<span class="org-constant">None</span>]
+        <span class="org-keyword">self</span>.boards = m.tolist()
+        <span class="org-keyword">self</span>.top = [<span class="org-constant">None</span>, <span class="org-constant">None</span>]
+        <span class="org-keyword">self</span>.right = [<span class="org-constant">None</span>]
+        <span class="org-keyword">self</span>.current_tensor = m.copy()
+
+    <span class="org-keyword">def</span> <span class="org-function-name">move_left</span>(<span class="org-keyword">self</span>, t, a):
+        <span class="org-keyword">assert</span> tensor_ref(t, <span class="org-string">'y'</span>) == tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'xy'</span>)
+        <span class="org-keyword">assert</span> tensor_ref(t, <span class="org-string">'1'</span>) == tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'x'</span>)
+        <span class="org-keyword">self</span>.current_tensor = t
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">add a new column for all boards</span>
+        <span class="org-keyword">for</span> i <span class="org-keyword">in</span> <span class="org-builtin">range</span>(<span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards)):
+            <span class="org-keyword">for</span> j <span class="org-keyword">in</span> <span class="org-builtin">range</span>(<span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards[0])):
+                <span class="org-keyword">self</span>.boards[i][j] = [<span class="org-constant">None</span>] + <span class="org-keyword">self</span>.boards[i][j]
+
+        <span class="org-keyword">self</span>.boards[-2][-2][0] = tensor_ref(t, <span class="org-string">'b'</span>)
+        <span class="org-keyword">self</span>.boards[-2][-1][0] = tensor_ref(t, <span class="org-string">'a'</span>)
+        <span class="org-keyword">self</span>.boards[-1][-2][0] = tensor_ref(t, <span class="org-string">'f'</span>)
+        <span class="org-keyword">self</span>.boards[-1][-1][0] = tensor_ref(t, <span class="org-string">'e'</span>)
+        <span class="org-keyword">self</span>.top = [[a]] + <span class="org-keyword">self</span>.top
+
+    <span class="org-keyword">def</span> <span class="org-function-name">move_down</span>(<span class="org-keyword">self</span>, t, b):
+        <span class="org-keyword">assert</span> tensor_ref(t, <span class="org-string">'x'</span>) == tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'xy'</span>)
+        <span class="org-keyword">assert</span> tensor_ref(t, <span class="org-string">'1'</span>) == tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'y'</span>)
+        <span class="org-keyword">self</span>.current_tensor = t
+        <span class="org-variable-name">new_row_numerator</span>   = [<span class="org-constant">None</span>] * <span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards[0][0])
+        <span class="org-variable-name">new_row_denominator</span> = [<span class="org-constant">None</span>] * <span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards[1][0])
+        <span class="org-variable-name">new_row_numerator</span>[0] = tensor_ref(t, <span class="org-string">'a'</span>)
+        <span class="org-variable-name">new_row_numerator</span>[1] = tensor_ref(t, <span class="org-string">'c'</span>)
+        <span class="org-variable-name">new_row_denominator</span>[0] = tensor_ref(t, <span class="org-string">'e'</span>)
+        <span class="org-variable-name">new_row_denominator</span>[1] = tensor_ref(t, <span class="org-string">'g'</span>)
+        <span class="org-keyword">self</span>.boards[-2] = <span class="org-keyword">self</span>.boards[-2] + [new_row_numerator]
+        <span class="org-keyword">self</span>.boards[-1] = <span class="org-keyword">self</span>.boards[-1] + [new_row_denominator]
+        <span class="org-keyword">self</span>.right = <span class="org-keyword">self</span>.right + [b]
+
+        <span class="org-comment-delimiter"># </span><span class="org-comment">all boards under have to be expanded</span>
+        <span class="org-keyword">for</span> i <span class="org-keyword">in</span> <span class="org-builtin">range</span>(0, <span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards)-2):
+            <span class="org-keyword">self</span>.boards[i] = <span class="org-keyword">self</span>.boards[i] + [[<span class="org-constant">None</span>] * <span class="org-builtin">len</span>(new_row_numerator)]
+
+    <span class="org-keyword">def</span> <span class="org-function-name">move_high</span>(<span class="org-keyword">self</span>, t, output):
+        <span class="org-keyword">assert</span> tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'f'</span>) == tensor_ref(t, <span class="org-string">'b'</span>)
+        <span class="org-keyword">assert</span> tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'h'</span>) == tensor_ref(t, <span class="org-string">'d'</span>)
+        <span class="org-keyword">assert</span> tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'e'</span>) == tensor_ref(t, <span class="org-string">'a'</span>)
+        <span class="org-keyword">assert</span> tensor_ref(<span class="org-keyword">self</span>.current_tensor, <span class="org-string">'g'</span>) == tensor_ref(t, <span class="org-string">'c'</span>)
+        <span class="org-keyword">self</span>.current_tensor = t
+
+        <span class="org-variable-name">n_rows</span> = <span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards[0])
+        <span class="org-variable-name">n_cols</span> = <span class="org-builtin">len</span>(<span class="org-keyword">self</span>.boards[0][0])
+        <span class="org-keyword">def</span> <span class="org-function-name">new_row</span>():
+            <span class="org-keyword">return</span> [<span class="org-constant">None</span>] * n_cols
+        <span class="org-variable-name">new_boards</span> = [new_row() <span class="org-keyword">for</span> i <span class="org-keyword">in</span> <span class="org-builtin">range</span>(n_rows)]
+
+        new_boards[-2][0] = tensor_ref(t, <span class="org-string">'f'</span>)
+        new_boards[-2][1] = tensor_ref(t, <span class="org-string">'h'</span>)
+        new_boards[-1][0] = tensor_ref(t, <span class="org-string">'e'</span>)
+        new_boards[-1][1] = tensor_ref(t, <span class="org-string">'g'</span>)
+        <span class="org-keyword">self</span>.boards = <span class="org-keyword">self</span>.boards + [new_boards]
+
+    @<span class="org-builtin">staticmethod</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">pp_item</span>(item, right = <span class="org-constant">False</span>, field_width = 3):
+        <span class="org-comment-delimiter">#</span><span class="org-comment">print("item=", item)</span>
+        <span class="org-keyword">if</span> item <span class="org-keyword">is</span> <span class="org-constant">None</span>:
+            <span class="org-keyword">return</span> <span class="org-string">" "</span> * field_width
+        <span class="org-keyword">else</span>:
+            <span class="org-keyword">if</span> right:
+                <span class="org-keyword">return</span> f<span class="org-string">" {item : &lt; {field_width}}"</span>
+            <span class="org-keyword">else</span>:
+                <span class="org-keyword">return</span> f<span class="org-string">"{item : &gt; {field_width}}"</span>
+
+    @<span class="org-builtin">staticmethod</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">pp_row</span>(row):
+        <span class="org-comment-delimiter">#</span><span class="org-comment">print("row=", row)</span>
+        <span class="org-keyword">return</span> <span class="org-builtin">reduce</span>(<span class="org-keyword">lambda</span> s, item: s + Chart3D.pp_item(item), row, <span class="org-string">""</span>) + <span class="org-string">"\n"</span>
+
+    @<span class="org-builtin">staticmethod</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">pp_board</span>(board):
+        <span class="org-variable-name">s</span> = <span class="org-string">""</span>
+        <span class="org-keyword">for</span> (i, row) <span class="org-keyword">in</span> <span class="org-builtin">enumerate</span>(board):
+            <span class="org-variable-name">s</span> = s + Chart3D.pp_row(row)
+        <span class="org-keyword">return</span> s + <span class="org-string">"\n"</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">__repr__</span>(<span class="org-keyword">self</span>):
+        <span class="org-variable-name">s</span> = <span class="org-string">""</span>
+        <span class="org-comment-delimiter">#</span><span class="org-comment">s = s + Chart3D.pp_row([None] + self.top) + "\n"</span>
+        <span class="org-keyword">for</span> b <span class="org-keyword">in</span> <span class="org-keyword">self</span>.boards:
+            <span class="org-comment-delimiter">#</span><span class="org-comment">print("board=", b)</span>
+            <span class="org-variable-name">s</span> = s + Chart3D.pp_board(b)
+        <span class="org-variable-name">s</span> = s[:-1]
+        <span class="org-keyword">return</span> s
+
+    <span class="org-keyword">def</span> <span class="org-function-name">export_csv</span>(<span class="org-keyword">self</span>, filename):
+        <span class="org-keyword">with</span> <span class="org-builtin">open</span>(filename, mode = <span class="org-string">'w'</span>) <span class="org-keyword">as</span> outfile:
+            <span class="org-variable-name">writer</span> = csv.writer(outfile)
+            <span class="org-keyword">for</span> b <span class="org-keyword">in</span> <span class="org-keyword">self</span>.boards:
+                writer.writerows(b)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org99f8dc3" class="outline-3">
+<h3 id="org99f8dc3"><span class="section-number-3">13.5.</span> Tabulated displays: 3D</h3>
+<div class="outline-text-3" id="text-13-5">
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">tabs3d</span>(a, b, t0 = tForAddition):
+    <span class="org-variable-name">c</span> = Chart3D(t0)
+    <span class="org-keyword">for</span> direction, coefficient, t <span class="org-keyword">in</span> arithmetic_convergents_(a, b, t0):
+        <span class="org-keyword">if</span> direction == <span class="org-string">'a'</span>:
+            c.move_left(t, coefficient)
+        <span class="org-keyword">else</span>:
+            c.move_down(t, coefficient)
+    <span class="org-keyword">return</span> c
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6306991" class="outline-3">
+<h3 id="org6306991"><span class="section-number-3">13.6.</span> Imports</h3>
+<div class="outline-text-3" id="text-13-6">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">from</span> cont_frac <span class="org-keyword">import</span> *
 <span class="org-keyword">from</span> functools <span class="org-keyword">import</span> <span class="org-builtin">reduce</span>
@@ -1882,9 +2195,9 @@ Some miscellaneous pretty printing utilities:
 </div>
 </div>
 </div>
-<div id="outline-container-orgcefeba2" class="outline-2">
-<h2 id="orgcefeba2"><span class="section-number-2">11.</span> Appendix: Imports</h2>
-<div class="outline-text-2" id="text-11">
+<div id="outline-container-org3b21e3c" class="outline-2">
+<h2 id="org3b21e3c"><span class="section-number-2">14.</span> Appendix: Imports</h2>
+<div class="outline-text-2" id="text-14">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> math
 <span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
@@ -1905,7 +2218,7 @@ Some miscellaneous pretty printing utilities:
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Hsin-Hao Yu</p>
-<p class="date">Created: 2022-04-17 Sun 16:28</p>
+<p class="date">Created: 2022-04-23 Sat 21:31</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

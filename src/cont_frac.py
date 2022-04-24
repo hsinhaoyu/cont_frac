@@ -201,6 +201,126 @@ def cf_transform(
             # to continue. It can be ignored
 
 
+# Tensor representations of bihomographic functions
+
+
+def tFrom2x4(m: np.ndarray) -> np.ndarray:
+    ((a, b, c, d), (e, f, g, h)) = m.tolist()
+    return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
+
+
+def tTo2x4(m: np.ndarray) -> np.ndarray:
+    (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
+    return np.array([[a, b, c, d], [e, f, g, h]])
+
+
+def tensor_ref(t: np.ndarray, label: str):
+    assert t.shape == (2, 2, 2)
+    assert label in [
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1'
+    ]
+    lookup = {}
+    lookup['a'] = t[0, 1, 0]
+    lookup['b'] = t[0, 0, 0]
+    lookup['c'] = t[0, 1, 1]
+    lookup['d'] = t[0, 0, 1]
+    lookup['e'] = t[1, 1, 0]
+    lookup['f'] = t[1, 0, 0]
+    lookup['g'] = t[1, 1, 1]
+    lookup['h'] = t[1, 0, 1]
+    lookup['xy'] = lookup['a'], lookup['e']
+    lookup['x'] = lookup['b'], lookup['f']
+    lookup['y'] = lookup['c'], lookup['g']
+    lookup['1'] = lookup['d'], lookup['h']
+    return lookup[label]
+
+
+tForAddition = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+tForSubtraction = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
+tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
+
+
+def apply_a(t: np.ndarray, a: int):
+    ha = h(a)
+    return np.einsum('dyx,xz->dyz', t, ha)
+
+
+def h_rotated(b: int) -> np.ndarray:
+    return np.array([[0, 1], [1, b]])
+
+
+def apply_b(t: np.ndarray, b: int):
+    hb = h_rotated(b)
+    return np.einsum('zy,dyx->dzx', hb, t)
+
+
+def arithmetic_convergents_(a: Iterator[int],
+                            b: Iterator[int],
+                            t0=tForAddition) -> Iterator[np.ndarray]:
+    res = t0.copy()
+    while True:
+        an = next(a, None)
+        bn = next(b, None)
+
+        if an is None and bn is None:
+            break
+
+        if an is not None:
+            res = apply_a(res, an)
+            yield 'a', an, res
+        if bn is not None:
+            res = apply_b(res, bn)
+            yield 'b', bn, res
+
+
+def arithmetic_convergents(a: Iterator[int],
+                           b: Iterator[int],
+                           t0=tForAddition) -> Iterator[Rational]:
+    c = arithmetic_convergents_(a, b, t0)
+    next(c)  # skip the initial tensor
+    for _, _, res in c:
+        r = tensor_ref(res, 'xy')
+        yield Rational(*r)
+
+
+def tensor_term_ratios(t: np.ndarray) -> list:
+    """ return
+        [[a/e, floor(a/e), 'xy'],
+         [b/f, floor(b/f), 'x'],
+         [c/g, floor(c/g), 'y'],
+         [d/h, floor(d/h), '1']]"""
+    def f(label):
+        numerator, denominator = tensor_ref(t, label)
+        return numerator / denominator, math.floor(numerator /
+                                                   denominator), label
+
+    return [f('xy'), f('x'), f('y'), f('1')]
+
+
+def qr_tensor(t: np.ndarray):
+    if (t[1] <= 0).any():
+        # if any number in the denominator is smaller or equal to 0, the function is unbounded
+        pass
+    else:
+        r = tensor_term_ratios(t)
+        r_sorted = sorted(r, key=lambda terms: terms[1], reverse=True)
+
+        if r_sorted[0, 0] == r_sorted[0, 1]:
+            # the max can only be reached at 0 or infinity, so the quotient needed -1
+            r_sorted[0, 1] = r_sorted[0, 1] - 1
+
+        if r_sorted[0, 1] == r_sorted[-1, 1]:
+            #  If the floor of the first and the last are the same, the numbers are all the same
+            # in this case, the value is the quotient
+            pass
+        else:
+            # the quotient cannot be determined, but suggest which direction to go
+            # if one of them is different, go to the dir that is different
+            # if all three are different, what to do? compare magnitude?
+            pass
+
+
 # Examples of continuous fractions
 
 
@@ -220,35 +340,3 @@ def cf_sqrt2():
     yield 1
     while True:
         yield 2
-
-
-def tFrom2x4(m: np.ndarray) -> np.ndarray:
-    ((a, b, c, d), (e, f, g, h)) = m.tolist()
-    return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
-
-
-def tTo2x4(m: np.ndarray) -> np.ndarray:
-    (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
-    return np.array([[a, b, c, d], [e, f, g, h]])
-
-
-def tForAddition() -> np.ndarray:
-    return np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
-
-
-def tForMultiplication() -> np.ndarray:
-    return np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
-
-
-def apply_a(t: np.ndarray, a: int):
-    ha = h(a)
-    return np.einsum('dyx,xz->dyz', t, ha)
-
-
-def h_rotated(b: int) -> np.ndarray:
-    return np.array([[0, 1], [1, b]])
-
-
-def apply_b(t: np.ndarray, b: int):
-    hb = h_rotated(b)
-    return np.einsum('zy,dyx->dzx', hb, t)

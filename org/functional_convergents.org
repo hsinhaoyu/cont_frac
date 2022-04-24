@@ -120,7 +120,7 @@ $\begin{bmatrix}
      5 & 1
 \end{bmatrix}$
 
-represents a function that approximates a continued fraction with more terms. Applying this function to the remains of the series gives the exact value of the continued fraction. If the continued fractions has only 3 terms, we terminate the process by evaluating
+represents a function that approximates a continued fraction with more terms. If the continued fractions has only 3 terms, we terminate the process by evaluating
 
 \begin{equation*}
 

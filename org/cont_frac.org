@@ -14,8 +14,9 @@
   <<CONVERGENTS1>>
   <<QR_MATRIX>>
   <<CF_TRANSFORM>>
+  <<BIHOMOGRAPHY>>  
+  <<QR_TENSOR>>
   <<CF_EXAMPLES>>
-  <<BIHOMOGRAPHY>>
 #+end_src
 
 * Representing rational numbers as continued fractions
@@ -243,7 +244,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multiplications:
 #+begin_src python :tangle no :noweb-ref CONVERGENTS1
   # Calculate the convergents using matrix multiplication
-  
+
   def h(a: int) -> np.ndarray:
       return np.array([[a, 1], [1,0]])
 
@@ -313,21 +314,21 @@ The first row represents the coefficients of the continued fraction. To understa
 
 You can see these matrices shift leftwards in the tabular representation, with adjacent matrices sharing a column. To see why, suppose that the current matrix is
 $\begin{bmatrix}
-    x_{11} & x_{12} \\
-    x_{21} & x_{22}
-\end{bmatrix}$, and we have to update it with a new term $a$ in the continued fraction. The updated matrix is
+    p & q \\
+    r & s
+\end{bmatrix}$, and we have to update it with a new term $a_n$ in the continued fraction. The updated matrix is
 \begin{equation*}
     \begin{bmatrix}
-        x_{11} & x_{12} \\
-        x_{21} & x_{22}
+        p & q \\
+        r & s
     \end{bmatrix}
     \begin{bmatrix}
-        a & 1 \\
+        a_n & 1 \\
         1 & 0
     \end{bmatrix} =
     \begin{bmatrix}
-        ax_{11} & x_{11} \\
-        ax_{21} & x_{21}
+        a_n p + q & p \\
+        a_n r + s & r
     \end{bmatrix}
 \end{equation*}
 
@@ -501,7 +502,7 @@ This seems to be anti-climatic for quite a bit of work... but here's something c
 The numbers on the right are the outputs of =cf_transform=.
 
 * Simple transformations of continued fractions
-The beauty of representing convergents as matrices is that we can transform it with a function of the form $f(x) = \frac{ax+b}{cx+d}$. All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving =cf_transform= an initial matrix.
+The beauty of representing convergents as matrices is that we can transform it with a function of the form $f(x) = \frac{px+q}{rx+s}$. All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving =cf_transform= an initial matrix.
 
 The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, and turn it back to a continued fraction:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -623,39 +624,55 @@ Another example: what is $\tanh{\frac{1}{2}} = \frac{e-1}{e+1}$? We have already
 
 The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term.
 
-* Arithmetic: bilinear homographic functions
-When there is just one continued fraction $a$, the action is on the convergent of the form $f(x) = \frac{px+q}{rx+s}$, which can be represented with by a matrix $M = \begin{bmatrix} p & q \\ r & s \end{bmatrix}$. With two continued fractions $a$ and $b$, the function generalizes to $f(x, y) = \frac{axy + bx + cy + d}{exy + fx + gy + h}$, where $x$ and $y$ are the unknown terms for $a$ and $b$ respectively. This bilinear function can be represented by the 2x2x2 tensor $T=\begin{bmatrix}\begin{bmatrix} b & d \\ a & c \end{bmatrix}\begin{bmatrix} f & h \\ e & g \end{bmatrix}\end{bmatrix}$, where the first matrix encodes terms in the numerator, and the second encodes terms in the denominator. This particular representation is not necessary for the computation, but it gives the update rules a very nice visual interpretation. When the tensor is viewed as a 2x2x2 cube in 3D, it moves to leftwards when it receives a term of $a$, and it moves downwards when it receives a term of $b$. The following figure illustrates this for $a + b$. For each row, the table on the left illustrates the matrix encoding terms in the numerator, and the table on the right illustrates terms in the denominator. When the two matrices are combined, they describes the function in the middle panel. We start at the initial condition in the first row, add the first coefficient of $a$ in the second row, and then add the first coefficient of $b$ in the third row.
+* Continued fraction arithmetic - bihomographic functions
+#+INCLUDE: arithmetic.org
 
-#+attr_html: :width 500px
-[[../figs/addition.png]]
-
-Given what we have learned in the previous section, it shouldn't be too surprising that multiplication can be performed with a different initial tensor (but it's still quite remarkable!)
-
-#+attr_html: :width 500px
-[[../figs/multiplication.png]]
-
-Let's implement this with Numpy tensors:
-
+* Bihomographic functions - implementation
+Let's represent bihomographic functions with Numpy tensors:
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  # Tensor representations of bihomographic functions
+
   def tFrom2x4(m: np.ndarray) -> np.ndarray:
       ((a, b, c, d), (e, f, g, h)) = m.tolist()
       return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
 
   def tTo2x4(m: np.ndarray) -> np.ndarray:
-       (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
-       return np.array([[a, b, c, d], [e, f, g, h]])
+      (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
+      return np.array([[a, b, c, d], [e, f, g, h]])
 #+end_src
 
-#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
-  def tForAddition() -> np.ndarray:
-      return np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+#+RESULTS:
 
-  def tForMultiplication() -> np.ndarray:
-      return np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+A utility function for easy accessing elements of the matrices:
+#+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
+  def tensor_ref(t: np.ndarray, label: str):
+      assert t.shape == (2, 2, 2)
+      assert label in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1']
+      lookup = {}
+      lookup['a']  = t[0,1,0]
+      lookup['b']  = t[0,0,0]
+      lookup['c']  = t[0,1,1]
+      lookup['d']  = t[0,0,1]
+      lookup['e']  = t[1,1,0]
+      lookup['f']  = t[1,0,0]
+      lookup['g']  = t[1,1,1]
+      lookup['h']  = t[1,0,1]
+      lookup['xy'] = lookup['a'], lookup['e']
+      lookup['x']  = lookup['b'], lookup['f']
+      lookup['y']  = lookup['c'], lookup['g']
+      lookup['1']  = lookup['d'], lookup['h']
+      return lookup[label]
+#+end_src
+
+These are the initial tensors needed for arithmetic:
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  tForAddition = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+  tForSubtraction = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
+  tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+  tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
 #+end_src
 
 Applying new coefficients is implemented with my favorite Numpy function: =einsum= (Einstein's sum):
-
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
   def apply_a(t: np.ndarray, a: int):
       ha = h(a)
@@ -672,22 +689,15 @@ Applying new coefficients is implemented with my favorite Numpy function: =einsu
 To make sure that it works:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  m = tForAddition()
-  m = apply_a(m, 2)
-  m = apply_b(m, 3)
-  m = apply_a(m, 4)
-  m = apply_b(m, 5)
-  print(m, "\n")
-  print(tTo2x4(m))
+  t = tForAddition
+  t = apply_a(t, 2)
+  t = apply_b(t, 3)
+  t = apply_a(t, 4)
+  t = apply_b(t, 5)
+  print(tTo2x4(t))
 #+end_src
 
 #+RESULTS:
-: [[[ 21   5]
-:   [109  26]]
-: 
-:  [[  4   1]
-:   [ 20   5]]] 
-: 
 : [[109  21  26   5]
 :  [ 20   4   5   1]]
 
@@ -700,27 +710,76 @@ $\begin{bmatrix} 109 & 21 & 26 & 5 \\ 20 & 4 & 5 & 1 \end{bmatrix}$ means $\frac
 Let's try multiplication:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  m = tForMultiplication()
-  m = apply_a(m, 2)
-  m = apply_b(m, 3)
-  m = apply_a(m, 4)
-  print(m, "\n")
-  print(tTo2x4(m))
+  t = tForMultiplication
+  t = apply_a(t, 2)
+  t = apply_b(t, 3)
+  t = apply_a(t, 4)
+  print(tTo2x4(t))
 #+end_src
 
 #+RESULTS:
-: [[[ 9  2]
-:   [27  6]]
-: 
-:  [[ 0  0]
-:   [ 4  1]]] 
-: 
 : [[27  9  6  2]
 :  [ 4  0  1  0]]
 
 $\frac{27xy+9x+6y+2}{4xy+y} = (2 + \frac{1}{4+\frac{1}{x}}) \cdot (3+\frac{1}{y})$. That's also correct.
 
-* Appendix: Calculating the quotient and the remainder of a convergent in matrix form
+* Convergents
+#+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
+  def arithmetic_convergents_(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[np.ndarray]:
+      res = t0.copy()
+      while True:
+          an = next(a, None)
+          bn = next(b, None)
+
+          if an is None and bn is None:
+              break
+
+          if an is not None:
+              res = apply_a(res, an)
+              yield 'a', an, res
+          if bn is not None:
+              res = apply_b(res, bn)
+              yield 'b', bn, res
+
+  def arithmetic_convergents(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[Rational]:
+      c = arithmetic_convergents_(a, b, t0)
+      next(c) # skip the initial tensor
+      for _, _, res in c:
+          r = tensor_ref(res, 'xy')
+          yield Rational(*r)
+#+end_src
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(arithmetic_convergents(a, b, tForAddition)))
+#+end_src
+
+#+RESULTS:
+: [4/1, 5/1, 6/1, 11/2, 20/4, 111/22, 616/121, 727/143, 858/169]
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(arithmetic_convergents(a, b, tForSubtraction)))
+#+end_src
+
+#+RESULTS:
+: [0/1, 1/1, 0/1, -1/2, 0/4, 1/22, 0/121, -1/143, 0/169]
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(arithmetic_convergents(a, b, tForMultiplication)))
+#+end_src
+
+#+RESULTS:
+: [4/1, 6/1, 9/1, 15/2, 25/4, 140/22, 784/121, 924/143, 1089/169]
+
+* Appendix: Quotients/remainders for matrices
 This is just calculus
 
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
@@ -777,6 +836,44 @@ This is just calculus
               return (None, identity_m)
 #+end_src
 
+* Appendix: Quotients/remainders for tensors
+
+#+begin_src python :tangle no :noweb-ref QR_TENSOR
+  def tensor_term_ratios(t: np.ndarray) -> list:
+      """ return
+          [[a/e, floor(a/e), 'xy'],
+           [b/f, floor(b/f), 'x'],
+           [c/g, floor(c/g), 'y'],
+           [d/h, floor(d/h), '1']]"""
+
+      def f(label):
+          numerator, denominator = tensor_ref(t, label)
+          return numerator/denominator, math.floor(numerator/denominator), label
+
+      return [f('xy'), f('x'), f('y'), f('1')]
+
+  def qr_tensor(t: np.ndarray):
+      if (t[1] <= 0).any():
+          # if any number in the denominator is smaller or equal to 0, the function is unbounded
+          pass
+      else:
+          r = tensor_term_ratios(t)
+          r_sorted = sorted(r, key = lambda terms: terms[1], reverse = True)
+
+          if r_sorted[0, 0] == r_sorted[0, 1]:
+              # the max can only be reached at 0 or infinity, so the quotient needed -1 
+              r_sorted[0, 1] = r_sorted[0, 1] - 1
+
+          if r_sorted[0, 1] == r_sorted[-1, 1]:
+              #  If the floor of the first and the last are the same, the numbers are all the same
+              # in this case, the value is the quotient
+              pass
+          else:
+              # the quotient cannot be determined, but suggest which direction to go
+              # if one of them is different, go to the dir that is different
+              # if all three are different, what to do? compare magnitude?
+              pass
+#+end_src
 * Appendix: Tests
 #+INCLUDE: tests.org
 * Appendix: Display utilities

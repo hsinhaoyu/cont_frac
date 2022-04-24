@@ -1,3 +1,3 @@
 
-<img src="figs/cf_transform_tab2.png" width="400">
+<img src="figs/cf_transform_tab2.png" width="500">
 
