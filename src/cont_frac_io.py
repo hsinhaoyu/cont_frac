@@ -1,15 +1,16 @@
 from cont_frac import *
 from functools import reduce
 import csv
+# Utilities for tabulated displays
 
 
-class Chart3D(object):
-    def __init__(self, m=tForAddition):
+class Chart(object):
+    def __init__(self, m: np.ndarray = tForAddition):
         if len(m.shape) == 2:
             # if initialized with a matrix intead of a tensor
             self.include_b = False
             self.mode2D = True
-            self.current_tensor = Chart3D.m2t(m)
+            self.current_tensor = Chart.m2t(m)
             self.boards = self.current_tensor.tolist()
         else:
             self.boards = m.tolist()
@@ -24,13 +25,15 @@ class Chart3D(object):
         self.include_out = True
 
     @staticmethod
-    def m2t(m):
+    def m2t(m: np.ndarray) -> np.ndarray:
+        """Convert a homographic matrix into a bihomographic tensor"""
         return np.array([[[m[0, 0], m[0, 1]], [0, 0]],
                          [[m[1, 0], m[1, 1]], [0, 0]]])
 
-    def move_left(self, t, a):
+    def move_left(self, t: np.ndarray, a: int):
+        """t is the matrix or tensor after a new term of a"""
         if len(t.shape) == 2 and self.mode2D:
-            t2 = Chart3D.m2t(t)
+            t2 = Chart.m2t(t)
         else:
             t2 = t
 
@@ -49,7 +52,8 @@ class Chart3D(object):
         self.boards[-1][-1][0] = tensor_ref(t2, 'e')
         self.a = [a] + self.a
 
-    def move_down(self, t, b):
+    def move_down(self, t: np.ndarray, b: int):
+        """t is the matrix or tensor after a new term of b"""
         assert tensor_ref(t, 'x') == tensor_ref(self.current_tensor, 'xy')
         assert tensor_ref(t, '1') == tensor_ref(self.current_tensor, 'y')
         self.current_tensor = t
@@ -67,9 +71,10 @@ class Chart3D(object):
         for i in range(0, len(self.boards) - 2):
             self.boards[i] = self.boards[i] + [[None] * len(new_row_numerator)]
 
-    def move_under(self, t, output):
+    def move_under(self, t: np.ndarray, output: int):
+        """t is the matrix or tensor after a Euclidean step. output is the quotient"""
         if len(t.shape) == 2 and self.mode2D:
-            t2 = Chart3D.m2t(t)
+            t2 = Chart.m2t(t)
         else:
             t2 = t
 
@@ -98,7 +103,7 @@ class Chart3D(object):
 
         self.output = self.output + [output]
 
-    def board_to_array(self, board, b, out):
+    def board_to_array(self, board: list, b: list, out: int) -> list:
         new_content = []
         for i, row in enumerate(board):
             skip = False
@@ -127,7 +132,7 @@ class Chart3D(object):
                 new_content = new_content + [new_row]
         return new_content
 
-    def to_array(self):
+    def to_array(self) -> list:
         content = []
         row = []
         n_rows = len(self.boards[0])
@@ -152,18 +157,18 @@ class Chart3D(object):
         return content
 
     @staticmethod
-    def pp_item(item, field_width):
+    def pp_item(item: int, field_width: int) -> str:
         if item is None:
             return " " * field_width
         else:
             return f"{item : > {field_width}}"
 
     @staticmethod
-    def pp_row(row, field_width):
-        return reduce(lambda s, item: s + Chart3D.pp_item(item, field_width),
+    def pp_row(row: list, field_width: int) -> str:
+        return reduce(lambda s, item: s + Chart.pp_item(item, field_width),
                       row, "") + "\n"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         content = self.to_array()
 
         content_nonone = [[c for c in row if c is not None] for row in content]
@@ -171,28 +176,32 @@ class Chart3D(object):
         mx = max(map(max, content_nonone))
         field_width = len(str(mx)) + 1
 
-        s = reduce(lambda s, r: s + Chart3D.pp_row(r, field_width), content,
-                   "")
+        s = reduce(lambda s, r: s + Chart.pp_row(r, field_width), content, "")
         return s
 
-    def export_csv(self, filename):
+    def export_csv(self, filename: str):
         content = self.to_array()
         with open(filename, mode='w') as outfile:
             writer = csv.writer(outfile)
             writer.writerows(content)
 
 
-def r2cf_tab(rn: Rational):
+# Tabulated displays: 2D
+
+
+def r2cf_tab(rn: Rational) -> str:
+    """Show the prpocess of converting a rational numner to a continued fraction"""
     def row(st: str, x: tuple):
         b, q = x
         return st + f"{b : > 5}  {q : < 5}\n"
 
     str0 = f"{rn.a : > 5}\n"
-    print(reduce(row, r2cf_(rn), str0) + f"{0 : > 5}\n")
+    return reduce(row, r2cf_(rn), str0) + f"{0 : > 5}\n"
 
 
-def cf_convergents1_tab(cf: Iterator[int]):
-    chart = Chart3D(m=np.identity(2, int))
+def cf_convergents1_tab(cf: Iterator[int]) -> Chart:
+    """Show the process of converting a continued fraction to a rational number"""
+    chart = Chart(m=np.identity(2, int))
     chart.include_out = False
     (cf1, cf2) = tee(cf)
     for (mat, a) in zip(cf_convergents1_(cf1), cf2):
@@ -200,15 +209,19 @@ def cf_convergents1_tab(cf: Iterator[int]):
     return chart
 
 
-def euclid_matrix_tab(m):
-    chart = Chart3D(m=m)
+def euclid_matrix_tab(m: np.ndarray) -> Chart:
+    """Show the matrix form of the Euclidean algorithm"""
+    chart = Chart(m=m)
     for (q, r) in euclid_matrix_(m):
         chart.move_under(r, q)
     return chart
 
 
-def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int), n=None):
-    chart = Chart3D(m=m0)
+def cf_transform_tab(cf: Iterator[int],
+                     m0=np.identity(2, int),
+                     n=None) -> Chart:
+    """Show the process of operating on a continued fraction"""
+    chart = Chart(m=m0)
     if n:
         cf = islice(cf, n)
 
@@ -229,8 +242,13 @@ def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int), n=None):
     return chart
 
 
-def tabs3d(a, b, t0=tForAddition):
-    c = Chart3D(t0)
+# Tabulated displays: 3D
+
+
+def tabs3d(a: Iterator[int],
+           b: Iterator[int],
+           t0: np.ndarray = tForAddition) -> Chart:
+    c = Chart(t0)
     for direction, coefficient, t in arithmetic_convergents_(a, b, t0):
         if direction == 'a':
             c.move_left(t, coefficient)
@@ -249,7 +267,7 @@ def pp_qr(qr: Tuple[int, np.ndarray]) -> None:
     print(f"   {r[1][0]:2} {r[1][1]:2}")
 
 
-def pp_inf_cf(cf: list) -> None:
+def pp_inf_cf(cf: list) -> str:
     """Pretty print a list representing the first couple terms of a longer continued fraction"""
     res = "["
     res = res + reduce(lambda s, n: s + str(n) + ",", cf, "")
@@ -258,7 +276,9 @@ def pp_inf_cf(cf: list) -> None:
 
 
 # Utilities functions for LaTeX displays
-def latex_cf(lst: list):
+
+
+def latex_cf(lst: list) -> str:
     if len(lst) == 1:
         return str(lst[0])
     else:
@@ -267,11 +287,11 @@ def latex_cf(lst: list):
         return x
 
 
-def latex_rational(r: Rational):
+def latex_rational(r: Rational) -> str:
     return r"\frac{" + str(r.a) + "}{" + str(r.b) + "}"
 
 
-def show_cf_expansion(r: Rational):
+def show_cf_expansion(r: Rational) -> str:
     print(r"\[")
     print(r"\frac{", r.a, "}{", r.b, "}=")
     nc = list(r2cf(r))
@@ -279,7 +299,7 @@ def show_cf_expansion(r: Rational):
     print(r"\]")
 
 
-def show_rational_series(itr: Iterator[int]):
+def show_rational_series(itr: Iterator[int]) -> str:
     rLst = list(cf_convergents0(itr))
     s = ""
     for r in rLst:

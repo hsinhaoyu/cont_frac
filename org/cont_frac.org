@@ -92,7 +92,7 @@ This means that
 We can display the process in a tabular format. For example:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  r2cf_tab(Rational(254, 100))
+  print(r2cf_tab(Rational(254, 100)))
 #+end_src
 
 #+RESULTS:
