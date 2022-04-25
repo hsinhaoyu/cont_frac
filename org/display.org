@@ -9,7 +9,7 @@
 
 * Tabulated display utilities
 =Chart= is a class for constructing and exporting tabulated displays. It can be used for 2D (i.e., operations involving one continued fraction) or 3D (operations involving two continued fractions) displays. For 2D displayed, the homographic matrices are converted into bihomographic tensors.
-#+begin_src python :tangle no :noweb-ref TAB_UTILS
+#+begin_src python :noweb no-export :tangle no :noweb-ref TAB_UTILS
   # Utilities for tabulated displays
 
   class Chart(object):
@@ -38,157 +38,174 @@
           """Convert a homographic matrix into a bihomographic tensor"""
           return np.array([[[m[0,0], m[0,1]], [0, 0]], [[m[1,0], m[1,1]], [0, 0]]])
 
-      def move_left(self, t: np.ndarray, a: int):
-          """t is the matrix or tensor after a new term of a"""
-          if len(t.shape)==2 and self.mode2D:
-              t2 = Chart.m2t(t)
-          else:
-              t2 = t
+      <<ACCEPT_INPUT>>
+      <<PROCESS_OUTPUT>>
+      <<MAKE_ARRAY>>
+      <<DISPLAY_EXPORT>>
+#+end_src
 
-          assert tensor_ref(t2, 'y') == tensor_ref(self.current_tensor, 'xy')
-          assert tensor_ref(t2, '1') == tensor_ref(self.current_tensor, 'x')
-          self.current_tensor = t2
+** Take inputs from continued fractions
+#+begin_src python :tangle no :noweb-ref ACCEPT_INPUT
+  def move_left(self, t: np.ndarray, a: int):
+      """t is the matrix or tensor after a new term of a"""
+      if len(t.shape)==2 and self.mode2D:
+          t2 = Chart.m2t(t)
+      else:
+          t2 = t
 
-          # add a new column for all boards
-          for i in range(len(self.boards)):
-              for j in range(len(self.boards[0])):
-                  self.boards[i][j] = [None] + self.boards[i][j]
+      assert tensor_ref(t2, 'y') == tensor_ref(self.current_tensor, 'xy')
+      assert tensor_ref(t2, '1') == tensor_ref(self.current_tensor, 'x')
+      self.current_tensor = t2
 
-          self.boards[-2][-2][0] = tensor_ref(t2, 'b')
-          self.boards[-2][-1][0] = tensor_ref(t2, 'a')
-          self.boards[-1][-2][0] = tensor_ref(t2, 'f')
-          self.boards[-1][-1][0] = tensor_ref(t2, 'e')
-          self.a = [a] + self.a
+      # add a new column for all boards
+      for i in range(len(self.boards)):
+          for j in range(len(self.boards[0])):
+              self.boards[i][j] = [None] + self.boards[i][j]
 
-      def move_down(self, t: np.ndarray, b: int):
-          """t is the matrix or tensor after a new term of b"""
-          assert tensor_ref(t, 'x') == tensor_ref(self.current_tensor, 'xy')
-          assert tensor_ref(t, '1') == tensor_ref(self.current_tensor, 'y')
-          self.current_tensor = t
-          new_row_numerator   = [None] * len(self.boards[0][0])
-          new_row_denominator = [None] * len(self.boards[1][0])
-          new_row_numerator[0] = tensor_ref(t, 'a')
-          new_row_numerator[1] = tensor_ref(t, 'c')
-          new_row_denominator[0] = tensor_ref(t, 'e')
-          new_row_denominator[1] = tensor_ref(t, 'g')
-          self.boards[-2] = self.boards[-2] + [new_row_numerator]
-          self.boards[-1] = self.boards[-1] + [new_row_denominator]
-          self.b[-1] = self.b[-1] + [b]
+      self.boards[-2][-2][0] = tensor_ref(t2, 'b')
+      self.boards[-2][-1][0] = tensor_ref(t2, 'a')
+      self.boards[-1][-2][0] = tensor_ref(t2, 'f')
+      self.boards[-1][-1][0] = tensor_ref(t2, 'e')
+      self.a = [a] + self.a
 
-          # all boards under have to be expanded
-          for i in range(0, len(self.boards)-2):
-              self.boards[i] = self.boards[i] + [[None] * len(new_row_numerator)]
+  def move_down(self, t: np.ndarray, b: int):
+      """t is the matrix or tensor after a new term of b"""
+      assert tensor_ref(t, 'x') == tensor_ref(self.current_tensor, 'xy')
+      assert tensor_ref(t, '1') == tensor_ref(self.current_tensor, 'y')
+      self.current_tensor = t
+      new_row_numerator   = [None] * len(self.boards[0][0])
+      new_row_denominator = [None] * len(self.boards[1][0])
+      new_row_numerator[0] = tensor_ref(t, 'a')
+      new_row_numerator[1] = tensor_ref(t, 'c')
+      new_row_denominator[0] = tensor_ref(t, 'e')
+      new_row_denominator[1] = tensor_ref(t, 'g')
+      self.boards[-2] = self.boards[-2] + [new_row_numerator]
+      self.boards[-1] = self.boards[-1] + [new_row_denominator]
+      self.b[-1] = self.b[-1] + [b]
 
-      def move_under(self, t: np.ndarray, output: int):
-          """t is the matrix or tensor after a Euclidean step. output is the quotient"""
-          if len(t.shape)==2 and self.mode2D:
-              t2 = Chart.m2t(t)
-          else:
-              t2 = t
+      # all boards under have to be expanded
+      for i in range(0, len(self.boards)-2):
+          self.boards[i] = self.boards[i] + [[None] * len(new_row_numerator)]
+#+end_src
 
-          assert tensor_ref(self.current_tensor, 'f') == tensor_ref(t2, 'b')
-          assert tensor_ref(self.current_tensor, 'h') == tensor_ref(t2, 'd')
-          assert tensor_ref(self.current_tensor, 'e') == tensor_ref(t2, 'a')
-          assert tensor_ref(self.current_tensor, 'g') == tensor_ref(t2, 'c')
-          self.current_tensor = t2
+** Process output
+After an Euclidean step, we "move under" by creating a new board.
+#+begin_src python :tangle no :noweb-ref PROCESS_OUTPUT
+  def move_under(self, t: np.ndarray, output: int):
+      """t is the matrix or tensor after a Euclidean step. output is the quotient"""
+      if len(t.shape)==2 and self.mode2D:
+          t2 = Chart.m2t(t)
+      else:
+          t2 = t
 
-          n_rows = len(self.boards[0])
-          n_cols = len(self.boards[0][0])
-          def new_row():
-              return [None] * n_cols
-          new_boards = [new_row() for i in range(n_rows)]
+      assert tensor_ref(self.current_tensor, 'f') == tensor_ref(t2, 'b')
+      assert tensor_ref(self.current_tensor, 'h') == tensor_ref(t2, 'd')
+      assert tensor_ref(self.current_tensor, 'e') == tensor_ref(t2, 'a')
+      assert tensor_ref(self.current_tensor, 'g') == tensor_ref(t2, 'c')
+      self.current_tensor = t2
 
-          new_boards[-2][0] = tensor_ref(t2, 'f')
-          new_boards[-2][1] = tensor_ref(t2, 'h')
-          new_boards[-1][0] = tensor_ref(t2, 'e')
-          new_boards[-1][1] = tensor_ref(t2, 'g')
-          self.boards = self.boards + [new_boards]
+      n_rows = len(self.boards[0])
+      n_cols = len(self.boards[0][0])
+      def new_row():
+          return [None] * n_cols
+      new_boards = [new_row() for i in range(n_rows)]
 
-          new_b = [None] * len(self.b[-1])
-          self.b = self.b + [new_b]
+      new_boards[-2][0] = tensor_ref(t2, 'f')
+      new_boards[-2][1] = tensor_ref(t2, 'h')
+      new_boards[-1][0] = tensor_ref(t2, 'e')
+      new_boards[-1][1] = tensor_ref(t2, 'g')
+      self.boards = self.boards + [new_boards]
 
-          self.output = self.output + [output]
+      new_b = [None] * len(self.b[-1])
+      self.b = self.b + [new_b]
 
-      def board_to_array(self, board: list, b: list, out: int) -> list:
-          new_content = []
-          for i, row in enumerate(board):
-              skip = False
-              if self.mode2D and i%2==1:
-                  skip = True
+      self.output = self.output + [output]
+#+end_src
 
-              if not skip:
-                  new_row = row.copy()
+** Convert to array
+#+begin_src python :tangle no :noweb-ref MAKE_ARRAY
+  def board_to_array(self, board: list, b: list, out: int) -> list:
+      new_content = []
+      for i, row in enumerate(board):
+          skip = False
+          if self.mode2D and i%2==1:
+              skip = True
 
-                  if self.include_b:
-                      if i == 0:
-                          new_row = new_row + [None]
-                      elif b is None:
-                          new_row = new_row + [None]
-                      elif i <= len(b):
-                          new_row = new_row + [b[i-1]]
-                      else:
-                          new_row = new_row + [None]
+          if not skip:
+              new_row = row.copy()
 
-                  if self.include_out:
-                      if i == len(board) - 2:
-                          new_row = new_row + [out]
-                      else:
-                          new_row = new_row + [None]
-
-                  new_content = new_content + [new_row]
-          return new_content
-
-      def to_array(self) -> list:
-          content = []
-          row = []
-          n_rows = len(self.boards[0])
-          n_cols = len(self.boards[0][0])
-
-          if self.include_a:
-              row = row + [None]
               if self.include_b:
-                  row = row + [None]
+                  if i == 0:
+                      new_row = new_row + [None]
+                  elif b is None:
+                      new_row = new_row + [None]
+                  elif i <= len(b):
+                      new_row = new_row + [b[i-1]]
+                  else:
+                      new_row = new_row + [None]
+
               if self.include_out:
-                  row = row + [None]
-              row = self.a + row
-              row = [None] * (n_cols - len(self.a) - 1) + row
-              content = content + [row]
+                  if i == len(board) - 2:
+                      new_row = new_row + [out]
+                  else:
+                      new_row = new_row + [None]
 
-          for i in range(len(self.boards)):
-              board = self.boards[i]
-              b = self.b[i] if i<len(self.b) else None
-              out = self.output[i] if i<len(self.output) else None
-              content = content + self.board_to_array(board, b, out)
+              new_content = new_content + [new_row]
+      return new_content
 
-          return content
+  def to_array(self) -> list:
+      content = []
+      row = []
+      n_rows = len(self.boards[0])
+      n_cols = len(self.boards[0][0])
 
-      @staticmethod
-      def pp_item(item: int, field_width: int) -> str:
-          if item is None:
-              return " " * field_width
-          else:
-              return f"{item : > {field_width}}"
+      if self.include_a:
+          row = row + [None]
+          if self.include_b:
+              row = row + [None]
+          if self.include_out:
+              row = row + [None]
+          row = self.a + row
+          row = [None] * (n_cols - len(self.a) - 1) + row
+          content = content + [row]
 
-      @staticmethod
-      def pp_row(row: list, field_width: int) -> str:
-          return reduce(lambda s, item: s + Chart.pp_item(item, field_width), row, "") + "\n"
+      for i in range(len(self.boards)):
+          board = self.boards[i]
+          b = self.b[i] if i<len(self.b) else None
+          out = self.output[i] if i<len(self.output) else None
+          content = content + self.board_to_array(board, b, out)
 
-      def __repr__(self) -> str:
-          content = self.to_array()
+      return content
+#+end_src
+** Display/export
+#+begin_src python :tangle no :noweb-ref DISPLAY_EXPORT
+  @staticmethod
+  def pp_item(item: int, field_width: int) -> str:
+      if item is None:
+          return " " * field_width
+      else:
+          return f"{item : > {field_width}}"
 
-          content_nonone = [[c for c in row if c is not None] for row in content]
-          content_nonone = [r for r in content_nonone if r != []]
-          mx = max(map(max, content_nonone))
-          field_width = len(str(mx)) + 1
+  @staticmethod
+  def pp_row(row: list, field_width: int) -> str:
+      return reduce(lambda s, item: s + Chart.pp_item(item, field_width), row, "") + "\n"
 
-          s = reduce(lambda s, r: s + Chart.pp_row(r, field_width), content, "")
-          return s
+  def __repr__(self) -> str:
+      content = self.to_array()
 
-      def export_csv(self, filename: str):
-          content = self.to_array()
-          with open(filename, mode = 'w') as outfile:
-              writer = csv.writer(outfile)
-              writer.writerows(content)
+      content_nonone = [[c for c in row if c is not None] for row in content]
+      content_nonone = [r for r in content_nonone if r != []]
+      mx = max(map(max, content_nonone))
+      field_width = len(str(mx)) + 1
+
+      s = reduce(lambda s, r: s + Chart.pp_row(r, field_width), content, "")
+      return s
+
+  def export_csv(self, filename: str):
+      content = self.to_array()
+      with open(filename, mode = 'w') as outfile:
+          writer = csv.writer(outfile)
+          writer.writerows(content)
 #+end_src
 
 * Tabulated displays: 2D
