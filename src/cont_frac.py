@@ -278,7 +278,6 @@ def arithmetic_convergents(a: Iterator[int],
                            b: Iterator[int],
                            t0=tForAddition) -> Iterator[Rational]:
     c = arithmetic_convergents_(a, b, t0)
-    next(c)  # skip the initial tensor
     for _, _, res in c:
         r = tensor_ref(res, 'xy')
         yield Rational(*r)

@@ -5,6 +5,7 @@ import csv
 
 
 class Chart(object):
+    """Construction and export tabulated displays"""
     def __init__(self, m: np.ndarray = tForAddition):
         if len(m.shape) == 2:
             # if initialized with a matrix intead of a tensor
@@ -217,15 +218,13 @@ def euclid_matrix_tab(m: np.ndarray) -> Chart:
     return chart
 
 
-def cf_transform_tab(cf: Iterator[int],
-                     m0=np.identity(2, int),
-                     n=None) -> Chart:
-    """Show the process of operating on a continued fraction"""
+def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int)) -> Chart:
+    """Show the process of operating on a continued fraction.
+    Make sure that cf has finite number of terms
+    """
     chart = Chart(m=m0)
-    if n:
-        cf = islice(cf, n)
-
     res = cf_transform_(cf, m0)
+
     for (q, r, m, a, new_a) in res:
         if new_a:
             chart.move_left(m, a)
@@ -245,9 +244,10 @@ def cf_transform_tab(cf: Iterator[int],
 # Tabulated displays: 3D
 
 
-def tabs3d(a: Iterator[int],
-           b: Iterator[int],
-           t0: np.ndarray = tForAddition) -> Chart:
+def arithmetic_convergents_tab(a: Iterator[int],
+                               b: Iterator[int],
+                               t0: np.ndarray = tForAddition) -> Chart:
+    """Show the process of calculating convergents of arithmetical operations"""
     c = Chart(t0)
     for direction, coefficient, t in arithmetic_convergents_(a, b, t0):
         if direction == 'a':
