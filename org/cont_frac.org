@@ -963,44 +963,165 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 * Appendix: Quotients/remainders for tensors
 
 #+begin_src python :tangle no :noweb-ref QR_TENSOR
+  def t_ratios(t: np.ndarray) -> list:
+      def r(label):
+          numerator, denominator = tensor_ref(t, label)
+          return [numerator/denominator, math.floor(numerator/denominator), label]
+
+      zz = [r('xy'), r('x'), r('y'), r('1')]
+      # zort by the floating point ratio
+      zz_sorted = sorted(zz, key = lambda item: item[0])
+
+      zz_max = zz_sorted[-1]
+      if zz_max[0] == zz_max[1]:
+          # In this situation, the upper-bound zz_max[0] will never be reached
+          # so we return the value - 1
+          zz_max[1] = zz_max[1] - 1
+
+      dict = {}
+      for item in zz_sorted:
+          dict[item[2]] = item[1]
+
+      return [[dict['x'], dict['1']], [dict['xy'], dict['y']]]
+
+  def debug(t):
+      def r(label):
+          numerator, denominator = tensor_ref(t, label)
+          return math.floor(numerator/denominator)    
+      return np.array([[r('x'), r('1')], [r('xy'), r('y')]])
+
+  def score(t):
+      def r(label):
+          numerator, denominator = tensor_ref(t, label)
+          return math.floor(numerator/denominator)
+    
+      # number of zero in the denominator
+      n_zero = np.count_nonzero(t[1]==0)
+      if n_zero == 3 or n_zero == 4:
+          # 0 can be removed in 2 moves
+          return -2 
+      elif n_zero == 2:
+          if tensor_ref(t, 'f') == 0 and tensor_ref(t, 'h') == 0:
+              if r('xy') == r('y'):
+                  # 0 0
+                  # 2 2
+                  # after one step, in a good position
+                  return -0.5
+              else:
+                  # 0 0
+                  # 2 3
+                  # both zeros can be removed in one step
+                  return -1.0
+          elif tensor_ref(t, 'h') == 0 and tensor_ref(t, 'g') == 0:
+              if r('xy') == r('x'):
+                  # 2 0
+                  # 2 0
+                  # in good position in one step
+                  return -0.5
+              else:
+                  # 2 0
+                  # 3 0
+                  # both zeroes can be remoevd in one step
+                  return -1
+      elif n_zero == 1:
+          if tensor_ref(t, 'e') == 0:
+              # 3 8
+              # 0 1
+              # takes 2 moves to remove 0
+              return -2.0
+          elif tensor_ref(t, 'f') == 0:
+              if r('xy') == r('y'):
+                  # 0 x
+                  # 2 2
+                  # in good position in one step
+                  return -0.5
+              else:
+                  # 0 2
+                  # 3 4
+                  return -1.0
+          elif tensor_ref(t, 'g') == 0:
+              if (r('xy') == r('x')):
+                  # 2 3
+                  # 2 0
+                  return -0.5
+              else:
+                  # 2 3
+                  # 3 0                
+                  return -1.0
+          else:
+              if (r('xy') == r('x')) or (r('xy') == r('y')):
+                  # 2 0
+                  # 2 3
+                  return -0.5
+              else:
+                  return -1.0
+      else: # no zereos in the denominator
+          r  = t_ratios(t)
+          print(debug(t))
+          if r[0][0] == r[0][1] == r[1][0] == r[1][1]:
+              # the 4 ratios are all the same. This is the best situation
+              return 4.0
+          elif (r[0][0] == r[1][0]) or (r[1][0] == r[1][1]):
+              return 1.0
+          else:
+              return 0.0
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref QR_TENSOR
-  def tensor_term_ratios(t: np.ndarray) -> list:
-      """ return
-          [[a/e, floor(a/e), 'xy'],
-           [b/f, floor(b/f), 'x'],
-           [c/g, floor(c/g), 'y'],
-           [d/h, floor(d/h), '1']]"""
+  def ABQueue(a, b):
+      current_a = None
+      current_b = None
+      last_tie = 'b'
 
-      def f(label):
-          numerator, denominator = tensor_ref(t, label)
-          return numerator/denominator, math.floor(numerator/denominator), label
+      def ABQueue_(t):
+          nonlocal current_a
+          nonlocal current_b
+          nonlocal last_tie
+          if current_a is None:
+              current_a = next(a, None)
+          if current_b is None:
+              current_b = next(b, None)
 
-      return [f('xy'), f('x'), f('y'), f('1')]
-
-  def qr_tensor(t: np.ndarray):
-      if (t[1] <= 0).any():
-          # if any number in the denominator is smaller or equal to 0, the function is unbounded
-          pass
-      else:
-          r = tensor_term_ratios(t)
-          r_sorted = sorted(r, key = lambda terms: terms[1], reverse = True)
-
-          if r_sorted[0, 0] == r_sorted[0, 1]:
-              # the max can only be reached at 0 or infinity, so the quotient needed -1 
-              r_sorted[0, 1] = r_sorted[0, 1] - 1
-
-          if r_sorted[0, 1] == r_sorted[-1, 1]:
-              #  If the floor of the first and the last are the same, the numbers are all the same
-              # in this case, the value is the quotient
-              pass
+          if current_a is None and current_b is None:
+              return None, None
+          elif current_a is None:
+              next_term = current_b
+              current_b = None
+              return next_term, 'b'
+          elif current_b is None:
+              next_term = current_a
+              current_a = None
+              return next_term, 'a'
           else:
-              # the quotient cannot be determined, but suggest which direction to go
-              # if one of them is different, go to the dir that is different
-              # if all three are different, what to do? compare magnitude?
-              pass
+              t_a = apply_a(t, current_a)
+              t_b = apply_b(t, current_b)
+              s_a = score(t_a)
+              s_b = score(t_b)
+              print(t_a)
+              print(t_b)
+              print(s_a, s_b)
+              if s_a == s_b:
+                  if last_tie == 'a':
+                      res = current_b
+                      current_b = None
+                      last_tie = 'b' 
+                      return res, 'b'
+                  else:
+                      res = current_a
+                      current_a = None
+                      last_tie = 'a'
+                      return res, 'a'
+              if s_a < s_b:
+                  res = current_b
+                  current_b = None
+                  return current_b, 'b'
+              else:
+                  res = current_a
+                  current_a = None
+                  return current_a, 'a'
+      return ABQueue_
 #+end_src
+
 * Appendix: Tests
 #+INCLUDE: tests.org
 * Appendix: Display utilities
