@@ -15,7 +15,8 @@ class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
 
 
 def qr(a: int, b: int) -> Tuple[int, int]:
-    """a = b * q + r, return (q, r)"""
+    """a = b * q + r, return (q, r)
+    a is the numberator, and b is the denominator of a rational number"""
     q = math.floor(a / b)  # the quotient
     r = a - b * q  # the remainder
     return (q, r)
@@ -108,7 +109,7 @@ def flip_remain(m: np.ndarray, q: int):
     return np.matmul(flip_m, m)
 
 
-def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
+def qr_matrix(m: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
     """Calculate the quotient and the remainder of a 2x2 matrix"""
 
     assert not (m[1][0] == 0 and m[1][1] == 0)
@@ -197,7 +198,7 @@ def cf_transform(
         (q, r, m, a, new_a) = res
         if q is not None:
             yield q
-            # q can be None, indicating that more coefficients are needed
+            # q can be None, indicating that more terms are needed
             # to continue. It can be ignored
 
 
@@ -258,6 +259,8 @@ def apply_b(t: np.ndarray, b: int):
 def arithmetic_convergents_(a: Iterator[int],
                             b: Iterator[int],
                             t0=tForAddition) -> Iterator[np.ndarray]:
+    """Given two continued fractions (a and b) and an arithemtic operation (specified by t0), return an iterator of tensors and addional information.
+       New terms of the two continued fractions are applied alternately"""
     res = t0.copy()
     while True:
         an = next(a, None)
@@ -277,6 +280,7 @@ def arithmetic_convergents_(a: Iterator[int],
 def arithmetic_convergents(a: Iterator[int],
                            b: Iterator[int],
                            t0=tForAddition) -> Iterator[Rational]:
+    """Given two continued fractions (a and b) and an arithemtic operation (specified by t0), return an interator of rational numbers"""
     c = arithmetic_convergents_(a, b, t0)
     for _, _, res in c:
         r = tensor_ref(res, 'xy')

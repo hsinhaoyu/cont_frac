@@ -781,24 +781,24 @@ Again, Gospher developed an ingenious method for visualizing the computational p
 
 #+RESULTS:
 #+begin_example
-       1   5   1   1   2            
-                   2   1   0        
-               1   1   0   1   2    
-           9   5   4   1       1    
-      61  11   6   5           1    
- 131 111  20  11               5    
- 727 616 111                   1    
- 858 727                            
-                   1   0   1        
-               0   0   0   0        
-           2   1   1   0            
-      11   2   1   1                
-  26  22   4   2                    
- 143 121  22                        
- 169 143                            
+       1   5   1   1   2        
+                   2   1   0    
+               1   1   0   1   2
+           9   5   4   1       1
+      61  11   6   5           1
+ 131 111  20  11               5
+ 727 616 111                   1
+ 858 727                        
+                   1   0   1    
+               0   0   0   0    
+           2   1   1   0        
+      11   2   1   1            
+  26  22   4   2                
+ 143 121  22                    
+ 169 143                        
 
 #+end_example
-The result $\frac{858}{168}$ comes from the numbers at the lower-left corners of the two bands.
+The result $\frac{858}{168}$ comes from the numbers at the lower-left corners of the two bands. Note that the row on top and the column on the right represent the two continued fractions.
 
 Let's try subtraction. Observe that $[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does become 0 (that is $\frac{0}{169}$):
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -815,21 +815,21 @@ Let's try subtraction. Observe that $[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does bec
 #+begin_example
 [-1/0, 0/1, 1/1, 0/1, -1/2, 0/4, 1/22, 0/121, -1/143, 0/169] 
 
-       1   5   1   1   2            
-                   2   1   0        
-              -1  -1   0  -1   2    
-           1   1   0   1       1    
-      -5  -1   0  -1           1    
-   1   1   0   1               5    
-  -1   0  -1                   1    
-   0   1                            
-                   1   0   1        
-               0   0   0   0        
-           2   1   1   0            
-      11   2   1   1                
-  26  22   4   2                    
- 143 121  22                        
- 169 143                            
+       1   5   1   1   2        
+                   2   1   0    
+              -1  -1   0  -1   2
+           1   1   0   1       1
+      -5  -1   0  -1           1
+   1   1   0   1               5
+  -1   0  -1                   1
+   0   1                        
+                   1   0   1    
+               0   0   0   0    
+           2   1   1   0        
+      11   2   1   1            
+  26  22   4   2                
+ 143 121  22                    
+ 169 143                        
 
 #+end_example
 Note that the numerator oscillates between -1, 0, and 1, while the denominator gets larger and larger.
@@ -849,21 +849,21 @@ How about division? Yup. $\frac{429}{429}=1$.
 #+begin_example
 [0/1, 2/2, 3/2, 3/3, 5/6, 10/10, 56/55, 308/308, 363/364, 429/429] 
 
-       1   5   1   1   2            
-                   2   1   0        
-               0   0   0   0   2    
-           5   3   2   1       1    
-      28   5   3   2           1    
-  66  56  10   6               5    
- 363 308  55                   1    
- 429 364                            
-                   0   0   0        
-               1   1   0   1        
-           4   2   2   0            
-      33   6   3   3                
-  65  55  10   5                    
- 364 308  56                        
- 429 363                            
+       1   5   1   1   2        
+                   2   1   0    
+               0   0   0   0   2
+           5   3   2   1       1
+      28   5   3   2           1
+  66  56  10   6               5
+ 363 308  55                   1
+ 429 364                        
+                   0   0   0    
+               1   1   0   1    
+           4   2   2   0        
+      33   6   3   3            
+  65  55  10   5                
+ 364 308  56                    
+ 429 363                        
 
 #+end_example
 
@@ -882,27 +882,28 @@ Finally, let's try $\sqrt{2}*\sqrt{2}$. With infinite number of terms, the answe
 #+begin_example
 [1/0, 1/1, 3/2, 9/4, 21/10, 49/25, 119/60, 289/144, 697/348, 1681/841, 4059/2030, 9801/4900] 
 
-         2    2    2    2    2    1               
-                             0    0    0          
-                        3    1    1    0    1     
-                   7    3    1    1         2     
-             51   21    9    3              2     
-       287  119   49   21                   2     
- 1683  697  289  119                        2     
- 4059 1681  697                             2     
- 9801 4059                                        
-                             1    0    1          
-                        0    0    0    0          
-                   5    2    1    0               
-             24   10    4    2                    
-       145   60   25   10                         
-  840  348  144   60                              
- 2030  841  348                                   
- 4900 2030                                        
+         2    2    2    2    2    1          
+                             0    0    0     
+                        3    1    1    0    1
+                   7    3    1    1         2
+             51   21    9    3              2
+       287  119   49   21                   2
+ 1683  697  289  119                        2
+ 4059 1681  697                             2
+ 9801 4059                                   
+                             1    0    1     
+                        0    0    0    0     
+                   5    2    1    0          
+             24   10    4    2               
+       145   60   25   10                    
+  840  348  144   60                         
+ 2030  841  348                              
+ 4900 2030                                   
 
 #+end_example
 
 Unfortunately, these displays are not very satisfying, because the numbers tend to grow bigger and bigger. That's because we haven't performed any Euclidean step. That's for the next section.
+
 * Appendix: Quotients/remainders for matrices
 Given a homographic function represented by a 2x2 matrix, determine if the Euclidean step can be performed. If yes, return the quotient.
 #+begin_src python :tangle no :noweb-ref QR_MATRIX

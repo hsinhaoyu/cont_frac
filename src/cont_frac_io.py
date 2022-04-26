@@ -249,6 +249,7 @@ def arithmetic_convergents_tab(a: Iterator[int],
                                t0: np.ndarray = tForAddition) -> Chart:
     """Show the process of calculating convergents of arithmetical operations"""
     c = Chart(t0)
+    c.include_out = False
     for direction, coefficient, t in arithmetic_convergents_(a, b, t0):
         if direction == 'a':
             c.move_left(t, coefficient)
