@@ -38,12 +38,13 @@ How to convert a rational number to a continued fraction? Observing that
 = 2 + \frac{1}{1 + \frac{1}{\frac{46}{54}}}
 \]
 
-it should be obvious that the solution is just the [[https://en.wikipedia.org/wiki/Euclidean_algorithm][Euclidean algorithm]] for finding the greatest common divider:
+it should be obvious that the solution is just the [[https://en.wikipedia.org/wiki/Euclidean_algorithm][Euclidean algorithm]] for finding the greatest common divider: we first decompose the numerator $a$ as $a=b*q+r$, where $b$ is the denominator, $q$ is an integer called the /quotient/, and $r$ is the remainder. We output $q$, and repeat the process, using $b$ as the numerator and $r$ as the denominator. We stop when the numerator becomes 0.
 #+begin_src python :tangle no :noweb-ref R2CF
   # Convert a rational number to a continued fraction
   
   def qr(a: int, b: int) -> Tuple[int, int]:
-      """a = b * q + r, return (q, r)"""
+      """a = b * q + r, return (q, r)
+      a is the numberator, and b is the denominator of a rational number"""
       q = math.floor(a / b)  # the quotient
       r = a - b * q          # the remainder
       return (q, r)
@@ -51,7 +52,7 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
   def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
       """The Euclidean algorithm for representing a rational number as a continuous fraction.
       Return an iterator of quotients and remainders"""
-      a, b = rn    
+      a, b = rn
       while True:
           q, r = qr(a, b)
           yield b, q
@@ -67,7 +68,7 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
       return map(second, r2cf_(rn))
 #+end_src
 
-Now we can use =r2cf= to convert a rational number into a continued fraction. In this article, continued fractions are represented by Python generators, because they can have infinite number of terms. However, the generators returned by =r2cf= are finite iterators because the continued fractions associated with rational numbers always have finite numbers of coefficients.
+Now we can use =r2cf= to convert a rational number into a continued fraction. In this article, I use Python generators to represent continued fractions, because they can have infinite number of terms. However, in the specific case of =r2cf=, the generators returned always have finite numbers of terms, because the continued fractions associated with rational numbers always have finite numbers of terms. This is one of the fundamental properties of rational numbers.
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   nc = r2cf(Rational(254, 100))
@@ -106,7 +107,7 @@ We can display the process in a tabular format. For example:
 :     0
 : 
 
-This table shows that 2 (the penultimate row) is the greatest common divider of 254 and 100. As a byproduct of this process, we also get the coefficients of the corresponding continued fraction, which are the quotients displayed on the right.
+On the top, we begin with the rational number $\frac{254}{100}$. The quotient 2, displayed on the side, is the first term of the continued fraction. The rational number now becomes $\frac{100}{54}$, and we continue the process until we reach 0. As a side note, the penultimate numerator 2 is the greatest common divider for 254 and 100, according to the Euclidean algorithm.
 
 Interestingly, the reciprocal of $\frac{254}{100}$ (that is, $\frac{100}{254}$) is represented by the following as a continued fraction:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -121,9 +122,9 @@ Interestingly, the reciprocal of $\frac{254}{100}$ (that is, $\frac{100}{254}$) 
 It's the same sequence with an additional 0 at the beginning! This is our first clue that a continued fraction can be transformed by performing some operations at the beginning of the Euclidean algorithm. We'll come back to this point later.
 
 * Calculating the convergents of a continued fraction
-Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more coefficients are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
+Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more terms are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
 
-This question has an easy solution if we use a series of rational numbers to approximate the continued fraction. Each term in the series is called a convergent. The formula for the convergents can be derived easily with mathematical induction, and it is implemented below. For the moment, we'll use the formula just a convenience to get the job done. We'll get deeper into its meaning in the next section.
+This question has an easy solution if we use a series of rational numbers to approximate the continued fraction. Each term in the series is called a /convergent/. The formula for the convergents can be derived easily with mathematical induction, and it is implemented below. For the moment, we'll use the formula just a convenience to get the job done. We'll get deeper into its meaning in the next section.
 #+begin_src python :tangle no :noweb-ref CONVERGENTS0
   # Calculate the convergents of a continued fraction
   
@@ -185,7 +186,7 @@ For convenience, we define a specialized version of =cf_convergents0= just for f
 #+RESULTS:
 : 127/50
 
-Another example: the irrational number $e$ can be expressed as a continuous fraction by:
+Another example: the irrational number $e$ can be expressed as a continuous fraction by this code:
 #+begin_src python :tangle no :noweb-ref CF_EXAMPLES
   # Examples of continuous fractions
   
@@ -209,6 +210,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 #+RESULTS:
 : [2, 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8, 1, 1, 10, 1]
 
+Here are the convergents, as rational and as floating point numbers:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   conv_ = cf_convergents0(cf_e())
@@ -237,7 +239,7 @@ It has infinite number of terms, but the series follows a simple pattern. This i
 566827/208524        2.71828183
 #+end_example
 
-* Continued fraction approximation as function compositions
+* Continued fraction approximation as recursive function compositions
 #+INCLUDE: functional_convergents.org
 
 * Calculating convergents using the matrix notation
@@ -262,7 +264,7 @@ Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multipli
           yield Rational(m[0, 0], m[1, 0])
 #+end_src
 
-Let's try it on the example given in the [[*Continued fraction approximation as function compositions][previous section]]:
+Let's try it on the example given in the [[*Continued fraction approximation as recursive function compositions][previous section]]:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents1(iter([5, 1, 4]))))
@@ -294,7 +296,7 @@ A very charming thing that Gosper did was that he used a compact tabulated forma
 
 This table is read from the right to the left. The right-to-left direction takes some getting used to, but it's needed to preserve the normal representation of matrices.
 
-The first row represents the coefficients of the continued fraction. To understand the other numbers, we calculate the matrices for each additional coefficient in the continued fraction:
+The first row represents the terms of the continued fraction. To understand the other numbers, we calculate the matrices for each additional term in the continued fraction:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   itr = cf_convergents1_(iter([5, 1, 4]))
@@ -367,7 +369,7 @@ $\begin{bmatrix}
 
 How? The answer is still the Euclidean algorithm, but we have to use it symbolically rather than numerically.
 
-The first step is to symbolically represent the function as a quotient and a remainder (see =qr()= in =r2cf_=). I implemented this operation in =qr_matrix= in the [[*Calculating the quotient and the remainder of a convergent in matrix form][Appendix]]. We can use it on the third convergent:
+The first step is to symbolically represent the function as a quotient and a remainder (see =qr()= in =r2cf_=). I implemented this operation in =qr_matrix= in the [[*Appendix: Quotients/remainders for matrices][Appendix]]. We can use it on the third convergent:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
@@ -427,7 +429,7 @@ $\begin{bmatrix}
 :     2  0
 : 
 
-So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 coefficients (5, 1, 4). We stopped at the last term, because $\frac{2x+1}{2x}$ is an unbounded function, so the quotient cannot be determined.
+So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 terms (5, 1, 4). We stopped at the last term, because $\frac{2x+1}{2x}$ is an unbounded function. The quotient cannot be determined.
 
 As before, Gospher stacked the matrices in a compact format to illustrate the process:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -442,7 +444,9 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 :  10  4  1
 :   2  1  4
 :   2  0   
-: 
+:
+
+This is a just an extension of the format that we use to visualize =r2cf=: we start with $\begin{bmatrix} 70 & 29 \\ 12 & 5\end{bmatrix}$, end with $\begin{bmatrix}2 & 1 \\ 2 & 0\end{bmatrix}$, and output 5, 1, 4 in the process. The process stops when we don't have enough information to determine the next quotient. 
 
 Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
@@ -471,7 +475,7 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
           (q, r, m, a, new_a) = res
           if q is not None:
               yield q
-              # q can be None, indicating that more coefficients are needed
+              # q can be None, indicating that more terms are needed
               # to continue. It can be ignored
 #+end_src
 
@@ -512,7 +516,7 @@ The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, 
   <<DEMO_IMPORTS>>
   print("[2, 1, 1, 5, 1] is ", cf2r1(iter([2, 1, 1, 5, 1])))
   print("The continued fraction of 66/13 is ", list(r2cf(Rational(66, 13))), "\n")
-  r2cf_tab(Rational(66, 13))
+  print(r2cf_tab(Rational(66, 13)))
 #+end_src
 
 #+RESULTS:
@@ -543,7 +547,7 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
 :   1  1  0  1          13
 : 
 
-Take the term $\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}$ for example. The range is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore has to wait for the next coefficient to resolve it. That's why the transformed continued fraction has a smaller number of terms. 
+Take one of the matrices in the tabulated display $\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}$ for example. The range of $\frac{6x+4}{x+1}$ is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore needs another term of the continued fraction. The matrix shifts leftwards without outputting a quotient. That's why the transformed continued fraction has a smaller number of terms. 
 
 Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -645,7 +649,7 @@ Let's represent bihomographic functions with Numpy tensors:
       return np.array([[a, b, c, d], [e, f, g, h]])
 #+end_src
 
-A utility function for easy accessing elements of the matrices:
+I need a utility function to manage the large number of numbers in the tensor:
 #+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
   def tensor_ref(t: np.ndarray, label: str):
       assert t.shape == (2, 2, 2)
@@ -674,7 +678,7 @@ These are the initial tensors needed for arithmetic:
   tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
 #+end_src
 
-Applying new coefficients is implemented with my favorite Numpy function: =einsum= (Einstein's sum):
+Applying new terms is implemented with my favorite Numpy function: =einsum= (Einstein's sum; see [[https://ajcr.net/Basic-guide-to-einsum/][this tutorial]]):
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
   def apply_a(t: np.ndarray, a: int):
       ha = h(a)
@@ -726,9 +730,11 @@ Let's try multiplication:
 $\frac{27xy+9x+6y+2}{4xy+y} = (2 + \frac{1}{4+\frac{1}{x}}) \cdot (3+\frac{1}{y})$. That's also correct.
 
 * Convergents for continued fraction arithmetic
-We have already developed sufficient machinery for doing continued fraction arithmetic. By updating the bihomographic function with new terms of $a$ and $b$, we can generate a series of rational numbers that converge to the result. The following code applies new terms of $a$ and $b$ alternately, but there are many ways of doing it. As long as the terms of the two continued fractions are applied in sequence, it doesn't matter how you do it. You can, for example, update with two terms of $a$, and then two terms of $b$.
+We have already developed sufficient machinery for doing continued fraction arithmetic. By updating the bihomographic function with new terms of $a$ and $b$, we can generate a series of rational numbers that converges to the result. The following code applies a new term of $a$, and then a new term of $b$... and so on. This is not the only way to do it. Any process that applies the terms in sequence will work. You can, for example, update with two terms of $a$, and then two terms of $b$.
 #+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
   def arithmetic_convergents_(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[np.ndarray]:
+      """Given two continued fractions (a and b) and an arithemtic operation (specified by t0), return an iterator of tensors and addional information.
+         New terms of the two continued fractions are applied alternately"""
       res = t0.copy()
       while True:
           an = next(a, None)
@@ -745,6 +751,7 @@ We have already developed sufficient machinery for doing continued fraction arit
               yield 'b', bn, res
 
   def arithmetic_convergents(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[Rational]:
+      """Given two continued fractions (a and b) and an arithemtic operation (specified by t0), return an interator of rational numbers"""
       c = arithmetic_convergents_(a, b, t0)
       for _, _, res in c:
           r = tensor_ref(res, 'xy')
@@ -764,8 +771,7 @@ We have calculated [[*Simple transformations of continued fractions][previously]
 
 Yup. $\frac{858}{169}$ equals to $\frac{66}{13}$.
 
-Again, Gospher developed an ingenious method for visualizing the computational process, representing 2x2x2 tensors with a pseudo-3D effect. I decided not to implement his method because I find it hard to read. Instead, I will display the numerator and the denominator matrices separately. In the figure below, the upper "band" is the evolution of the numerator matrix, and the lower band does the same for the denominator matrix. Note that for a 2x2 matrix in either band, you should read off the number in the lower-left corner, because $\lim_{\substack{x\to \infty \\ y\to \infty}} \frac{axy + bx + cy + d}{exy + fx + gy + h} = \frac{a}{e}$.
-
+Again, Gospher developed an ingenious method for visualizing the computational process, representing 2x2x2 tensors with a pseudo-3D effect. I decided not to implement his method because I find it hard to read. Instead, I will display the numerator and the denominator matrices separately. This format is not as compact as Gospher's method, but it works better when the numbers get large. In the figure below, the upper "band" is the evolution of the numerator matrix, and the lower band does the same for the denominator matrix. Note that for a 2x2 matrix in either band, you should read off the number in the lower-left corner, because $\lim_{\substack{x\to \infty \\ y\to \infty}} \frac{axy + bx + cy + d}{exy + fx + gy + h} = \frac{a}{e}$.
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   a = iter([2, 1, 1, 5, 1])
@@ -792,8 +798,9 @@ Again, Gospher developed an ingenious method for visualizing the computational p
  169 143                            
 
 #+end_example
+The result $\frac{858}{168}$ comes from the numbers at the lower-left corners of the two bands.
 
-$[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does become 0:
+Let's try subtraction. Observe that $[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does become 0 (that is $\frac{0}{169}$):
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   a = iter([2, 1, 1, 5, 1])
@@ -825,8 +832,9 @@ $[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does become 0:
  169 143                            
 
 #+end_example
+Note that the numerator oscillates between -1, 0, and 1, while the denominator gets larger and larger.
 
-How about division?
+How about division? Yup. $\frac{429}{429}=1$.
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   a = iter([2, 1, 1, 5, 1])
@@ -858,7 +866,6 @@ How about division?
  429 363                            
 
 #+end_example
-
 
 Finally, let's try $\sqrt{2}*\sqrt{2}$. With infinite number of terms, the answer should be 2. With finite number of terms, however, we get an approximation of 2 ($\frac{9801}{4900}=2.0002$).
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -895,10 +902,9 @@ Finally, let's try $\sqrt{2}*\sqrt{2}$. With infinite number of terms, the answe
 
 #+end_example
 
-These results are not very satisfying, because the numbers tend to grow bigger and bigger. That's because we haven't performed any Euclidean step. That's for the next section.
+Unfortunately, these displays are not very satisfying, because the numbers tend to grow bigger and bigger. That's because we haven't performed any Euclidean step. That's for the next section.
 * Appendix: Quotients/remainders for matrices
-This is just calculus
-
+Given a homographic function represented by a 2x2 matrix, determine if the Euclidean step can be performed. If yes, return the quotient.
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
   # Simple transformation of continued fraction
   
@@ -911,7 +917,7 @@ This is just calculus
       m[0] = r
       return np.matmul(flip_m, m)
 
-  def qr_matrix(m: np.ndarray) -> Tuple[int, np.ndarray]:
+  def qr_matrix(m: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
       """Calculate the quotient and the remainder of a 2x2 matrix"""
 
       assert not(m[1][0] == 0 and m[1][1] == 0)
@@ -954,6 +960,9 @@ This is just calculus
 #+end_src
 
 * Appendix: Quotients/remainders for tensors
+
+#+begin_src python :tangle no :noweb-ref QR_TENSOR
+#+end_src
 
 #+begin_src python :tangle no :noweb-ref QR_TENSOR
   def tensor_term_ratios(t: np.ndarray) -> list:
