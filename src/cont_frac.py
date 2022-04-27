@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from typing import NamedTuple, Iterator, Tuple, Optional
+from typing import NamedTuple, Iterator, Tuple, Optional, Callable
 from functools import reduce
 from itertools import tee, islice
 
@@ -256,10 +256,18 @@ def apply_b(t: np.ndarray, b: int):
     return np.einsum('zy,dyx->dzx', hb, t)
 
 
+def apply_ab(t: np.ndarray, term: int, label: str) -> np.ndarray:
+    assert label in ['a', 'b']
+    if label == 'a':
+        return apply_a(t, term)
+    else:
+        return apply_b(t, term)
+
+
 def arithmetic_convergents_(a: Iterator[int],
                             b: Iterator[int],
                             t0=tForAddition) -> Iterator[np.ndarray]:
-    """Given two continued fractions (a and b) and an arithemtic operation (specified by t0), return an iterator of tensors and addional information.
+    """Given two continued fractions (a and b) and an arithmetic operation (specified by t0), return an iterator of tensors and addional information.
        New terms of the two continued fractions are applied alternately"""
     res = t0.copy()
     while True:
@@ -270,21 +278,39 @@ def arithmetic_convergents_(a: Iterator[int],
             break
 
         if an is not None:
-            res = apply_a(res, an)
+            res = apply_ab(res, an, 'a')
             yield 'a', an, res
         if bn is not None:
-            res = apply_b(res, bn)
+            res = apply_ab(res, bn, 'b')
             yield 'b', bn, res
 
 
 def arithmetic_convergents(a: Iterator[int],
                            b: Iterator[int],
                            t0=tForAddition) -> Iterator[Rational]:
-    """Given two continued fractions (a and b) and an arithemtic operation (specified by t0), return an interator of rational numbers"""
+    """Given two continued fractions (a and b) and an arithmetic operation (specified by t0), return an interator of rational numbers"""
     c = arithmetic_convergents_(a, b, t0)
     for _, _, res in c:
         r = tensor_ref(res, 'xy')
         yield Rational(*r)
+
+
+def qr_tensor(t: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
+    t1 = t.copy()
+    if np.all(t1[1] > 0):
+        # if the denominator matrix doesn't have any 0 or negative number
+        r = t_ratios(t)
+        if r[0][0] == r[0][1] == r[1][0] == r[1][1]:
+            # if the integer parts are all the same, we've got a quotient
+            q = r[0][0]
+            r = np.array([t1[1], t1[0] - q * t1[1]])
+            return (q, r)
+        else:
+            # the range is too big to determine the quotient
+            return (None, np.array([identity_m, identity_m]))
+    else:
+        # the denominator can be zero. The dihomographic function is unbounded
+        return (None, np.array([identity_m, identity_m]))
 
 
 def t_ratios(t: np.ndarray) -> list:
@@ -296,7 +322,7 @@ def t_ratios(t: np.ndarray) -> list:
         ]
 
     zz = [r('xy'), r('x'), r('y'), r('1')]
-    # zort by the floating point ratio
+    # sort by the floating point ratio
     zz_sorted = sorted(zz, key=lambda item: item[0])
 
     zz_max = zz_sorted[-1]
@@ -326,7 +352,8 @@ def score(t):
         return math.floor(numerator / denominator)
 
     # number of zero in the denominator
-    n_zero = np.count_nonzero(t[1] == 0)
+    # a negative value means that the denominator can be made zero
+    n_zero = np.count_nonzero(t[1] <= 0)
     if n_zero == 3 or n_zero == 4:
         # 0 can be removed in 2 moves
         return -2
@@ -353,6 +380,8 @@ def score(t):
                 # 3 0
                 # both zeroes can be remoevd in one step
                 return -1
+        else:
+            return -2
     elif n_zero == 1:
         if tensor_ref(t, 'e') == 0:
             # 3 8
@@ -387,69 +416,137 @@ def score(t):
                 return -1.0
     else:  # no zereos in the denominator
         r = t_ratios(t)
-        print(debug(t))
+        #print(debug(t))
         if r[0][0] == r[0][1] == r[1][0] == r[1][1]:
             # the 4 ratios are all the same. This is the best situation
             return 4.0
         elif (r[0][0] == r[1][0]) or (r[1][0] == r[1][1]):
+            # 3 1       1 2
+            # 3 2 or    3 3
             return 1.0
         else:
             return 0.0
 
 
-def ABQueue(a, b):
+def ABQueue(a: Iterator[int],
+            b: Iterator[int]) -> Callable[np.ndarray, Tuple[int, str]]:
     current_a = None
     current_b = None
     last_tie = 'b'
 
-    def ABQueue_(t):
+    def ABQueue_(t: np.ndarray) -> Tuple[int, str]:
         nonlocal current_a
         nonlocal current_b
         nonlocal last_tie
+
+        def dequeue(label: str) -> Tuple[int, str]:
+            nonlocal current_a
+            nonlocal current_b
+            nonlocal last_tie
+            assert label in ['a', 'b', 'alt']
+            if label == 'a':
+                next_term = current_a
+                current_a = None
+                return next_term, 'a'
+            elif label == 'b':
+                next_term = current_b
+                current_b = None
+                return next_term, 'b'
+            elif label == 'alt':
+                if last_tie == 'a':
+                    next_term = current_b
+                    current_b = None
+                    last_tie = 'b'
+                    return next_term, 'b'
+                else:
+                    next_term = current_a
+                    current_a = None
+                    last_tie = 'a'
+                    return next_term, 'a'
+
         if current_a is None:
             current_a = next(a, None)
         if current_b is None:
             current_b = next(b, None)
 
         if current_a is None and current_b is None:
+            # both a and b are empty
             return None, None
         elif current_a is None:
-            next_term = current_b
-            current_b = None
-            return next_term, 'b'
+            # if a is empty, return b
+            return dequeue('b')
         elif current_b is None:
-            next_term = current_a
-            current_a = None
-            return next_term, 'a'
+            # if b is empty, return a
+            return dequeue('a')
         else:
-            t_a = apply_a(t, current_a)
-            t_b = apply_b(t, current_b)
-            s_a = score(t_a)
-            s_b = score(t_b)
-            print(t_a)
-            print(t_b)
-            print(s_a, s_b)
+            #print(current_a, current_b)
+            t_a = apply_ab(t, current_a, 'a')
+            t_b = apply_ab(t, current_b, 'b')
+            s_a, s_b = score(t_a), score(t_b)
+            #print(t_a)
+            #print(s_a, s_b)
             if s_a == s_b:
-                if last_tie == 'a':
-                    res = current_b
-                    current_b = None
-                    last_tie = 'b'
-                    return res, 'b'
-                else:
-                    res = current_a
-                    current_a = None
-                    last_tie = 'a'
-                    return res, 'a'
+                return dequeue('alt')
             if s_a < s_b:
-                res = current_b
-                current_b = None
-                return current_b, 'b'
+                return dequeue('b')
             else:
-                res = current_a
-                current_a = None
-                return current_a, 'a'
+                return dequeue('a')
 
     return ABQueue_
+
+
+def euclid_tensor_(t: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
+    while True:
+        if np.all(t[0] == 0):
+            # if the numerator is all zero, stop
+            break
+        else:
+            (q, r) = qr_tensor(t)
+            if q is not None:
+                yield q, r
+                t = r
+            else:
+                break
+
+
+def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
+                   t0: np.ndarray) -> Iterator:
+    t = t0
+    next_ab = ABQueue(cf_a, cf_b)
+
+    while True:
+        term, label = next_ab(t)
+        if term is None and label is None:
+            # cf_a and cf_b are exhausted
+            #print(t)
+            break
+        else:
+            t = apply_ab(t, term, label)
+            new_term = True
+            for (q, r) in euclid_tensor_(t):
+                yield q, r, t, term, label, new_term
+                t = r
+                new_term = False
+            if new_term:
+                # Nothing was yielded. This means that an Euclidean step was not performed
+                yield None, None, t, term, label, new_term
+
+    # we will only reach this point if cf_a and cf_b have finite terms
+    if tensor_ref(t, 'e') != 0:
+        for s in r2cf(Rational(*tensor_ref(t, 'xy'))):
+            yield s, None, t, None, None, False
+    else:
+        # if the 'e' term is 0, that means the quotient is 0.
+        # there is no need to return it
+        pass
+
+
+def cf_arithmetic(cf_a: Iterator[int], cf_b: Iterator[int],
+                  t0: np.ndarray) -> Iterator[int]:
+    for res in cf_arithmetic_(cf_a, cf_b, t0):
+        (q, r, t, term, label, new_term) = res
+        if q is not None:
+            yield q
 
 
 # Examples of continuous fractions
