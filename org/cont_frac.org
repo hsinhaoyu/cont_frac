@@ -237,6 +237,7 @@ Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multipli
   # Calculate the convergents using matrix multiplication
 
   def h(a: int) -> np.ndarray:
+      """Homographic matrix for one term of continued fraction"""
       return np.array([[a, 1], [1,0]])
 
   def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
@@ -613,7 +614,8 @@ I find the tabulated displays visually appealing, so I wrote some external codes
 
 Before we proceed further, there is a small but important point that should be clarified. In the last example, we transformed $e$ to calculate $\frac{e-1}{e+1}$. It was done by truncating $e$'s infinite number of terms, retaining only the first 6 terms. This might give the impression that =cf_transform= is for approximating $\frac{e-1}{e+1}$. That is not the case. The entire point of Gospher's work is to show that /exact/ continued fraction arithmetic is possible. If this is not clear to you, let's define a different interface to =cf_transform_=, to make the point more obvious.
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
-  def cf_transform_func(cf, m0):
+  def cf_transform_func(cf: Iterator[int], m0: np.ndarray) -> Tuple[List[int], np.ndarray]:
+      """Given a conitued fraction with finite terms (cf) and a transformation (m0), return a list of terms and a homographic matrix"""
       outputs = []
       out_m = None
       for res in cf_transform_(cf, m0, finite_term = False):
@@ -667,10 +669,12 @@ Since we are working with two matrices as a single entity, it's natural to use t
   # Tensor representations of bihomographic functions
 
   def tFrom2x4(m: np.ndarray) -> np.ndarray:
+      """Translate a bihomographic function from algebraic form to tensor form"""
       ((a, b, c, d), (e, f, g, h)) = m.tolist()
       return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
 
   def tTo2x4(m: np.ndarray) -> np.ndarray:
+      """Translate a bihomographic function from tensor form to algebraic form"""
       (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
       return np.array([[a, b, c, d], [e, f, g, h]])
 #+end_src
@@ -678,6 +682,7 @@ Since we are working with two matrices as a single entity, it's natural to use t
 I need a utility function to make it easy to access so many numbers in the tensors:
 #+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
   def tensor_ref(t: np.ndarray, label: str) -> Union[int, Tuple[int, int]]:
+      """Return elements or pairs of elements in the tensor t"""
       assert t.shape == (2, 2, 2)
       assert label in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1']
       lookup = {}
@@ -722,6 +727,7 @@ The above suggests an elegant way to visualize continued fraction arithmetic: if
 To implement the cube movements in Python, I use my favorite Numpy function: =einsum= (Einstein's sum; see [[https://ajcr.net/Basic-guide-to-einsum/][this tutorial]]). If the very compact notation (invented by Einstein) seems cryptic, don't worry. It's just repeated matrix multiplication.
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
   def apply_a(t: np.ndarray, a: int) -> np.ndarray:
+      """Move the tensor t to the left"""
       ha = h(a)
       return np.einsum('dyx,xz->dyz', t, ha)
 
@@ -729,10 +735,12 @@ To implement the cube movements in Python, I use my favorite Numpy function: =ei
       return np.array([[0, 1], [1, b]])
 
   def apply_b(t: np.ndarray, b: int) -> np.ndarray:
+      """Move the tensor t downwards"""
       hb = h_rotated(b)
       return np.einsum('zy,dyx->dzx', hb, t)
 
   def apply_ab(t: np.ndarray, term: int, label: str) -> np.ndarray:
+      """Given tensor t, apply a new term (term) associated with one of the two continued fractions (specified by label)"""
       assert label in ['a', 'b']
       if label == 'a':
           return apply_a(t, term)
@@ -910,6 +918,7 @@ Unfortunately, I think these displays are not very satisfying, because the numbe
 Since our tensors are just representations of bihomographic functions, it's straightforward to apply the Euclidean algorithm symbolically on them. =euclid_tensor_= is almost identical to =euclid_matrix_= in code structure:
 #+begin_src python :tangle no :noweb-ref ARITHMETIC
   def euclid_tensor_(t: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
+      """Symbolic Euclidean step for tensor t"""
       while True:
           if np.all(t[0]==0):
               # if the numerator is all zero, stop
@@ -1002,14 +1011,14 @@ Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with converg
           pass
 
   def cf_arithmetic(cf_a: Iterator[int], cf_b: Iterator[int], t0: np.ndarray, finite_term = True) -> Iterator[int]:
-      """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
-      """      
+      """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction."""
       for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term = finite_term):
           (q, r, t, term, label, new_term) = res
           if q is not None:
               yield q
 
-  def cf_arithmetic_func(cf_a, cf_b, t0):
+  def cf_arithmetic_func(cf_a: Iterator[int], cf_b: Iterator[int], t0: np.ndarray) -> Tuple[List[int], np.ndarray]:
+      """Given two finite-length continued fractions and an operation, return a list of new terms and a bihomographic tensor"""
       outputs = []
       out_t = None
       for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term = False):
