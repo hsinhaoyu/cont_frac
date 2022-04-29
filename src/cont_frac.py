@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from typing import NamedTuple, Iterator, Tuple, Optional, Callable
+from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union
 from functools import reduce
 from itertools import tee, islice
 
@@ -169,11 +169,14 @@ def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
 
 
 def cf_transform_(
-    cf: Iterator[int], m0: np.ndarray = np.identity(2, int)
+    cf: Iterator[int],
+    m0: np.ndarray = np.identity(2, int),
+    finite_term=True
 ) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray, int,
                     bool]]:
-    """Transform the input continued fraction by matrix m
-    returns another continued fraction"""
+    """Transform the input continued fraction, using the initial matrix m0.
+    Returns a tuple of quotients, and internal states
+    """
     m = m0
     for a in cf:
         m = np.matmul(m, h(a))
@@ -186,20 +189,39 @@ def cf_transform_(
             # Nothing was yielded. That means for this convergent cannot be turned into a continued fraction
             yield (None, None, m, a, new_a)
 
-    # we will only reach this point if the series is finite
-    if m[1][0] != 0:
+    # We will only reach this point if the series is finite
+    # If cf has finite term, but it represents the beginning of a longer series, set finite_term to False
+    if finite_term and m[1][0] != 0:
         for s in r2cf(Rational(m[0][0], m[1][0])):
             yield s, None, m, a, False
 
 
-def cf_transform(
-    cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
-    for res in cf_transform_(cf, m0):
+def cf_transform(cf: Iterator[int],
+                 m0: np.ndarray = np.identity(2, int),
+                 finite_term=True) -> Iterator[Union[int, np.ndarray]]:
+    """Transform the input continued fraction, using the initial matrix m0.
+    Returns another continued fraction"""
+    for res in cf_transform_(cf, m0, finite_term):
         (q, r, m, a, new_a) = res
         if q is not None:
             yield q
+        else:
+            pass
+
+
             # q can be None, indicating that more terms are needed
             # to continue. It can be ignored
+def cf_transform_func(cf, m0):
+    outputs = []
+    out_m = None
+    for res in cf_transform_(cf, m0, finite_term=False):
+        (q, r, m, a, new_a) = res
+        if q is not None:
+            outputs = outputs + [q]
+            out_m = q
+        else:
+            out_m = m
+    return outputs, out_m
 
 
 # Tensor representations of bihomographic functions
@@ -215,7 +237,7 @@ def tTo2x4(m: np.ndarray) -> np.ndarray:
     return np.array([[a, b, c, d], [e, f, g, h]])
 
 
-def tensor_ref(t: np.ndarray, label: str):
+def tensor_ref(t: np.ndarray, label: str) -> Union[int, Tuple[int, int]]:
     assert t.shape == (2, 2, 2)
     assert label in [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1'
@@ -236,13 +258,7 @@ def tensor_ref(t: np.ndarray, label: str):
     return lookup[label]
 
 
-tForAddition = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
-tForSubtraction = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
-tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
-tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
-
-
-def apply_a(t: np.ndarray, a: int):
+def apply_a(t: np.ndarray, a: int) -> np.ndarray:
     ha = h(a)
     return np.einsum('dyx,xz->dyz', t, ha)
 
@@ -251,7 +267,7 @@ def h_rotated(b: int) -> np.ndarray:
     return np.array([[0, 1], [1, b]])
 
 
-def apply_b(t: np.ndarray, b: int):
+def apply_b(t: np.ndarray, b: int) -> np.ndarray:
     hb = h_rotated(b)
     return np.einsum('zy,dyx->dzx', hb, t)
 
@@ -262,6 +278,12 @@ def apply_ab(t: np.ndarray, term: int, label: str) -> np.ndarray:
         return apply_a(t, term)
     else:
         return apply_b(t, term)
+
+
+tForAddition = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+tForSubtraction = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
+tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
 
 
 def arithmetic_convergents_(a: Iterator[int],
@@ -511,6 +533,9 @@ def euclid_tensor_(t: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
 
 def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
                    t0: np.ndarray) -> Iterator:
+    """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
+    Returns an iterator of quotients and other information.
+    """
     t = t0
     next_ab = ABQueue(cf_a, cf_b)
 
@@ -518,7 +543,6 @@ def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
         term, label = next_ab(t)
         if term is None and label is None:
             # cf_a and cf_b are exhausted
-            #print(t)
             break
         else:
             t = apply_ab(t, term, label)
@@ -543,6 +567,8 @@ def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
 
 def cf_arithmetic(cf_a: Iterator[int], cf_b: Iterator[int],
                   t0: np.ndarray) -> Iterator[int]:
+    """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
+    """
     for res in cf_arithmetic_(cf_a, cf_b, t0):
         (q, r, t, term, label, new_term) = res
         if q is not None:

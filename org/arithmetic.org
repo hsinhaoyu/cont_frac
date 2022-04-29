@@ -7,7 +7,42 @@ f(x, y) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} b & d \\ a & c \en
           \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} f & h \\ e & g \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix}
 \end{equation*}
 
-What happens when a new term $a_n$ of $a$ is received?
+
+Since we are working with two matrices as a single entity, it's natural to use tensors to represent bihomographic functions:
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  # Tensor representations of bihomographic functions
+
+  def tFrom2x4(m: np.ndarray) -> np.ndarray:
+      ((a, b, c, d), (e, f, g, h)) = m.tolist()
+      return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
+
+  def tTo2x4(m: np.ndarray) -> np.ndarray:
+      (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
+      return np.array([[a, b, c, d], [e, f, g, h]])
+#+end_src
+
+I need a utility function to make it easy to access so many numbers in the tensors:
+#+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
+  def tensor_ref(t: np.ndarray, label: str) -> Union[int, Tuple[int, int]]:
+      assert t.shape == (2, 2, 2)
+      assert label in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1']
+      lookup = {}
+      lookup['a']  = t[0,1,0]
+      lookup['b']  = t[0,0,0]
+      lookup['c']  = t[0,1,1]
+      lookup['d']  = t[0,0,1]
+      lookup['e']  = t[1,1,0]
+      lookup['f']  = t[1,0,0]
+      lookup['g']  = t[1,1,1]
+      lookup['h']  = t[1,0,1]
+      lookup['xy'] = lookup['a'], lookup['e']
+      lookup['x']  = lookup['b'], lookup['f']
+      lookup['y']  = lookup['c'], lookup['g']
+      lookup['1']  = lookup['d'], lookup['h']
+      return lookup[label]
+#+end_src
+
+What happens to $f(x, y)$, with the addition of a new term $a_n$ of $a$?
 
 \begin{equation*}
 f(a_n + \frac{1}{x}, y) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a_n b  + d & b \\ a_n a + c & a \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg /
@@ -30,14 +65,24 @@ The above suggests an elegant way to visualize continued fraction arithmetic: if
 #+attr_html: :width 500px
 [[../figs/cf_space.png]]
 
-Something is curious about the discussion so far. We have a generic method for ingesting terms of two continued fractions, but how do we actually do any computation on them? It's not hard to see that it all depends on the initial matrices. With appropriated chosen initial matrices, we can do multiplication, addition, division, subtraction, and their combinations. I think it's quite a remarkable result, because when we are dealing with numbers with multiple terms, multiplication is usually harder than addition. With continued fraction, the computational steps are exactly the same!
+To implement the cube movements in Python, I use my favorite Numpy function: =einsum= (Einstein's sum; see [[https://ajcr.net/Basic-guide-to-einsum/][this tutorial]]):
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  def apply_a(t: np.ndarray, a: int) -> np.ndarray:
+      ha = h(a)
+      return np.einsum('dyx,xz->dyz', t, ha)
 
-I made the following two figures to explain how addition and multiplication are done. Here's $a+b$. We begin with just the initial matrices (first row), add the first term of $a$, and then add the first term of $b$. 
+  def h_rotated(b: int) -> np.ndarray:
+      return np.array([[0, 1], [1, b]])
 
-#+attr_html: :width 500px
-[[../figs/addition.png]]
+  def apply_b(t: np.ndarray, b: int) -> np.ndarray:
+      hb = h_rotated(b)
+      return np.einsum('zy,dyx->dzx', hb, t)
 
-Here's the same process for multiplication:
+  def apply_ab(t: np.ndarray, term: int, label: str) -> np.ndarray:
+      assert label in ['a', 'b']
+      if label == 'a':
+          return apply_a(t, term)
+      else:
+          return apply_b(t, term)
+#+end_src
 
-#+attr_html: :width 500px
-[[../figs/multiplication.png]]

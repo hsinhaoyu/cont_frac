@@ -258,6 +258,42 @@ def arithmetic_convergents_tab(a: Iterator[int],
     return c
 
 
+def euclid_tensor_tab(t):
+    c = Chart(t)
+    c.include_a = False
+    c.include_b = False
+    res = euclid_tensor_(t)
+    for (q, r) in res:
+        c.move_under(r, q)
+    return c
+
+
+def cf_arithmetic_tab(cf_a, cf_b, t0):
+    chart = Chart(m=t0)
+    chart.include_a = True
+    chart.include_b = True
+    chart.include_out = True
+    res = cf_arithmetic_(cf_a, cf_b, t0)
+
+    for (q, r, t, term, label, new_term) in res:
+        if new_term:
+            if label == 'a':
+                chart.move_left(t, term)
+            else:
+                assert label == 'b'
+                chart.move_down(t, term)
+        if q is None:
+            # this means that no Euclidean step was performed
+            # do nothing
+            pass
+        else:
+            if r is not None:
+                chart.move_under(r, q)
+            else:
+                chart.output = chart.output + [q]
+    return chart
+
+
 # Pretty printing utilities
 
 

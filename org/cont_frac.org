@@ -6,19 +6,6 @@
 
 #+TITLE: Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)
 
-#+begin_src python :noweb no-export :tangle ../src/cont_frac.py
-  <<IMPORTS>>
-  <<RATIONAL_NUM>>
-  <<R2CF>>
-  <<CONVERGENTS0>>
-  <<CONVERGENTS1>>
-  <<QR_MATRIX>>
-  <<CF_TRANSFORM>>
-  <<BIHOMOGRAPHY>>  
-  <<QR_TENSOR>>
-  <<ARITHMETIC>>
-  <<CF_EXAMPLES>>
-#+end_src
 
 * Representing rational numbers as continued fractions
 Since we'll use rational numbers a lot, let's define a class:
@@ -39,7 +26,7 @@ How to convert a rational number to a continued fraction? Observing that
 = 2 + \frac{1}{1 + \frac{1}{\frac{46}{54}}}
 \]
 
-it should be obvious that the solution is just the [[https://en.wikipedia.org/wiki/Euclidean_algorithm][Euclidean algorithm]] for finding the greatest common divider: we first decompose the numerator $a$ as $a=b*q+r$, where $b$ is the denominator, $q$ is an integer called the /quotient/, and $r$ is the remainder. We output $q$, and repeat the process, using $b$ as the numerator and $r$ as the denominator. We stop when the numerator becomes 0.
+it should be obvious that the solution is just the [[https://en.wikipedia.org/wiki/Euclidean_algorithm][Euclidean algorithm]] for finding the greatest common divider: we first decompose the numerator $a$ as $a=b*q+r$, where $b$ is the denominator, $q$ is an integer called the /quotient/, and $r$ is the remainder. We output $q$, and repeat the process, using $b$ as the numerator and $r$ as the denominator. We stop when the numerator becomes 0. 
 #+begin_src python :tangle no :noweb-ref R2CF
   # Convert a rational number to a continued fraction
   
@@ -51,7 +38,7 @@ it should be obvious that the solution is just the [[https://en.wikipedia.org/wi
       return (q, r)
 
   def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
-      """The Euclidean algorithm for representing a rational number as a continuous fraction.
+      """The Euclidean algorithm for representing a rational number as a continued fraction.
       Return an iterator of quotients and remainders"""
       a, b = rn
       while True:
@@ -143,7 +130,7 @@ This question has an easy solution if we use a series of rational numbers to app
           q0, q1 = q1, q
 #+end_src
 
-For example, for the continued fraction $[2, 1, 1, 5, 1, 3]$, we get
+<<CONVERGENT_EX1>>For example, for the continued fraction $[2, 1, 1, 5, 1, 3]$, we get
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents0(iter([2, 1, 1, 5, 1, 3]))))
@@ -187,12 +174,12 @@ For convenience, we define a specialized version of =cf_convergents0= just for f
 #+RESULTS:
 : 127/50
 
-Another example: the irrational number $e$ can be expressed as a continuous fraction by this code:
+Another example: the irrational number $e$ can be expressed as a continued fraction by this code:
 #+begin_src python :tangle no :noweb-ref CF_EXAMPLES
-  # Examples of continuous fractions
+  # Examples of continued fractions
   
   def cf_e() -> Iterator[int]:
-      """e as a continuous fraction"""
+      """e as a continued fraction"""
       yield 2
       k = 0
       while True:
@@ -240,10 +227,11 @@ Here are the convergents, as rational and as floating point numbers:
 566827/208524        2.71828183
 #+end_example
 
-* Continued fraction approximation as recursive function compositions
+* Continued fractions as recursive functions
+<<SEC_RECURSION>>
 #+INCLUDE: functional_convergents.org
 
-* Calculating convergents using the matrix notation
+* Calculating convergents using matrices
 Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multiplications:
 #+begin_src python :tangle no :noweb-ref CONVERGENTS1
   # Calculate the convergents using matrix multiplication
@@ -252,29 +240,20 @@ Now, we are ready to rewrite the formula in =cf_convergents0= as matrix multipli
       return np.array([[a, 1], [1,0]])
 
   def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
-      """Given a continuous fraction, return an iterator of 2x2 matrices representing convergents"""
+      """Given a continued fraction, return an iterator of 2x2 matrices representing convergents"""
       res = np.array([[1, 0], [0, 1]])
       for a in cf:
           res = np.matmul(res, h(a))
           yield res
 
   def cf_convergents1(cf: Iterator[int]) -> Iterator[Rational]:
-      """Given a continuous fraction, return an iterator of rational numbers representing convergents"""
+      """Given a continued fraction, return an iterator of rational numbers representing convergents"""
       mLst = cf_convergents1_(cf)
       for m in mLst:
           yield Rational(m[0, 0], m[1, 0])
 #+end_src
 
-Let's try it on the example given in the [[*Continued fraction approximation as recursive function compositions][previous section]]:
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  print(list(cf_convergents1(iter([5, 1, 4]))))
-#+end_src
-
-#+RESULTS:
-: [5/1, 6/1, 29/5]
-
-Here's a longer sequence that we used [[*Calculating the convergents of a continued fraction][previously]]:
+<<CONVERGENT_EX2>>Let's try it on an example that that we used [[CONVERGENT_EX1][previously]]:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   print(list(cf_convergents1(iter([2, 1, 1, 5, 1, 3]))))
@@ -295,9 +274,7 @@ A very charming thing that Gosper did was that he used a compact tabulated forma
 :   5  1  1  0  1
 : 
 
-This table is read from the right to the left. The right-to-left direction takes some getting used to, but it's needed to preserve the normal representation of matrices.
-
-The first row represents the terms of the continued fraction. To understand the other numbers, we calculate the matrices for each additional term in the continued fraction:
+This table is read from the right to the left. The right-to-left direction takes some getting used to, but it's needed to preserve the normal representation of matrices. The first row represents the terms of the continued fraction. What are the numbers below the first row? They are the matrices representing the convergents associated with $[5, 1, 4]$. To see why, we calculate the matrices for each additional term in the continued fraction:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   itr = cf_convergents1_(iter([5, 1, 4]))
@@ -316,7 +293,7 @@ The first row represents the terms of the continued fraction. To understand the 
 : [[29  6]
 :  [ 5  1]]
 
-You can see these matrices shift leftwards in the tabular representation, with adjacent matrices sharing a column. To see why, suppose that the current matrix is
+You can see these matrices shift leftwards in the tabular representation, with adjacent matrices sharing a column. Suppose that the current matrix is
 $\begin{bmatrix}
     p & q \\
     r & s
@@ -338,19 +315,7 @@ $\begin{bmatrix}
 
 This explains the shift, and we have recovered the formula in =cf_convergents0=.
 
-Here's a longer series:
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  print(cf_convergents1_tab(iter([2, 1, 1, 5, 1, 3])))
-#+end_src
-
-#+RESULTS:
-:        3   1   5   1   1   2    
-:  127  33  28   5   3   2   1   0
-:   50  13  11   2   1   1   0   1
-: 
-
-As before, we define a specialized version of =cf_convergents1= just for finite-term continued fractions. 
+Finally, we define a specialized version of =cf_convergents1= just for finite-term continued fractions. 
 #+begin_src python :tangle no :noweb-ref CONVERGENTS1
   def cf2r1(cf: Iterator[int]) -> Rational:
       """Given a finite-term continued fraction, return its value as a rational number.
@@ -359,18 +324,18 @@ As before, we define a specialized version of =cf_convergents1= just for finite-
       return list(cf_convergents1(cf))[-1]
 #+end_src
 
-* Turning convergents into continued fractions
-In this section, we'll develop code that calculates convergents as in =cf_convergent1=, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that the code receives a continued fraction, and just returns the same series. However, this code will become useful in the coming sections.
+* Turning convergents into continued fractions using the Euclidean algorithm
+In this section, we'll calculate convergents as in =cf_convergent1=, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that our code receives a continued fraction, and just returns the same series. However, in the next section, it will be used to do interesting things.
 
-Let's take the continued fraction $[5, 1, 4... ]$ as an example. Since we already know from the [[*Calculating convergents using the matrix notation][last section]] that the third convergent of $[5, 1, 4]$ is $\frac{29}{5}$, can't we just turn $\frac{29}{5}$ into a continued fraction? It is not as simple as that, because $[5, 1, 4]$ and $[5, 1, 4...]$ are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent is
+Let's take the continued fraction $[5, 1, 4... ]$ as an example. Since we already know from the [[CONVERGENT_EX2][last section]] that the third convergent of $[5, 1, 4]$ is $\frac{29}{5}$, can't we just turn $\frac{29}{5}$ into a continued fraction, using the =r2cf= function that we have already written? It is not as simple as that, because $[5, 1, 4]$ and $[5, 1, 4...]$ are not the same. For the former, the third convergent just a rational number. However, for the latter, the third convergent 
 $\begin{bmatrix}
     29 & 6 \\
      5 & 1
-\end{bmatrix}$, which represents the function $\frac{29x + 6}{5x + 1}$. To turn it into a continued fraction, we'll need to take the rest of the series, represented by $x$, into account.
+\end{bmatrix}$ represents the function $\frac{29x + 6}{5x + 1}$. To turn it into a continued fraction, we'll need to take the rest of the series, represented by $x$, into account.
 
 How? The answer is still the Euclidean algorithm, but we have to use it symbolically rather than numerically.
 
-The first step is to symbolically represent the function as a quotient and a remainder (see =qr()= in =r2cf_=). I implemented this operation in =qr_matrix= in the [[*Appendix: Quotients/remainders for matrices][Appendix]]. We can use it on the third convergent:
+The first step is to symbolically represent the function as a quotient and a remainder. I implemented this operation in =qr_matrix= in the [[QR_MATRIX][Appendix]]. We can use it on the third convergent:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   pp_qr(qr_matrix(np.array([[29, 6], [5, 1]])))
@@ -430,8 +395,9 @@ $\begin{bmatrix}
 :     2  0
 : 
 
-So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 terms (5, 1, 4). We stopped at the last term, because $\frac{2x+1}{2x}$ is an unbounded function. The quotient cannot be determined.
+So there is enough information in $\frac{70x+29}{12x+5}$ to precisely determine 3 terms (5, 1, 4). The last matrix represents $\frac{2x+1}{2x}$, an unbounded function. This means that depending on the next term of the input, the function can evaluate to any value. We don't have enough information to determine the quotient, so we have to stop.
 
+<<EUCLID_EX1>>
 As before, Gospher stacked the matrices in a compact format to illustrate the process:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
@@ -447,13 +413,14 @@ As before, Gospher stacked the matrices in a compact format to illustrate the pr
 :   2  0   
 :
 
-This is a just an extension of the format that we use to visualize =r2cf=: we start with $\begin{bmatrix} 70 & 29 \\ 12 & 5\end{bmatrix}$, end with $\begin{bmatrix}2 & 1 \\ 2 & 0\end{bmatrix}$, and output 5, 1, 4 in the process. The process stops when we don't have enough information to determine the next quotient. 
+This is a just an extension of the format that we use to visualize =r2cf=: we start with $\begin{bmatrix} 70 & 29 \\ 12 & 5\end{bmatrix}$, end with $\begin{bmatrix}2 & 1 \\ 2 & 0\end{bmatrix}$, and output 5, 1, 4 in the process. 
 
-Now, we can combine convergent calculation with the symbolic Euclidean algorithm:
+Now, we can combine convergent calculation with the symbolic Euclidean algorithm. The first function below =cf_transform_= returns the desired information (the quotient) along with internal states of the algorithm. It's useful for debugging and visualization. We use a second function =cf_transform= to filter out the internal states:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
-  def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray, int, bool]]:
-      """Transform the input continued fraction by matrix m
-      returns another continued fraction"""
+  def cf_transform_(cf: Iterator[int], m0: np.ndarray = np.identity(2, int), finite_term = True) -> Iterator[Tuple[Optional[int], Optional[np.ndarray], np.ndarray, int, bool]]:
+      """Transform the input continued fraction, using the initial matrix m0.
+      Returns a tuple of quotients, and internal states
+      """
       m = m0
       for a in cf:
           m = np.matmul(m, h(a))
@@ -466,16 +433,21 @@ Now, we can combine convergent calculation with the symbolic Euclidean algorithm
               # Nothing was yielded. That means for this convergent cannot be turned into a continued fraction
               yield (None, None, m, a, new_a)
 
-      # we will only reach this point if the series is finite
-      if m[1][0] != 0:
+      # We will only reach this point if the series is finite
+      # If cf has finite term, but it represents the beginning of a longer series, set finite_term to False
+      if finite_term and m[1][0] != 0:
           for s in r2cf(Rational(m[0][0], m[1][0])):
               yield s, None, m, a, False
 
-  def cf_transform(cf: Iterator[int], m0: np.ndarray = np.identity(2, int)) -> Iterator[int]:
-      for res in cf_transform_(cf, m0):
+  def cf_transform(cf: Iterator[int], m0: np.ndarray = np.identity(2, int), finite_term = True) -> Iterator[Union[int, np.ndarray]]:
+      """Transform the input continued fraction, using the initial matrix m0.
+      Returns another continued fraction"""
+      for res in cf_transform_(cf, m0, finite_term):
           (q, r, m, a, new_a) = res
           if q is not None:
               yield q
+          else:
+              pass
               # q can be None, indicating that more terms are needed
               # to continue. It can be ignored
 #+end_src
@@ -510,8 +482,9 @@ This seems to be anti-climatic for quite a bit of work... but here's something c
 The numbers on the right are the outputs of =cf_transform=.
 
 * Simple transformations of continued fractions
-The beauty of representing convergents as matrices is that we can transform it with a function of the form $f(x) = \frac{px+q}{rx+s}$. All we have to do is to do an additional matrix multiplication on the left side! This can be calculated by giving =cf_transform= an initial matrix.
+The beauty of the matrix representation is that we can transform convergents with a function of the form $f(x) = \frac{px+q}{rx+s}$. All we need is an additional matrix multiplication on the left side! This can be calculated by giving =cf_transform= an initial matrix.
 
+<<CF_DOUBLE>>
 The continued fraction $[2, 1, 1, 5, 1]$ is $\frac{33}{13}$. Let's double that, and turn it back to a continued fraction:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
@@ -550,7 +523,7 @@ According to the above, $2 * [2, 1, 1, 5, 1]$ is $[5, 13]$. How do we end up wit
 
 Take one of the matrices in the tabulated display $\begin{bmatrix} 6 & 4 \\ 1 & 1\end{bmatrix}$ for example. The range of $\frac{6x+4}{x+1}$ is too wide (between 4 and 6) for the quotient to be determined. The algorithm therefore needs another term of the continued fraction. The matrix shifts leftwards without outputting a quotient. That's why the transformed continued fraction has a smaller number of terms. 
 
-Previously, we saw that the reciprocal of a continuous fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
+Previously, we saw that the reciprocal of a continued fraction has an addition 0 in the beginning. Let's verify that with the initial matrix $\begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$ (which stands for the function $f(x) = \frac{1}{x}$): 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   m0 = np.array([[0, 1], [1, 0]], int)
@@ -633,11 +606,63 @@ Another example: what is $\tanh{\frac{1}{2}} = \frac{e-1}{e+1}$? We have already
 #+end_example
 The answer is a continued fraction with a simple pattern: after the second term, add 4 to the previous term.
 
-* Continued fraction arithmetic - bihomographic functions
-#+INCLUDE: arithmetic.org
+I find the tabulated displays visually appealing, so I wrote some external codes (in /Mathematica/) to give them some colors. The colors make it easier to see the patterns in the numbers.
+#+ATTR_ORG: :width 600
+#+ATTR_HTML: :width 600
+[[file:../figs/cf_transform_summary.png]]
 
-* Bihomographic functions - implementation
-Let's represent bihomographic functions with Numpy tensors:
+Before we proceed further, there is a small but important point that should be clarified. In the last example, we transformed $e$ to calculate $\frac{e-1}{e+1}$. It was done by truncating $e$'s infinite number of terms, retaining only the first 6 terms. This might give the impression that =cf_transform= is for approximating $\frac{e-1}{e+1}$. That is not the case. The entire point of Gospher's work is to show that /exact/ continued fraction arithmetic is possible. If this is not clear to you, let's define a different interface to =cf_transform_=, to make the point more obvious.
+#+begin_src python :tangle no :noweb-ref CF_TRANSFORM
+  def cf_transform_func(cf, m0):
+      outputs = []
+      out_m = None
+      for res in cf_transform_(cf, m0, finite_term = False):
+          (q, r, m, a, new_a) = res
+          if q is not None:
+              outputs = outputs + [q]
+              out_m = q
+          else:
+              out_m = m
+      return outputs, out_m
+#+end_src
+
+I call this function =cf_transform_func=, to emphasize that the output is a list integers, /and/ a function represented by a matrix. The list of integers is an approximation, but together with the function, we have the exact solution to the computation. Why is it exact? Because if we have more terms of $e$, we can send it to the function to get more output terms. This is a recursive process that can continue forever.
+
+The example below, we call =cf_transform_func= with the first 6 terms of $e$. We get 3 terms (0, 2, 6), and the function $f(x) = \frac{9x + 2}{x}$, represented by the matrix. We can get 6 more terms of $e$, and call =cf_transform_func= again with the matrix to continue the process.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  m0 = np.array([[1, -1], [1, 1]], int)
+  cf = cf_e()
+  cf6 = islice(cf, 6)
+  (outs, m) = cf_transform_func(cf6, m0 = m0)
+  print("Using the first 6 terms of e, (e-1)/(e+1) is ", outs)
+  print("The homomorphic function is:\n ", m)
+  # take 6 more terms from e
+  cf6 = islice(cf, 6)
+  # we can continue our calculations to get more terms
+  (outs, m) = cf_transform_func(cf6, m0 = m)
+  print("With 6 more terms of e, we get ", outs)
+#+end_src
+
+#+RESULTS:
+: Using the first 6 terms of e, (e-1)/(e+1) is  [0, 2, 6]
+: The homomorphic function is:
+:   [[9 2]
+:  [1 0]]
+: With 6 more terms of e, we get  [10, 14]
+
+* Arithmetic (Step 1): From matrices to tensors
+We have been dealing with one continued fraction at a time. In those situations, all operations involve functions of the form $f(x) = \frac{px+q}{rx+s}$. They are known as /homographic functions/, and they can be represented by the matrix $\begin{bmatrix} p & q \\ r & s \end{bmatrix}$. How do we generalize it to operations involving two continued fractions?
+
+The problem is solved with /bihomographic functions/ of the form $f(x, y) = \frac{axy + bx + cy + d}{exy + fx + gy + h}$, where $x$ and $y$ are the unknown terms for the two continued fractions $a$ and $b$ respectively. We can write it in matrix form as:
+
+\begin{equation*}
+f(x, y) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} b & d \\ a & c \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg/
+          \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} f & h \\ e & g \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix}
+\end{equation*}
+
+
+Since we are working with two matrices as a single entity, it's natural to use tensors to represent bihomographic functions:
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
   # Tensor representations of bihomographic functions
 
@@ -650,9 +675,9 @@ Let's represent bihomographic functions with Numpy tensors:
       return np.array([[a, b, c, d], [e, f, g, h]])
 #+end_src
 
-I need a utility function to manage the large number of numbers in the tensor:
+I need a utility function to make it easy to access so many numbers in the tensors:
 #+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
-  def tensor_ref(t: np.ndarray, label: str):
+  def tensor_ref(t: np.ndarray, label: str) -> Union[int, Tuple[int, int]]:
       assert t.shape == (2, 2, 2)
       assert label in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1']
       lookup = {}
@@ -671,24 +696,39 @@ I need a utility function to manage the large number of numbers in the tensor:
       return lookup[label]
 #+end_src
 
-These are the initial tensors needed for arithmetic:
-#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
-  tForAddition = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
-  tForSubtraction = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
-  tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
-  tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
-#+end_src
+What happens to $f(x, y)$, with the addition of a new term $a_n$ of $a$?
 
-Applying new terms is implemented with my favorite Numpy function: =einsum= (Einstein's sum; see [[https://ajcr.net/Basic-guide-to-einsum/][this tutorial]]):
+\begin{equation*}
+f(a_n + \frac{1}{x}, y) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a_n b  + d & b \\ a_n a + c & a \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg /
+                          \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a_n f  + h & f \\ a_n e + g & e \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} 
+\end{equation*}
+
+This is familiar, isn't it? It's exactly the same update rule that we use for updating the convergents! All we need to do is to right-multiply $\begin{bmatrix} a_n & 1 \\ 1 & 0\end{bmatrix}$ the two matrices.
+
+We can do the same with a new term $b_n$ for $b$:
+
+\begin{equation*}
+f(x, b_n + \frac{1}{y}) = \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} a & c \\ b_n a + b & b_n c + d \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} \bigg /
+                          \begin{bmatrix} 1 & y \end{bmatrix} \begin{bmatrix} e & g \\ b_n e + f & b_n g + h \end{bmatrix} \begin{bmatrix} x \\ 1 \end{bmatrix} 
+\end{equation*}
+
+This is basically the same thing, except that the direction is different. This corresponds to left-multiplying $\begin{bmatrix} 0 & 1 \\ 1 & b_n\end{bmatrix}$.
+
+The above suggests an elegant way to visualize continued fraction arithmetic: if we imagine that two matrices form a 2x2x2 cube, this cube moves leftwards upon receiving a new term of $a$, and it moves downwards upon receiving a new term of $b$. As before, we'll also use the Euclidean algorithm to convert the bihomographic function into continued fractions. When we get to perform the Euclidean step, the 2x2x2 cube moves in the third dimension. The following figure illustrates that continued fraction arithmetic is a direct generalization of the 2D case:
+
+#+attr_html: :width 500px
+[[../figs/cf_space.png]]
+
+To implement the cube movements in Python, I use my favorite Numpy function: =einsum= (Einstein's sum; see [[https://ajcr.net/Basic-guide-to-einsum/][this tutorial]]). If the very compact notation (invented by Einstein) seems cryptic, don't worry. It's just repeated matrix multiplication.
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
-  def apply_a(t: np.ndarray, a: int):
+  def apply_a(t: np.ndarray, a: int) -> np.ndarray:
       ha = h(a)
       return np.einsum('dyx,xz->dyz', t, ha)
 
   def h_rotated(b: int) -> np.ndarray:
       return np.array([[0, 1], [1, b]])
 
-  def apply_b(t: np.ndarray, b: int):
+  def apply_b(t: np.ndarray, b: int) -> np.ndarray:
       hb = h_rotated(b)
       return np.einsum('zy,dyx->dzx', hb, t)
 
@@ -699,8 +739,26 @@ Applying new terms is implemented with my favorite Numpy function: =einsum= (Ein
       else:
           return apply_b(t, term)
 #+end_src
+* Arithmetic (Step 2):  Representing arithmetic operations
+Something is curious about the discussion so far. We have a generic method for ingesting terms of two continued fractions, but how do we actually perform a specific operation on them? It's not hard to see that it all depends on the initial matrices. With appropriated chosen initial matrices, we can do multiplication, addition, division, subtraction, and their combinations. I think it's quite a remarkable result, because when we are dealing with numbers with multiple terms, multiplication is usually harder than addition. With continued fraction, the computational steps are exactly the same!
 
-To make sure that it works:
+I made the following two figures to explain how addition and multiplication are done. Here's $a+b$. We begin with just the initial matrices (first row), add the first term of $a$, and then add the first term of $b$. 
+#+attr_html: :width 500px
+[[../figs/addition.png]]
+
+Here's the same process for multiplication:
+#+attr_html: :width 500px
+[[../figs/multiplication.png]]
+
+These are the initial tensors for the four basic operations:
+#+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
+  tForAddition = np.array([[[1, 0], [0, 1]], [[0, 1], [0, 0]]])
+  tForSubtraction = np.array([[[1, 0], [0, -1]], [[0, 1], [0, 0]]])
+  tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
+  tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
+#+end_src
+
+To make sure that the addition matrix works:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   t = tForAddition
@@ -716,10 +774,6 @@ To make sure that it works:
 :  [ 20   4   5   1]]
 
 $\begin{bmatrix} 109 & 21 & 26 & 5 \\ 20 & 4 & 5 & 1 \end{bmatrix}$ means $\frac{109xy + 21x + 26y + 5}{20xy + 4x + 5y + 1}$, which equals $(2+\frac{1}{4+\frac{1}{x}}) + (3+\frac{1}{5+\frac{1}{y}})$. That's correct.
-
-#+ATTR_ORG: :width 400
-#+ATTR_HTML: :width 400
-[[file:../figs/fig2.png]]
 
 Let's try multiplication:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
@@ -737,8 +791,8 @@ Let's try multiplication:
 
 $\frac{27xy+9x+6y+2}{4xy+y} = (2 + \frac{1}{4+\frac{1}{x}}) \cdot (3+\frac{1}{y})$. That's also correct.
 
-* Convergents for continued fraction arithmetic
-We have already developed sufficient machinery for doing continued fraction arithmetic. By updating the bihomographic function with new terms of $a$ and $b$, we can generate a series of rational numbers that converges to the result. The following code applies a new term of $a$, and then a new term of $b$... and so on. This is not the only way to do it. Any process that applies the terms in sequence will work. You can, for example, update with two terms of $a$, and then two terms of $b$.
+* Arithmetic (Step 3): Calculating convergents using tensors
+By updating the bihomographic function with new terms of $a$ and $b$, we can generate a series of rational numbers that converges to the result. The following code does this by applying a new term of $a$, and then a new term of $b$... and so on. This is not the only way to update the tensors. Any process that applies the terms in sequence will work. You can, for example, update with two terms of $a$, and then two terms of $b$.
 #+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
   def arithmetic_convergents_(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[np.ndarray]:
       """Given two continued fractions (a and b) and an arithmetic operation (specified by t0), return an iterator of tensors and addional information.
@@ -766,7 +820,7 @@ We have already developed sufficient machinery for doing continued fraction arit
           yield Rational(*r)
 #+end_src
 
-We have calculated [[*Simple transformations of continued fractions][previously]] that $2*[2, 1, 1, 5, 1] = \frac{66}{13}$. Let's verify it by adding the continued fraction to itself:
+We have calculated [[CF_DOUBLE][previously]] that $2*[2, 1, 1, 5, 1] = \frac{66}{13}$. Let's verify it by adding the continued fraction to itself:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   a = iter([2, 1, 1, 5, 1])
@@ -779,7 +833,45 @@ We have calculated [[*Simple transformations of continued fractions][previously]
 
 Yup. $\frac{858}{169}$ equals to $\frac{66}{13}$.
 
-Again, Gospher developed an ingenious method for visualizing the computational process, representing 2x2x2 tensors with a pseudo-3D effect. I decided not to implement his method because I find it hard to read. Instead, I will display the numerator and the denominator matrices separately. This format is not as compact as Gospher's method, but it works better when the numbers get large. In the figure below, the upper "band" is the evolution of the numerator matrix, and the lower band does the same for the denominator matrix. Note that for a 2x2 matrix in either band, you should read off the number in the lower-left corner, because $\lim_{\substack{x\to \infty \\ y\to \infty}} \frac{axy + bx + cy + d}{exy + fx + gy + h} = \frac{a}{e}$.
+Let's try subtraction. Observe that $[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does become 0 (that is $\frac{0}{169}$):
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(arithmetic_convergents(a, b, tForSubtraction)), "\n")
+#+end_src
+
+#+RESULTS:
+: [-1/0, 0/1, 1/1, 0/1, -1/2, 0/4, 1/22, 0/121, -1/143, 0/169] 
+: 
+
+Note that the numerator oscillates between -1, 0, and 1, while the denominator gets larger and larger.
+
+How about division? Yup. $\frac{429}{429}=1$.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(arithmetic_convergents(a, b, tForDivision)), "\n")
+#+end_src
+
+#+RESULTS:
+: [0/1, 2/2, 3/2, 3/3, 5/6, 10/10, 56/55, 308/308, 363/364, 429/429] 
+: 
+
+Finally, let's try $\sqrt{2}*\sqrt{2}$. With infinite number of terms, the answer should be 2. With finite number of terms, however, we get an approximation of 2 ($\frac{9801}{4900}=2.0002$).
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 6)
+  b = islice(cf_sqrt2(), 6)  
+  print(list(arithmetic_convergents(a, b, tForMultiplication)), "\n")
+#+end_src
+
+#+RESULTS:
+: [1/0, 1/1, 3/2, 9/4, 21/10, 49/25, 119/60, 289/144, 697/348, 1681/841, 4059/2030, 9801/4900] 
+: 
+
+Now we've come to visualization. Again, Gospher developed an ingenious method for visualizing the computational process, representing 2x2x2 tensors with a pseudo-3D effect. I decided not to implement his method because I find it hard to read. Instead, I will display the numerator and the denominator matrices separately. This format is not as compact as Gospher's method, but it works better when the numbers get large. In the figure below, the upper "band" is the evolution of the numerator matrix, and the lower band does the same for the denominator matrix. Note that for a 2x2 matrix in either band, you should read off the number in the lower-left corner, because $\lim_{\substack{x\to \infty \\ y\to \infty}} \frac{axy + bx + cy + d}{exy + fx + gy + h} = \frac{a}{e}$.
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   a = iter([2, 1, 1, 5, 1])
@@ -808,111 +900,15 @@ Again, Gospher developed an ingenious method for visualizing the computational p
 #+end_example
 The result $\frac{858}{168}$ comes from the numbers at the lower-left corners of the two bands. Note that the row on top and the column on the right represent the two continued fractions.
 
-Let's try subtraction. Observe that $[2, 1, 1, 5, 1] - [2, 1, 1, 5, 1]$ does become 0 (that is $\frac{0}{169}$):
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
-  print(list(arithmetic_convergents(a, b, tForSubtraction)), "\n")
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
-  print(arithmetic_convergents_tab(a, b, tForSubtraction))
-#+end_src
 
-#+RESULTS:
-#+begin_example
-[-1/0, 0/1, 1/1, 0/1, -1/2, 0/4, 1/22, 0/121, -1/143, 0/169] 
+Finally, some colors:
+#+attr_html: :width 600px
+[[../figs/arithmetic_convergents.png]]
 
-       1   5   1   1   2        
-                   2   1   0    
-              -1  -1   0  -1   2
-           1   1   0   1       1
-      -5  -1   0  -1           1
-   1   1   0   1               5
-  -1   0  -1                   1
-   0   1                        
-                   1   0   1    
-               0   0   0   0    
-           2   1   1   0        
-      11   2   1   1            
-  26  22   4   2                
- 143 121  22                    
- 169 143                        
+Unfortunately, I think these displays are not very satisfying, because the numbers tend to grow monotonically. That's because we haven't performed any Euclidean step. That's for the next section.
 
-#+end_example
-Note that the numerator oscillates between -1, 0, and 1, while the denominator gets larger and larger.
-
-How about division? Yup. $\frac{429}{429}=1$.
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
-  print(list(arithmetic_convergents(a, b, tForDivision)), "\n")
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
-  print(arithmetic_convergents_tab(a, b, tForDivision))
-#+end_src
-
-#+RESULTS:
-#+begin_example
-[0/1, 2/2, 3/2, 3/3, 5/6, 10/10, 56/55, 308/308, 363/364, 429/429] 
-
-       1   5   1   1   2        
-                   2   1   0    
-               0   0   0   0   2
-           5   3   2   1       1
-      28   5   3   2           1
-  66  56  10   6               5
- 363 308  55                   1
- 429 364                        
-                   0   0   0    
-               1   1   0   1    
-           4   2   2   0        
-      33   6   3   3            
-  65  55  10   5                
- 364 308  56                    
- 429 363                        
-
-#+end_example
-
-Finally, let's try $\sqrt{2}*\sqrt{2}$. With infinite number of terms, the answer should be 2. With finite number of terms, however, we get an approximation of 2 ($\frac{9801}{4900}=2.0002$).
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  a = islice(cf_sqrt2(), 6)
-  b = islice(cf_sqrt2(), 6)  
-  print(list(arithmetic_convergents(a, b, tForMultiplication)), "\n")
-  a = islice(cf_sqrt2(), 6)
-  b = islice(cf_sqrt2(), 6)  
-  print(arithmetic_convergents_tab(a, b, tForMultiplication))
-#+end_src
-
-#+RESULTS:
-#+begin_example
-[1/0, 1/1, 3/2, 9/4, 21/10, 49/25, 119/60, 289/144, 697/348, 1681/841, 4059/2030, 9801/4900] 
-
-         2    2    2    2    2    1          
-                             0    0    0     
-                        3    1    1    0    1
-                   7    3    1    1         2
-             51   21    9    3              2
-       287  119   49   21                   2
- 1683  697  289  119                        2
- 4059 1681  697                             2
- 9801 4059                                   
-                             1    0    1     
-                        0    0    0    0     
-                   5    2    1    0          
-             24   10    4    2               
-       145   60   25   10                    
-  840  348  144   60                         
- 2030  841  348                              
- 4900 2030                                   
-
-#+end_example
-
-Unfortunately, these displays are not very satisfying, because the numbers tend to grow bigger and bigger. That's because we haven't performed any Euclidean step. That's for the next section.
-
-* Continued fraction arithmetic
+* Arithmetic (Step 4): Applying the Euclidean algorithm to convergents
+Since our tensors are just representations of bihomographic functions, it's straightforward to apply the Euclidean algorithm symbolically on them. =euclid_tensor_= is almost identical to =euclid_matrix_= in code structure:
 #+begin_src python :tangle no :noweb-ref ARITHMETIC
   def euclid_tensor_(t: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
       while True:
@@ -928,6 +924,7 @@ Unfortunately, these displays are not very satisfying, because the numbers tend 
                   break
 #+end_src
 
+In the following example, we manage to extract three terms from the bihomographic function $f(x, y) = \frac{3466xy + 1150x + 483y + 216}{1318xy + 601x + 182y + 83}$:
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
   t = np.array([[[1550, 216], [3466, 483]], [[601, 83], [1318, 182]]])          
@@ -941,8 +938,41 @@ Unfortunately, these displays are not very satisfying, because the numbers tend 
 : 1
 : 1
 
+
+A tabulated format can be used to visualize the process. It is a generalization of the format that we used to visualize the symbolic Euclidean algorithm (see [[EUCLID_EX1][here]]), except that we are now flipping entire matrices instead of rows.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  t = np.array([[[1550, 216], [3466, 483]], [[601, 83], [1318, 182]]])          
+  c = euclid_tensor_tab(t)
+  print(c)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+ 1550  216     
+ 3466  483     
+  601   83    2
+ 1318  182     
+  348   50    1
+  830  119     
+  253   33    1
+  488   63     
+   95   17     
+  342   56     
+
+#+end_example
+The algorithm stops after 3 steps, because the bihomographic function associated with the remainder of the last step $f(x, y) = \frac{488xy+253x+63y+33}{342xy+95x+56y+17}$ is bounded by $\frac{63}{56}=1.125$ and $\frac{253}{95}=2.66316$. The range is too wide to determine a quotient.
+
+#+ATTR_ORG: :width 400
+#+ATTR_HTML: :width 400
+[[file:../figs/fig2.png]]
+
+Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with convergent calculation (=arithmetic_convergents_=). The code structure is basically the same as =cf_transform_=, except that there is one additional issue to consider: when we work with just one continued fraction, if the Euclidean step fails to determine a quotient, the only thing that we can do is to ingest one more term from the continued fraction. But now we have two continued fractions, so we have to decide which one to use. In terms of the 3D space, the question becomes: should we move the cube left or down? The decision is more or less arbitrary, because the Euclidean step will eventually sort out the result, as long as the terms from the two continued fractions are ingested sequentially. However, for visualization, we want to perform the Euclidean step as soon as possible, to prevent the numbers in the tensor from becoming too big. I use some heuristic from Gospher's paper to make this decision. The implementation (=ABQueue=) is in the [[APPENDIX_QR_TENSOR][Appendix]].
 #+begin_src python :tangle no :noweb-ref ARITHMETIC
   def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int], t0: np.ndarray) -> Iterator:
+      """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
+      Returns an iterator of quotients and other information.
+      """
       t = t0
       next_ab = ABQueue(cf_a, cf_b)
 
@@ -950,7 +980,6 @@ Unfortunately, these displays are not very satisfying, because the numbers tend 
           term, label = next_ab(t)
           if term is None and label is None:
               # cf_a and cf_b are exhausted
-              #print(t)
               break
           else:
               t = apply_ab(t, term, label)
@@ -973,14 +1002,320 @@ Unfortunately, these displays are not very satisfying, because the numbers tend 
           pass
 
   def cf_arithmetic(cf_a: Iterator[int], cf_b: Iterator[int], t0: np.ndarray) -> Iterator[int]:
+      """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
+      """      
       for res in cf_arithmetic_(cf_a, cf_b, t0):
           (q, r, t, term, label, new_term) = res
           if q is not None:
               yield q
 #+end_src
 
+In an earlier [[CF_DOUBLE][section]], we showed that $2 * [2, 1, 1, 5, 1] = [5, 13]$. Let's see if we can duplicate this by adding $[2, 1, 1, 5, 1]$ to itself.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(cf_arithmetic(a, b, tForAddition)))
+#+end_src
+
+#+RESULTS:
+: [5, 13]
+
+It works! Subtraction?
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(cf_arithmetic(a, b, tForSubtraction)))
+#+end_src
+
+#+RESULTS:
+: [0]
+
+Yup! Multiplication?
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(cf_arithmetic(a, b, tForMultiplication)))
+#+end_src
+
+#+RESULTS:
+: [6, 2, 3, 1, 18]
+
+So, $\Bigg( 2 + \frac{1}{1 + \frac{1}{1 + \frac{1}{5 + \frac{1}{1}}}} \Bigg)^2 = 6 + \frac{1}{2 + \frac{1}{3 + \frac{1}{1 + \frac{1}{18}}}}$. This is pretty cool, and it's something that we couldn't do before.
+
+
+How about division?
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(cf_arithmetic(a, b, tForDivision)))
+#+end_src
+
+#+RESULTS:
+: [1]
+
+Also works. One more sanity check. This is a different way of demonstrating that the reciprocal of a continued fraction has an additional 0 in front. Note that the terms of a continued fractions are unique, expect for the last one. $[2, 1, 1, 6]$ is just a different way of expressing $[2, 1, 1, 5, 1]$.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([1])
+  b = iter([2, 1, 1, 5, 1])
+  print(list(cf_arithmetic(a, b, tForDivision)))
+#+end_src
+
+#+RESULTS:
+: [0, 2, 1, 1, 6]
+
+Finally, a more difficult question: $\sqrt{2} * \sqrt{2} = 2$. Because $\sqrt{2}$ is an irrational number, we'll get 2 only if we have infinite number of terms. With finite number of terms, the best that we can do is approximation.
+
+With 6 terms of $\sqrt{2}$, we get $2 + \frac{1}{4900}$
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 6)
+  b = islice(cf_sqrt2(), 6)
+  print(list(cf_arithmetic(a, b, tForMultiplication)))
+#+end_src
+
+#+RESULTS:
+: [2, 4900]
+
+With 8 terms of $\sqrt{2}$, we get $2 + \frac{1}{5654884}$. So indeed, we are getting more accurate approximation of 2.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 10)
+  b = islice(cf_sqrt2(), 10)
+  print(list(cf_arithmetic(a, b, tForMultiplication)))
+#+end_src
+
+#+RESULTS:
+: [2, 5654884]
+
+We don't have to truncate the inputs to finite terms. If the two continued fractions have infinite number of terms, we'll get the first term of the result (2) easily. However, if we ask for a second term, the program will get stuck in an infinite loop.
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = cf_sqrt2()
+  b = cf_sqrt2()
+  res = cf_arithmetic(a, b, tForMultiplication)
+  print(next(res))
+#+end_src
+
+#+RESULTS:
+: 2
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 7)
+  b = islice(cf_e(), 7)
+  res = cf_arithmetic(a, b, tForAddition)
+  print(list(res))
+#+end_src
+
+#+RESULTS:
+: [4, 7, 1, 1, 3, 4, 2]
+
+* The section with complicated figures
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(cf_arithmetic_tab(a, b, tForAddition))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+       1   5   1   1   2            
+                   2   1   0        
+               1   1   0   1   2    
+               5   4   1       1    
+          11   6   5           1    
+          20  11   9                
+                                    
+                                    
+                   1   0   1        
+               0   0   0   0        
+               1   1   0            
+  13  11   2   1   1                
+  26  22   4   2   2           5    
+ 143 121                       1   5
+ 169 143                            
+                                    
+                                    
+                                    
+   7   6   1   1                    
+   1   1   0   1                    
+  12  11                          13
+  13  12                            
+
+#+end_example
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(cf_arithmetic_tab(a, b, tForSubtraction))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+       1   5   1   1   2            
+                   2   1   0        
+              -1  -1   0  -1   2    
+               1   0   1       1    
+               0  -1           1    
+               1  -1           5    
+  -1   0  -1   5  -6           1    
+   0   1  -1   6  -7                
+                   1   0   1        
+               0   0   0   0        
+               1   1   0            
+               1   1                
+               2   2                
+ 143 121  22  11  11               0
+ 169 143  26  13  13                
+
+#+end_example
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(cf_arithmetic_tab(a, b, tForMultiplication))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+       1   5   1   1   2            
+                   0   0   0        
+               3   2   1   0   2    
+               6   4   2       1    
+               9   6           1    
+     140  25  15  10           5    
+     784 140  84  56                
+                                    
+                   1   0   1        
+               0   0   0   0        
+               1   1   0            
+               1   1                
+      22   4   2   2                
+     121  22  11  11           1   6
+     143  26                        
+                                    
+                                    
+                                    
+                                    
+       8   1                        
+  66  58   8                       2
+  75  66   9                        
+                                    
+                                    
+                                    
+                                    
+                                    
+  11   5   6                       3
+  19  11   8                        
+
+#+end_example
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  print(cf_arithmetic_tab(a, b, tForDivision))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+       1   5   1   1   2            
+               3   2   1   0        
+               0   0   0   0   2    
+               3   2           1    
+      28   5   3   2           1    
+      56  10   6   4           5    
+ 363 308  55                   1    
+ 429 364  65                        
+               0   0   0   0        
+               1   1   0   1        
+               2   2                
+      33   6   3   3                
+      55  10   5   5                
+ 364 308  56                       1
+ 429 363  66                        
+
+#+end_example
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 7)
+  b = islice(cf_e(), 7)
+  c = cf_arithmetic_tab(a, b, tForAddition)
+  print(c)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+         2    2    2    2    2    2    1               
+                                  1    1    0          
+                             2    1    0    1    2     
+                       17    7    3    1         1     
+                       22    9    4              2     
+                       61   25                         
+                                                       
+                                                       
+                                                       
+                                                       
+                                  1    0    1          
+                             0    0    0    0          
+                        5    2    1    0               
+                        5    2    1                    
+       210   87   36   15    6                   1     
+       280  116   48   20    8                   1     
+       490  203                                  4     
+      2240  928                                       4
+                                                       
+                                                       
+                                                       
+                                                       
+                        2    1                         
+        17    7    3    1    1                         
+        46   19    8    3    2                         
+        63   26                                        
+       298  123                                       7
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+        49   21                                        
+       154   67                                  1    1
+       203   88                                        
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+        14    5                                        
+  344  144   56                                       1
+  377  158   61                                        
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+                                                       
+   31   10   11                                       3
+  117   45   27                                        
+
+#+end_example
+
 * Appendix: Quotients/remainders for matrices
 Given a homographic function represented by a 2x2 matrix, determine if the Euclidean step can be performed. If yes, return the quotient.
+<<QR_MATRIX>>
 #+begin_src python :tangle no :noweb-ref QR_MATRIX
   # Simple transformation of continued fraction
   
@@ -1036,7 +1371,7 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 #+end_src
 
 * Appendix: Quotients/remainders for tensors
-
+<<APPENDIX_QR_TENSOR>>
 #+begin_src python :tangle no :noweb-ref QR_TENSOR
   def qr_tensor(t: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
       t1 = t.copy()
@@ -1234,15 +1569,30 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
       return ABQueue_
 #+end_src
 
-* Appendix: Tests
+* Appendix: Unit tests
 #+INCLUDE: tests.org
 * Appendix: Display utilities
 #+INCLUDE: display.org
-* Appendix: Imports
+* Appendix: Imports and outlines
+This is the outline of the main code =cont_frac.py=.
+#+begin_src python :noweb no-export :tangle ../src/cont_frac.py
+  <<IMPORTS>>
+  <<RATIONAL_NUM>>
+  <<R2CF>>
+  <<CONVERGENTS0>>
+  <<CONVERGENTS1>>
+  <<QR_MATRIX>>
+  <<CF_TRANSFORM>>
+  <<BIHOMOGRAPHY>>  
+  <<QR_TENSOR>>
+  <<ARITHMETIC>>
+  <<CF_EXAMPLES>>
+#+end_src
+
 #+begin_src python :tangle no :noweb-ref IMPORTS
   import math
   import numpy as np
-  from typing import NamedTuple, Iterator, Tuple, Optional, Callable
+  from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union
   from functools import reduce
   from itertools import tee, islice
 #+end_src

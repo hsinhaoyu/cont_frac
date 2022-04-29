@@ -35,7 +35,7 @@
 
   @np.vectorize
   def f(x, y):
-      return (109.0 * x * y + 21.0 * x + 26.0 * y + 5.0) / (20.0 * x * y + 4 * x + 5 * y + 1)
+      return (488.0 * x * y + 253.0 * x + 63.0 * y + 33.0) / (342.0 * x * y + 95 * x + 56 * y + 17)
 
   X = np.arange(0, 10, 0.1)
   Y = np.arange(0, 10, 0.1)
@@ -45,7 +45,7 @@
   ax.set_xlabel('x')
   ax.set_ylabel('y')
   ax.set_zlabel('f(x, y)')
-  ax.set_title(r'$f(x, y)=\frac{109xy + 21x + 26y + 5}{20xy + 4x + 5y + 1}$')
+  ax.set_title(r'$f(x, y)=\frac{488xy + 253x + 63y + 33}{342xy + 95x + 56y + 17}$')
   plt.savefig(filename)
 #+end_src
 
@@ -307,6 +307,78 @@
  4900 2030                                   
 
 #+end_example
+
+* Arithmetic
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  c = cf_arithmetic_tab(a, b, tForAddition)
+  c.export_csv('../exports/arithmetic_tab_1.csv')
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  c = cf_arithmetic_tab(a, b, tForSubtraction)
+  c.export_csv('../exports/arithmetic_tab_2.csv')  
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  c = cf_arithmetic_tab(a, b, tForMultiplication)
+  c.export_csv('../exports/arithmetic_tab_3.csv')    
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([2, 1, 1, 5, 1])
+  b = iter([2, 1, 1, 5, 1])
+  c = cf_arithmetic_tab(a, b, tForDivision)
+  c.export_csv('../exports/arithmetic_tab_4.csv')      
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = iter([1])
+  b = iter([2, 1, 1, 5, 1])
+  c = cf_arithmetic_tab(a, b, tForDivision)
+  c.export_csv('../exports/arithmetic_tab_5.csv')        
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 8)
+  b = islice(cf_sqrt2(), 8)
+  c = cf_arithmetic_tab(a, b, tForMultiplication)
+  c.export_csv('../exports/arithmetic_tab_6.csv')          
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  a = islice(cf_sqrt2(), 10)
+  b = islice(cf_e(), 10)
+  c = cf_arithmetic_tab(a, b, tForAddition)
+  c.export_csv('../exports/arithmetic_tab_7.csv')
+#+end_src
+
+#+RESULTS:
 
 * Imports
 #+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
