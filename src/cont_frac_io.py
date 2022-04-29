@@ -104,12 +104,20 @@ class Chart(object):
 
         self.output = self.output + [output]
 
-    def board_to_array(self, board: list, b: list, out: int) -> list:
+    def board_to_array(self,
+                       board: list,
+                       b: list,
+                       out: int,
+                       truncate_board=False) -> list:
         new_content = []
         for i, row in enumerate(board):
             skip = False
             if self.mode2D and i % 2 == 1:
                 skip = True
+
+            if truncate_board:
+                if row.count(None) == len(row):
+                    skip = True
 
             if not skip:
                 new_row = row.copy()
@@ -133,7 +141,7 @@ class Chart(object):
                 new_content = new_content + [new_row]
         return new_content
 
-    def to_array(self) -> list:
+    def to_array(self, truncate_board=False) -> list:
         content = []
         row = []
         n_rows = len(self.boards[0])
@@ -153,7 +161,8 @@ class Chart(object):
             board = self.boards[i]
             b = self.b[i] if i < len(self.b) else None
             out = self.output[i] if i < len(self.output) else None
-            content = content + self.board_to_array(board, b, out)
+            content = content + self.board_to_array(
+                board, b, out, truncate_board=truncate_board)
 
         return content
 
@@ -170,7 +179,7 @@ class Chart(object):
                       row, "") + "\n"
 
     def __repr__(self) -> str:
-        content = self.to_array()
+        content = self.to_array(truncate_board=True)
 
         content_nonone = [[c for c in row if c is not None] for row in content]
         content_nonone = [r for r in content_nonone if r != []]
@@ -180,8 +189,8 @@ class Chart(object):
         s = reduce(lambda s, r: s + Chart.pp_row(r, field_width), content, "")
         return s
 
-    def export_csv(self, filename: str):
-        content = self.to_array()
+    def export_csv(self, filename: str, truncate_board=False):
+        content = self.to_array(truncate_board=truncate_board)
         with open(filename, mode='w') as outfile:
             writer = csv.writer(outfile)
             writer.writerows(content)

@@ -23,7 +23,7 @@ def qr(a: int, b: int) -> Tuple[int, int]:
 
 
 def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
-    """The Euclidean algorithm for representing a rational number as a continuous fraction.
+    """The Euclidean algorithm for representing a rational number as a continued fraction.
     Return an iterator of quotients and remainders"""
     a, b = rn
     while True:
@@ -75,7 +75,7 @@ def h(a: int) -> np.ndarray:
 
 
 def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
-    """Given a continuous fraction, return an iterator of 2x2 matrices representing convergents"""
+    """Given a continued fraction, return an iterator of 2x2 matrices representing convergents"""
     res = np.array([[1, 0], [0, 1]])
     for a in cf:
         res = np.matmul(res, h(a))
@@ -83,7 +83,7 @@ def cf_convergents1_(cf: Iterator[int]) -> Iterator[np.ndarray]:
 
 
 def cf_convergents1(cf: Iterator[int]) -> Iterator[Rational]:
-    """Given a continuous fraction, return an iterator of rational numbers representing convergents"""
+    """Given a continued fraction, return an iterator of rational numbers representing convergents"""
     mLst = cf_convergents1_(cf)
     for m in mLst:
         yield Rational(m[0, 0], m[1, 0])
@@ -218,7 +218,7 @@ def cf_transform_func(cf, m0):
         (q, r, m, a, new_a) = res
         if q is not None:
             outputs = outputs + [q]
-            out_m = q
+            out_m = r
         else:
             out_m = m
     return outputs, out_m
@@ -360,14 +360,6 @@ def t_ratios(t: np.ndarray) -> list:
     return [[dict['x'], dict['1']], [dict['xy'], dict['y']]]
 
 
-def debug(t):
-    def r(label):
-        numerator, denominator = tensor_ref(t, label)
-        return math.floor(numerator / denominator)
-
-    return np.array([[r('x'), r('1')], [r('xy'), r('y')]])
-
-
 def score(t):
     def r(label):
         numerator, denominator = tensor_ref(t, label)
@@ -438,7 +430,6 @@ def score(t):
                 return -1.0
     else:  # no zereos in the denominator
         r = t_ratios(t)
-        #print(debug(t))
         if r[0][0] == r[0][1] == r[1][0] == r[1][1]:
             # the 4 ratios are all the same. This is the best situation
             return 4.0
@@ -531,8 +522,10 @@ def euclid_tensor_(t: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
                 break
 
 
-def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
-                   t0: np.ndarray) -> Iterator:
+def cf_arithmetic_(cf_a: Iterator[int],
+                   cf_b: Iterator[int],
+                   t0: np.ndarray,
+                   finite_term=True) -> Iterator:
     """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
     Returns an iterator of quotients and other information.
     """
@@ -556,7 +549,8 @@ def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
                 yield None, None, t, term, label, new_term
 
     # we will only reach this point if cf_a and cf_b have finite terms
-    if tensor_ref(t, 'e') != 0:
+    # If cf has finite term, but it represents the beginning of a longer series, set finite_term to False
+    if finite_term and tensor_ref(t, 'e') != 0:
         for s in r2cf(Rational(*tensor_ref(t, 'xy'))):
             yield s, None, t, None, None, False
     else:
@@ -565,21 +559,36 @@ def cf_arithmetic_(cf_a: Iterator[int], cf_b: Iterator[int],
         pass
 
 
-def cf_arithmetic(cf_a: Iterator[int], cf_b: Iterator[int],
-                  t0: np.ndarray) -> Iterator[int]:
+def cf_arithmetic(cf_a: Iterator[int],
+                  cf_b: Iterator[int],
+                  t0: np.ndarray,
+                  finite_term=True) -> Iterator[int]:
     """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
     """
-    for res in cf_arithmetic_(cf_a, cf_b, t0):
+    for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term=finite_term):
         (q, r, t, term, label, new_term) = res
         if q is not None:
             yield q
 
 
-# Examples of continuous fractions
+def cf_arithmetic_func(cf_a, cf_b, t0):
+    outputs = []
+    out_t = None
+    for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term=False):
+        q, r, t, term, label, new_term = res
+        if q is not None:
+            outputs = outputs + [q]
+            out_t = r
+        else:
+            out_t = t
+    return outputs, out_t
+
+
+# Examples of continued fractions
 
 
 def cf_e() -> Iterator[int]:
-    """e as a continuous fraction"""
+    """e as a continued fraction"""
     yield 2
     k = 0
     while True:
@@ -594,3 +603,25 @@ def cf_sqrt2():
     yield 1
     while True:
         yield 2
+
+
+def cf_sqrt6():
+    """sqrt(6) = [2, 2, 4, 2, 4, 2...]"""
+    yield 2
+    yield 2
+    while True:
+        yield 4
+        yield 2
+
+
+def cf_coth1():
+    """(e^2+1)/(e^2-1) = [1, 3, 5, 7...]"""
+    s = 1
+    while True:
+        yield s
+        s = s + 2
+
+
+def cf_pi():
+    return iter(
+        [3, 7, 15, 1, 292, 1, 1, 1, 2, 1, 3, 1, 14, 2, 1, 1, 2, 2, 2, 2])

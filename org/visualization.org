@@ -309,76 +309,113 @@
 #+end_example
 
 * Arithmetic
+
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
+  a = islice(cf_e(), 7)
+  b = islice(cf_e(), 7)
+  c = cf_arithmetic(a, b, tForAddition)  
+  print(list(c))
+  a = islice(cf_e(), 25)
+  b = islice(cf_e(), 25)
+  c = cf_arithmetic_tab(a, b, tForAddition)  
+  c.export_csv('../exports/arithmetic_tab_5_3D.csv', truncate_board = False)
+  a = islice(cf_e(), 25)
+  b  = islice(cf_e(), 25)
   c = cf_arithmetic_tab(a, b, tForAddition)
-  c.export_csv('../exports/arithmetic_tab_1.csv')
+  c.include_out = False
+  c.export_csv('../exports/arithmetic_tab_5.csv', truncate_board = True)  
 #+end_src
 
 #+RESULTS:
+: [5, 2, 3, 2, 2]
+
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
+  b = islice(cf_sqrt2(), 7)
+  a = islice(cf_e(), 7)
+  c = cf_arithmetic(a, b, tForAddition)  
+  print(list(c))
+  b = islice(cf_sqrt2(), 10)
+  a = islice(cf_e(), 10)
+  c = cf_arithmetic_tab(a, b, tForAddition)  
+  c.export_csv('../exports/arithmetic_tab_6_3D.csv', truncate_board = False)
+  b = islice(cf_sqrt2(), 10)
+  a  = islice(cf_e(), 10)
+  c = cf_arithmetic_tab(b, a, tForAddition)
+  c.include_out = False
+  c.export_csv('../exports/arithmetic_tab_6.csv', truncate_board = True)  
+#+end_src
+
+#+RESULTS:
+: [4, 7, 1, 1, 3, 4, 2]
+
+
+#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
+  <<DEMO_IMPORTS>>
+  b = islice(cf_sqrt2(), 7)
+  a = islice(cf_e(), 7)
+  c = cf_arithmetic(a, b, tForSubtraction)  
+  print(list(c))
+  b = islice(cf_sqrt2(), 10)
+  a = islice(cf_e(), 10)
+  c = cf_arithmetic_tab(a, b, tForSubtraction)  
+  c.export_csv('../exports/arithmetic_tab_7_3D.csv', truncate_board = False)
+  b = islice(cf_sqrt2(), 10)
+  a  = islice(cf_e(), 10)
   c = cf_arithmetic_tab(a, b, tForSubtraction)
-  c.export_csv('../exports/arithmetic_tab_2.csv')  
+  c.include_out = False
+  c.export_csv('../exports/arithmetic_tab_7.csv', truncate_board = True)  
 #+end_src
 
 #+RESULTS:
+: [1, 3, 3, 2, 2, 1, 2, 2]
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
-  c = cf_arithmetic_tab(a, b, tForMultiplication)
-  c.export_csv('../exports/arithmetic_tab_3.csv')    
+  t0 = np.array([[[1, 0], [2, 0]], [[0, 0], [1, 1]]])
+
+  b = islice(cf_sqrt6(), 3)
+  a = islice(cf_coth1(), 3)
+  c = cf_arithmetic(a, b, t0)
+  print(list(c))
+
+
+  b = islice(cf_sqrt6(), 4)
+  a = islice(cf_coth1(), 4)
+  c = cf_arithmetic_tab(a, b, t0)
+  c.export_csv('../exports/arithmetic_tab_8_3D.csv', truncate_board = False)
+
+  b = islice(cf_sqrt6(), 4)
+  a = islice(cf_coth1(), 4)
+  c = cf_arithmetic_tab(a, b, t0)
+  c.include_out = False
+  c.export_csv('../exports/arithmetic_tab_8.csv', truncate_board = True)
 #+end_src
 
 #+RESULTS:
+: [1, 2, 1, 2, 1, 1, 1, 1, 16]
 
 #+begin_src python :exports both :noweb strip-export :results output :dir ../src/
   <<DEMO_IMPORTS>>
-  a = iter([2, 1, 1, 5, 1])
-  b = iter([2, 1, 1, 5, 1])
-  c = cf_arithmetic_tab(a, b, tForDivision)
-  c.export_csv('../exports/arithmetic_tab_4.csv')      
-#+end_src
-
-#+RESULTS:
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  a = iter([1])
-  b = iter([2, 1, 1, 5, 1])
-  c = cf_arithmetic_tab(a, b, tForDivision)
-  c.export_csv('../exports/arithmetic_tab_5.csv')        
-#+end_src
-
-#+RESULTS:
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  a = islice(cf_sqrt2(), 8)
-  b = islice(cf_sqrt2(), 8)
-  c = cf_arithmetic_tab(a, b, tForMultiplication)
-  c.export_csv('../exports/arithmetic_tab_6.csv')          
-#+end_src
-
-#+RESULTS:
-
-
-#+begin_src python :exports both :noweb strip-export :results output :dir ../src/
-  <<DEMO_IMPORTS>>
-  a = islice(cf_sqrt2(), 10)
-  b = islice(cf_e(), 10)
+  a = islice(cf_e(), 7)
+  b = islice(cf_pi(), 7)
+  c = cf_arithmetic(a, b, tForAddition)  
+  print(list(c))
+  a = islice(cf_e(), 10)
+  b = islice(cf_pi(), 10)  
   c = cf_arithmetic_tab(a, b, tForAddition)
-  c.export_csv('../exports/arithmetic_tab_7.csv')
+  c.export_csv('../exports/arithmetic_tab_9_3D.csv', truncate_board = False)
+  a = islice(cf_e(), 10)
+  b = islice(cf_pi(), 10)  
+  c = cf_arithmetic_tab(a, b, tForAddition)
+  c.include_out = False
+  c.export_csv('../exports/arithmetic_tab_9.csv', truncate_board = True)  
 #+end_src
 
 #+RESULTS:
+: [5, 1, 6, 8, 2, 1, 2, 1, 3, 13, 1, 5, 1, 4, 2]
 
 * Imports
 #+begin_src python :tangle no :noweb-ref DEMO_IMPORTS
