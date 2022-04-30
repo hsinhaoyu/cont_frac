@@ -1,6 +1,7 @@
 from cont_frac import *
-from typing import List, Sequence
+from typing import List
 from functools import reduce
+from itertools import tee
 import csv
 # Utilities for tabulated displays
 
@@ -75,7 +76,10 @@ class Chart(object):
             self.boards[i] = self.boards[i] + [[None] * len(new_row_numerator)]
 
     def move_under(self, t: np.ndarray, output: int):
-        """t is the matrix or tensor after a Euclidean step. output is the quotient"""
+        """
+        t is the matrix or tensor after a Euclidean step.
+        output is the quotient
+        """
         if len(t.shape) == 2 and self.mode2D:
             t2 = Chart.m2t(t)
         else:
@@ -146,7 +150,6 @@ class Chart(object):
     def to_array(self, truncate_board=False) -> list:
         content: List[List] = []
         row: List[Optional[int]] = []
-        n_rows = len(self.boards[0])
         n_cols = len(self.boards[0][0])
 
         if self.include_a:
@@ -202,7 +205,10 @@ class Chart(object):
 
 
 def r2cf_tab(rn: Rational) -> str:
-    """Show the prpocess of converting a rational numner to a continued fraction"""
+    """
+    Show the prpocess of converting a rational numner
+    to a continued fraction
+    """
 
     def row(st: str, x: tuple):
         b, q = x
@@ -213,7 +219,10 @@ def r2cf_tab(rn: Rational) -> str:
 
 
 def cf_convergents1_tab(cf: Iterator[int]) -> Chart:
-    """Show the process of converting a continued fraction to a rational number"""
+    """
+    Show the process of converting a continued fraction
+    to a rational number
+    """
     chart = Chart(m=np.identity(2, int))
     chart.include_out = False
     (cf1, cf2) = tee(cf)
@@ -248,7 +257,8 @@ def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int)) -> Chart:
             if r is not None:
                 chart.move_under(r, q)
             else:
-                # r is None, meaning that the quotients are for rational numbers rathen than matrices
+                # r is None; the quotients are for rational numbers
+                # rather than matrices
                 chart.output = chart.output + [q]
     return chart
 
@@ -259,7 +269,10 @@ def cf_transform_tab(cf: Iterator[int], m0=np.identity(2, int)) -> Chart:
 def arithmetic_convergents_tab(a: Iterator[int],
                                b: Iterator[int],
                                t0: np.ndarray = tForAddition) -> Chart:
-    """Show the process of calculating convergents of arithmetical operations"""
+    """
+    Show the process of calculating the convergents of
+    arithmetical operations
+    """
     c = Chart(t0)
     c.include_out = False
     for direction, coefficient, t in arithmetic_convergents_(a, b, t0):
@@ -310,14 +323,17 @@ def cf_arithmetic_tab(cf_a, cf_b, t0):
 
 
 def pp_qr(qr: Tuple[int, np.ndarray]) -> None:
-    """Pretty print a tuple of a quotient and a remainder matrix"""
+    '''Pretty print a tuple of a quotient and a remainder matrix'''
     q, r = qr
     print(f"{q:>2} {r[0][0]:2} {r[0][1]:2}")
     print(f"   {r[1][0]:2} {r[1][1]:2}")
 
 
 def pp_inf_cf(cf: list) -> str:
-    """Pretty print a list representing the first couple terms of a longer continued fraction"""
+    """
+    Pretty print a list representing the first couple terms of
+    a longer continued fraction
+    """
     res = "["
     res = res + reduce(lambda s, n: s + str(n) + ",", cf, "")
     res = res[:-1] + "...]"

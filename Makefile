@@ -13,3 +13,6 @@ typing: tangle
 
 html: tangle
 	./org2html.sh org/cont_frac.org
+
+lint: tangle
+	flake8 --ignore F403,F405,E266,E302 src/

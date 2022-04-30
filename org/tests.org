@@ -23,25 +23,25 @@
   # Apply this test to two functions, because they should be equivalent
   @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
   def test_convergents_basci1(conv_func):
-      l = list(conv_func(iter([2, 1, 1, 5, 1, 3])))
-      assert l[0] == Rational(2, 1)
-      assert l[1] == Rational(3, 1)
-      assert l[2] == Rational(5, 2)
-      assert l[3] == Rational(28, 11)
-      assert l[4] == Rational(33, 13)
-      assert l[5] == Rational(127, 50)
-      assert len(l) == 6
+      lst = list(conv_func(iter([2, 1, 1, 5, 1, 3])))
+      assert lst[0] == Rational(2, 1)
+      assert lst[1] == Rational(3, 1)
+      assert lst[2] == Rational(5, 2)
+      assert lst[3] == Rational(28, 11)
+      assert lst[4] == Rational(33, 13)
+      assert lst[5] == Rational(127, 50)
+      assert len(lst) == 6
 
   # Apply this test to two functions, because they should be equivalent
   @pytest.mark.parametrize('conv_func', [cf_convergents0, cf_convergents1])
   def test_convergents_basic2(conv_func):
-      l = list(cf_convergents0(iter([1, 2, 3, 4, 5])))
-      assert l[0] == Rational(1, 1)
-      assert l[1] == Rational(3, 2)
-      assert l[2] == Rational(10, 7)
-      assert l[3] == Rational(43, 30)
-      assert l[4] == Rational(225, 157)
-      assert len(l) == 5
+      lst = list(cf_convergents0(iter([1, 2, 3, 4, 5])))
+      assert lst[0] == Rational(1, 1)
+      assert lst[1] == Rational(3, 2)
+      assert lst[2] == Rational(10, 7)
+      assert lst[3] == Rational(43, 30)
+      assert lst[4] == Rational(225, 157)
+      assert len(lst) == 5
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref TEST_CF2R
@@ -134,7 +134,7 @@
           assert q == 0 and r == [[2, 3], [1, 2]]
 
       def test_too_wide(self):
-          # (7x + 5) / (x + 1) is bounded between 5 and 7. It's too wide to determine tne quotient
+          # (7x + 5) / (x + 1) is bounded between 5 and 7. 
           m = [[7, 5], [1, 1]]
           (q, r) = self.qr(m)
           assert q is None
