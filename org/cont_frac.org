@@ -819,7 +819,7 @@ This is basically the same thing, except that the direction is different. This c
 The above suggests an elegant way to visualize continued fraction arithmetic: if we imagine that two matrices form a 2x2x2 cube, this cube moves leftwards upon receiving a new term of $a$, and it moves downwards upon receiving a new term of $b$. As before, we'll also use the Euclidean algorithm to convert the bihomographic function into continued fractions. When we get to perform the Euclidean step, the 2x2x2 cube moves in the third dimension. The following figure illustrates that continued fraction arithmetic is a direct generalization of the 2D case:
 
 #+attr_html: :width 500px
-[[../figs/cf_space.png]]
+[[figs/cf_space.png]]
 
 To implement the cube movements in Python, I use my favorite Numpy function: =einsum= (Einstein's sum; see [[https://ajcr.net/Basic-guide-to-einsum/][this tutorial]]). If the very compact notation (invented by Einstein) seems cryptic, don't worry. It's just repeated matrix multiplication.
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
@@ -857,11 +857,11 @@ Something is curious about the discussion so far. We have a generic method for i
 
 I made the following two figures to explain how addition and multiplication are done. Here's $a+b$. We begin with just the initial matrices (first row), add the first term of $a$, and then add the first term of $b$. 
 #+attr_html: :width 500px
-[[../figs/addition.png]]
+[[figs/addition.png]]
 
 Here's the same process for multiplication:
 #+attr_html: :width 500px
-[[../figs/multiplication.png]]
+[[figs/multiplication.png]]
 
 These are the initial tensors for the four basic operations:
 #+begin_src python :noweb no :noweb-ref BIHOMOGRAPHY
@@ -1037,7 +1037,7 @@ The result $\frac{858}{168}$ comes from the numbers at the lower-left corners of
 
 Finally, some colors:
 #+attr_html: :width 600px
-[[../figs/arithmetic_convergents.png]]
+[[figs/arithmetic_convergents.png]]
 
 Unfortunately, I think these displays are not very satisfying, because the numbers tend to grow monotonically. That's because we haven't performed any Euclidean step. That's for the next section.
 
