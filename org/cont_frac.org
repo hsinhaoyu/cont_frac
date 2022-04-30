@@ -388,7 +388,7 @@ This means that $f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}$.
 
 #+ATTR_ORG: :width 400
 #+ATTR_HTML: :width 400
-[[file:../figs/fig1.png]]
+[[file:figs/fig1.png]]
 
 Now, we are ready to implement the symbolic form of the Euclidean algorithm by calling =qr_matrix= repeatedly:
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
@@ -676,7 +676,7 @@ The answer is a continued fraction with a simple pattern: after the second term,
 I find the tabulated displays visually appealing, so I wrote some external codes (in /Mathematica/) to give them some colors. The colors make it easier to see the patterns in the numbers.
 #+ATTR_ORG: :width 600
 #+ATTR_HTML: :width 600
-[[file:../figs/cf_transform_summary.png]]
+[[file:figs/cf_transform_summary.png]]
 
 Before we proceed further, there is a small but important point that should be clarified. In the last example, we transformed $e$ to calculate $\frac{e-1}{e+1}$. It was done by truncating $e$'s infinite number of terms, retaining only the first 6 terms. This might give the impression that =cf_transform= is for approximating $\frac{e-1}{e+1}$. That is not the case. The entire point of Gospher's work is to show that /exact/ continued fraction arithmetic is possible. If this is not clear to you, let's define a different interface to =cf_transform_=, to make the point more obvious.
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
@@ -1107,7 +1107,7 @@ The algorithm stops after 3 steps, because the bihomographic function associated
 
 #+ATTR_ORG: :width 400
 #+ATTR_HTML: :width 400
-[[file:../figs/fig2.png]]
+[[file:figs/fig2.png]]
 
 Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with convergent calculation (=arithmetic_convergents_=). The code structure is basically the same as =cf_transform_=, except that there is one additional issue to consider: when we work with just one continued fraction, if the Euclidean step fails to determine a quotient, the only thing that we can do is to ingest one more term from the continued fraction. But now we have two continued fractions, so we have to decide which one to use. In terms of the 3D space, the question becomes: should we move the cube left or down? The decision is more or less arbitrary, because the Euclidean step will eventually sort out the result, as long as the terms from the two continued fractions are ingested sequentially. However, for visualization, we want to perform the Euclidean step as soon as possible, to prevent the numbers in the tensor from becoming too big. I use some heuristics from Gospher's paper to make this decision. The implementation (=ABQueue=) is in the [[APPENDIX_QR_TENSOR][Appendix]].
 #+begin_src python :tangle no :noweb-ref ARITHMETIC
@@ -1377,12 +1377,12 @@ This rendering should make it easier to understand what is going on:
 
 #+ATTR_ORG: :width 600
 #+ATTR_HTML: :width 600
-[[file:../figs/cf_arithmetic_summary.png]]
+[[file:figs/cf_arithmetic_summary.png]]
 
 These images are fun to look at. Here's another one that I like. This is $e+e=2e$. I rotated it to give it a horizontal orientation. 
 #+ATTR_ORG: :width 600
 #+ATTR_HTML: :width 600
-[[file:../figs/e2rotated_edit.png]]
+[[file:figs/e2rotated_edit.png]]
 
 * Appendix: Quotients/remainders for matrices
 Given a homographic function represented by a 2x2 matrix, determine if the Euclidean step can be performed. If yes, return the quotient.

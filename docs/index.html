@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-05-01 Sun 09:13 -->
+<!-- 2022-05-01 Sun 09:22 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)</title>
@@ -228,54 +228,54 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org02d5ad0">1. Representing rational numbers as continued fractions</a></li>
-<li><a href="#org04f0276">2. Calculating the convergents of a continued fraction</a></li>
-<li><a href="#org7cd5971">3. Continued fractions as recursive functions</a></li>
-<li><a href="#orgffd0138">4. Calculating convergents using matrices</a></li>
-<li><a href="#orgdf6ddb4">5. Turning convergents into continued fractions using the Euclidean algorithm</a></li>
-<li><a href="#org775be0b">6. Simple transformations of continued fractions</a></li>
-<li><a href="#org950aec5">7. Arithmetic (Step 1): From matrices to tensors</a></li>
-<li><a href="#orgf5fbb3c">8. Arithmetic (Step 2):  Representing arithmetic operations</a></li>
-<li><a href="#orgbd76474">9. Arithmetic (Step 3): Calculating convergents using tensors</a></li>
-<li><a href="#org4ebdf89">10. Arithmetic (Step 4): Applying the Euclidean algorithm to convergents</a></li>
-<li><a href="#orgf38c9da">11. The final section with complex figures</a></li>
-<li><a href="#org44eaf00">12. Appendix: Quotients/remainders for matrices</a></li>
-<li><a href="#org52a1183">13. Appendix: Quotients/remainders for tensors</a></li>
-<li><a href="#org8b4e936">14. Appendix: Unit tests</a>
+<li><a href="#org2b316d3">1. Representing rational numbers as continued fractions</a></li>
+<li><a href="#org7fe1d61">2. Calculating the convergents of a continued fraction</a></li>
+<li><a href="#org230c1ae">3. Continued fractions as recursive functions</a></li>
+<li><a href="#orgaef5d6b">4. Calculating convergents using matrices</a></li>
+<li><a href="#org1a46a58">5. Turning convergents into continued fractions using the Euclidean algorithm</a></li>
+<li><a href="#org072894d">6. Simple transformations of continued fractions</a></li>
+<li><a href="#org5e4aa34">7. Arithmetic (Step 1): From matrices to tensors</a></li>
+<li><a href="#orgf347fc9">8. Arithmetic (Step 2):  Representing arithmetic operations</a></li>
+<li><a href="#orgf548f69">9. Arithmetic (Step 3): Calculating convergents using tensors</a></li>
+<li><a href="#org75cdf14">10. Arithmetic (Step 4): Applying the Euclidean algorithm to convergents</a></li>
+<li><a href="#org4f8530a">11. The final section with complex figures</a></li>
+<li><a href="#org8bd32ec">12. Appendix: Quotients/remainders for matrices</a></li>
+<li><a href="#orgffd3e77">13. Appendix: Quotients/remainders for tensors</a></li>
+<li><a href="#org55d25f7">14. Appendix: Unit tests</a>
 <ul>
-<li><a href="#org48ccc5c">14.1. Using continued fractions to represent rational numbers</a></li>
-<li><a href="#orgf69e814">14.2. Convergents</a></li>
-<li><a href="#org6f61e29">14.3. Symbolic Euclidean algorithm</a></li>
-<li><a href="#org9032ac2">14.4. Transformations of continued fractions</a></li>
-<li><a href="#org93a7d07">14.5. Bihomography</a></li>
-<li><a href="#org469d1d3">14.6. Imports</a></li>
+<li><a href="#org1916acc">14.1. Using continued fractions to represent rational numbers</a></li>
+<li><a href="#orgc2d662f">14.2. Convergents</a></li>
+<li><a href="#org551c680">14.3. Symbolic Euclidean algorithm</a></li>
+<li><a href="#orga401ac1">14.4. Transformations of continued fractions</a></li>
+<li><a href="#org57c309f">14.5. Bihomography</a></li>
+<li><a href="#org81624e7">14.6. Imports</a></li>
 </ul>
 </li>
-<li><a href="#orga9667cc">15. Appendix: Display utilities</a>
+<li><a href="#org9b4c373">15. Appendix: Display utilities</a>
 <ul>
-<li><a href="#org363cbd9">15.1. Tabulated display utilities</a>
+<li><a href="#org11a3c52">15.1. Tabulated display utilities</a>
 <ul>
-<li><a href="#org46bdb77">15.1.1. Take inputs from continued fractions</a></li>
-<li><a href="#org4967421">15.1.2. Process output</a></li>
-<li><a href="#org67aefed">15.1.3. Convert to array</a></li>
-<li><a href="#orgc1af8d6">15.1.4. Display/export</a></li>
+<li><a href="#org06a6689">15.1.1. Take inputs from continued fractions</a></li>
+<li><a href="#org46fb9db">15.1.2. Process output</a></li>
+<li><a href="#org06e7601">15.1.3. Convert to array</a></li>
+<li><a href="#org7bdecef">15.1.4. Display/export</a></li>
 </ul>
 </li>
-<li><a href="#orgf17db74">15.2. Tabulated displays: 2D</a></li>
-<li><a href="#org211fc1f">15.3. Tabulated displays: 3D</a></li>
-<li><a href="#orge46d0a9">15.4. Pretty printing utilities</a></li>
-<li><a href="#org47aefcd">15.5. LaTeX utilities</a></li>
-<li><a href="#org031f2eb">15.6. Imports</a></li>
+<li><a href="#org26968db">15.2. Tabulated displays: 2D</a></li>
+<li><a href="#orgdd6047d">15.3. Tabulated displays: 3D</a></li>
+<li><a href="#orgda26c71">15.4. Pretty printing utilities</a></li>
+<li><a href="#orgddf905f">15.5. LaTeX utilities</a></li>
+<li><a href="#orgcfe8657">15.6. Imports</a></li>
 </ul>
 </li>
-<li><a href="#org54cd478">16. Appendix: Imports and outlines</a></li>
+<li><a href="#org0c64fd0">16. Appendix: Imports and outlines</a></li>
 </ul>
 </div>
 </div>
 
 
-<div id="outline-container-org02d5ad0" class="outline-2">
-<h2 id="org02d5ad0"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
+<div id="outline-container-org2b316d3" class="outline-2">
+<h2 id="org2b316d3"><span class="section-number-2">1.</span> Representing rational numbers as continued fractions</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Since we'll use rational numbers a lot, let's define a class:
@@ -420,8 +420,8 @@ It's the same sequence with an additional 0 at the beginning! This is our first 
 </div>
 </div>
 
-<div id="outline-container-org04f0276" class="outline-2">
-<h2 id="org04f0276"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
+<div id="outline-container-org7fe1d61" class="outline-2">
+<h2 id="org7fe1d61"><span class="section-number-2">2.</span> Calculating the convergents of a continued fraction</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Given a continued fraction, how do we calculate its value? If the series is finite, we can easily write a recursive function. However, if it's an infinite series, we need a method to incrementally approximate the value as more terms are received. Also, we want the evaluation to be accumulative, so that each update is based on the previous one.
@@ -454,7 +454,7 @@ This question has an easy solution if we use a series of rational numbers to app
 </div>
 
 <p>
-<a id="org9ce4244"></a>For example, for the continued fraction \([2, 1, 1, 5, 1, 3]\), we get
+<a id="org6b75474"></a>For example, for the continued fraction \([2, 1, 1, 5, 1, 3]\), we get
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -544,7 +544,7 @@ Here are the convergents, as rational and as floating point numbers:
 </pre>
 </div>
 
-<pre class="example" id="orgcb38ed7">
+<pre class="example" id="org88b5a59">
 2/1                  2.00000000
 3/1                  3.00000000
 8/3                  2.66666667
@@ -565,11 +565,11 @@ Here are the convergents, as rational and as floating point numbers:
 </div>
 </div>
 
-<div id="outline-container-org7cd5971" class="outline-2">
-<h2 id="org7cd5971"><span class="section-number-2">3.</span> Continued fractions as recursive functions</h2>
+<div id="outline-container-org230c1ae" class="outline-2">
+<h2 id="org230c1ae"><span class="section-number-2">3.</span> Continued fractions as recursive functions</h2>
 <div class="outline-text-2" id="text-3">
 <p>
-<a id="org860dcb7"></a>
+<a id="orgc0ef0d1"></a>
 Given the first 3 terms in a continued fraction \([5, 1, 4...]\), let \(x\) denote the reciprocal of the value of the remaining series. We can express the convergent as \(f_1(x)\), \(f_2(x)\), \(f_3(x)\)&#x2026;, where
 </p>
 
@@ -749,8 +749,8 @@ Multiplying the matrix with
 </div>
 </div>
 
-<div id="outline-container-orgffd0138" class="outline-2">
-<h2 id="orgffd0138"><span class="section-number-2">4.</span> Calculating convergents using matrices</h2>
+<div id="outline-container-orgaef5d6b" class="outline-2">
+<h2 id="orgaef5d6b"><span class="section-number-2">4.</span> Calculating convergents using matrices</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matrix multiplications:
@@ -788,7 +788,7 @@ Now, we are ready to rewrite the formula in <code>cf_convergents0</code> as matr
 </div>
 
 <p>
-<a id="orge93d566"></a>Let's try it on an example that we used <a href="#org9ce4244">previously</a>:
+<a id="org00b4308"></a>Let's try it on an example that we used <a href="#org6b75474">previously</a>:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -888,15 +888,15 @@ Finally, we define a specialized version of <code>cf_convergents1</code> just fo
 </div>
 </div>
 
-<div id="outline-container-orgdf6ddb4" class="outline-2">
-<h2 id="orgdf6ddb4"><span class="section-number-2">5.</span> Turning convergents into continued fractions using the Euclidean algorithm</h2>
+<div id="outline-container-org1a46a58" class="outline-2">
+<h2 id="org1a46a58"><span class="section-number-2">5.</span> Turning convergents into continued fractions using the Euclidean algorithm</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 In this section, we'll calculate convergents as in <code>cf_convergent1</code>, but as it happens, we'll also turn them into continued fractions. This seems to be a pointless exercise, because a continued fraction is what we start with! Indeed, at the end of this section, we'll see that our code receives a continued fraction, and just returns the same series. However, in the next section, it will be used to do interesting things.
 </p>
 
 <p>
-Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the <a href="#orge93d566">last section</a> that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction, using the <code>r2cf</code> function that we have already written? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent is just a rational number. However, for the latter, the third convergent 
+Let's take the continued fraction \([5, 1, 4... ]\) as an example. Since we already know from the <a href="#org00b4308">last section</a> that the third convergent of \([5, 1, 4]\) is \(\frac{29}{5}\), can't we just turn \(\frac{29}{5}\) into a continued fraction, using the <code>r2cf</code> function that we have already written? It is not as simple as that, because \([5, 1, 4]\) and \([5, 1, 4...]\) are not the same. For the former, the third convergent is just a rational number. However, for the latter, the third convergent 
 \(\begin{bmatrix}
     29 & 6 \\
      5 & 1
@@ -908,7 +908,7 @@ How? The answer is still the Euclidean algorithm, but we have to use it symbolic
 </p>
 
 <p>
-The first step is to symbolically represent the function as a quotient and a remainder. I implemented this operation in <code>qr_matrix</code> in the <a href="#orgd600cb3">Appendix</a>. We can use it on the third convergent:
+The first step is to symbolically represent the function as a quotient and a remainder. I implemented this operation in <code>qr_matrix</code> in the <a href="#orgfe8f93a">Appendix</a>. We can use it on the third convergent:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -927,8 +927,8 @@ This means that \(f_3(x) = \frac{29x+6}{5x+1} = 5 + \frac{1}{\frac{5x+1}{4x+1}}\
 </p>
 
 
-<div id="orgedf7720" class="figure">
-<p><img src="../figs/fig1.png" alt="fig1.png" width="400" />
+<div id="org808ae06" class="figure">
+<p><img src="figs/fig1.png" alt="fig1.png" width="400" />
 </p>
 </div>
 
@@ -993,7 +993,7 @@ So there is enough information in \(\frac{70x+29}{12x+5}\) to precisely determin
 </p>
 
 <p>
-<a id="org8cfb702"></a>
+<a id="org15b2fde"></a>
 As before, Gospher stacked the matrices in a compact format to illustrate the process:
 </p>
 <div class="org-src-container">
@@ -1124,15 +1124,15 @@ The numbers on the right are the outputs of <code>cf_transform</code>.
 </div>
 </div>
 
-<div id="outline-container-org775be0b" class="outline-2">
-<h2 id="org775be0b"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
+<div id="outline-container-org072894d" class="outline-2">
+<h2 id="org072894d"><span class="section-number-2">6.</span> Simple transformations of continued fractions</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 The beauty of the matrix representation is that we can transform convergents with a function of the form \(f(x) = \frac{px+q}{rx+s}\). All we need is an additional matrix multiplication on the left side! This can be calculated by giving <code>cf_transform</code> an initial matrix.
 </p>
 
 <p>
-<a id="org59b3321"></a>
+<a id="orge3f4150"></a>
 The continued fraction \([2, 1, 1, 5, 1]\) is \(\frac{33}{13}\). Let's double that, and turn it back to a continued fraction:
 </p>
 <div class="org-src-container">
@@ -1194,7 +1194,7 @@ Previously, we saw that the reciprocal of a continued fraction has an addition 0
 </pre>
 </div>
 
-<pre class="example" id="org0364c9b">
+<pre class="example" id="org0ff5191">
 The reciprocal of [2, 1, 1, 5, 1] is  [0, 2, 1, 1, 5, 1] 
 
    1 5 1 1 2    
@@ -1232,7 +1232,7 @@ Then, we just need to run <code>cf_transform</code> with \(\begin{bmatrix} 0 & 2
 </pre>
 </div>
 
-<pre class="example" id="org0593ae3">
+<pre class="example" id="orgac2c34d">
 2 / (3 - sqrt(2)) is  [1,3,1,4,1,4...] 
 
     2  2  2  2  2  1      
@@ -1261,7 +1261,7 @@ Another example: what is \(\tanh{\frac{1}{2}} = \frac{e-1}{e+1}\)? We have alrea
 </pre>
 </div>
 
-<pre class="example" id="orgb109b2e">
+<pre class="example" id="org4dce8ab">
 (e-1)/(e+1) is  [0,2,6,10,14,18...] 
 
      8  1  1  6  1  1  4  1  1  2  1  2      
@@ -1282,8 +1282,8 @@ The answer is a continued fraction with a simple pattern: after the second term,
 I find the tabulated displays visually appealing, so I wrote some external codes (in <i>Mathematica</i>) to give them some colors. The colors make it easier to see the patterns in the numbers.
 </p>
 
-<div id="org27ff2c0" class="figure">
-<p><img src="../figs/cf_transform_summary.png" alt="cf_transform_summary.png" width="600" />
+<div id="orge038518" class="figure">
+<p><img src="figs/cf_transform_summary.png" alt="cf_transform_summary.png" width="600" />
 </p>
 </div>
 
@@ -1352,8 +1352,8 @@ With 6 more terms of e, we get  [10, 14]
 </div>
 </div>
 
-<div id="outline-container-org950aec5" class="outline-2">
-<h2 id="org950aec5"><span class="section-number-2">7.</span> Arithmetic (Step 1): From matrices to tensors</h2>
+<div id="outline-container-org5e4aa34" class="outline-2">
+<h2 id="org5e4aa34"><span class="section-number-2">7.</span> Arithmetic (Step 1): From matrices to tensors</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 We have been dealing with one continued fraction at a time. In those situations, all operations involve functions of the form \(f(x) = \frac{px+q}{rx+s}\). They are known as <i>homographic functions</i>, and they can be represented by the matrix \(\begin{bmatrix} p & q \\ r & s \end{bmatrix}\). How do we generalize it to operations involving two continued fractions?
@@ -1461,7 +1461,7 @@ The above suggests an elegant way to visualize continued fraction arithmetic: if
 </p>
 
 
-<div id="org981acaa" class="figure">
+<div id="orga242fa7" class="figure">
 <p><img src="../figs/cf_space.png" alt="cf_space.png" width="500px" />
 </p>
 </div>
@@ -1502,8 +1502,8 @@ To implement the cube movements in Python, I use my favorite Numpy function: <co
 </div>
 </div>
 </div>
-<div id="outline-container-orgf5fbb3c" class="outline-2">
-<h2 id="orgf5fbb3c"><span class="section-number-2">8.</span> Arithmetic (Step 2):  Representing arithmetic operations</h2>
+<div id="outline-container-orgf347fc9" class="outline-2">
+<h2 id="orgf347fc9"><span class="section-number-2">8.</span> Arithmetic (Step 2):  Representing arithmetic operations</h2>
 <div class="outline-text-2" id="text-8">
 <p>
 Something is curious about the discussion so far. We have a generic method for ingesting terms of two continued fractions, but how do we actually perform a specific operation on them? It's not hard to see that it all depends on the initial matrices. With appropriately chosen initial matrices, we can do multiplication, addition, division, subtraction, and their combinations. I think it's quite a remarkable result, because when we are dealing with numbers with multiple terms, multiplication is usually harder than addition. With continued fraction, the computational steps are exactly the same!
@@ -1513,7 +1513,7 @@ Something is curious about the discussion so far. We have a generic method for i
 I made the following two figures to explain how addition and multiplication are done. Here's \(a+b\). We begin with just the initial matrices (first row), add the first term of \(a\), and then add the first term of \(b\). 
 </p>
 
-<div id="orgb8fac3f" class="figure">
+<div id="orgecd7d57" class="figure">
 <p><img src="../figs/addition.png" alt="addition.png" width="500px" />
 </p>
 </div>
@@ -1522,7 +1522,7 @@ I made the following two figures to explain how addition and multiplication are 
 Here's the same process for multiplication:
 </p>
 
-<div id="orgc978de3" class="figure">
+<div id="orgd1f5224" class="figure">
 <p><img src="../figs/multiplication.png" alt="multiplication.png" width="500px" />
 </p>
 </div>
@@ -1589,8 +1589,8 @@ Let's try multiplication:
 </div>
 </div>
 
-<div id="outline-container-orgbd76474" class="outline-2">
-<h2 id="orgbd76474"><span class="section-number-2">9.</span> Arithmetic (Step 3): Calculating convergents using tensors</h2>
+<div id="outline-container-orgf548f69" class="outline-2">
+<h2 id="orgf548f69"><span class="section-number-2">9.</span> Arithmetic (Step 3): Calculating convergents using tensors</h2>
 <div class="outline-text-2" id="text-9">
 <p>
 By updating the bihomographic function with new terms of \(a\) and \(b\), we can generate a series of rational numbers that converges to the result. The following code does this by applying a new term of \(a\), and then a new term of \(b\)&#x2026; and so on. This is not the only way to update the tensors. Any process that applies the terms in sequence will work. You can, for example, update with two terms of \(a\), and then two terms of \(b\).
@@ -1644,7 +1644,7 @@ By updating the bihomographic function with new terms of \(a\) and \(b\), we can
 </div>
 
 <p>
-We have calculated <a href="#org59b3321">previously</a> that \(2*[2, 1, 1, 5, 1] = \frac{66}{13}\). Let's verify it by adding the continued fraction to itself:
+We have calculated <a href="#orge3f4150">previously</a> that \(2*[2, 1, 1, 5, 1] = \frac{66}{13}\). Let's verify it by adding the continued fraction to itself:
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -1729,7 +1729,7 @@ Now we've come to visualization. Again, Gospher developed an ingenious method fo
 </pre>
 </div>
 
-<pre class="example" id="orgfd80b3c">
+<pre class="example" id="orgc9dbbd2">
       1   5   1   1   2        
                   2   1   0    
               1   1   0   1   2
@@ -1755,7 +1755,7 @@ The result \(\frac{858}{168}\) comes from the numbers at the lower-left corners 
 Finally, some colors:
 </p>
 
-<div id="org33a807c" class="figure">
+<div id="orgb3b0753" class="figure">
 <p><img src="../figs/arithmetic_convergents.png" alt="arithmetic_convergents.png" width="600px" />
 </p>
 </div>
@@ -1766,8 +1766,8 @@ Unfortunately, I think these displays are not very satisfying, because the numbe
 </div>
 </div>
 
-<div id="outline-container-org4ebdf89" class="outline-2">
-<h2 id="org4ebdf89"><span class="section-number-2">10.</span> Arithmetic (Step 4): Applying the Euclidean algorithm to convergents</h2>
+<div id="outline-container-org75cdf14" class="outline-2">
+<h2 id="org75cdf14"><span class="section-number-2">10.</span> Arithmetic (Step 4): Applying the Euclidean algorithm to convergents</h2>
 <div class="outline-text-2" id="text-10">
 <p>
 Since our tensors are just representations of bihomographic functions, it's straightforward to apply the Euclidean algorithm symbolically on them. <code>euclid_tensor_</code> is almost identical to <code>euclid_matrix_</code> in code structure:
@@ -1817,7 +1817,7 @@ In the following example, we manage to extract three terms from the bihomographi
 
 
 <p>
-A tabulated format can be used to visualize the process. It is a generalization of the format that we used to visualize the symbolic Euclidean algorithm (see <a href="#org8cfb702">here</a>), except that we are now flipping entire matrices instead of rows.
+A tabulated format can be used to visualize the process. It is a generalization of the format that we used to visualize the symbolic Euclidean algorithm (see <a href="#org15b2fde">here</a>), except that we are now flipping entire matrices instead of rows.
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -1827,7 +1827,7 @@ A tabulated format can be used to visualize the process. It is a generalization 
 </pre>
 </div>
 
-<pre class="example" id="org86549a7">
+<pre class="example" id="org3522792">
 1550  216     
 3466  483     
  601   83    2
@@ -1845,13 +1845,13 @@ The algorithm stops after 3 steps, because the bihomographic function associated
 </p>
 
 
-<div id="org06e5883" class="figure">
-<p><img src="../figs/fig2.png" alt="fig2.png" width="400" />
+<div id="orga7b7196" class="figure">
+<p><img src="figs/fig2.png" alt="fig2.png" width="400" />
 </p>
 </div>
 
 <p>
-Now it's time to combine the Euclidean algorithm (<code>euclid_tensor_</code>) with convergent calculation (<code>arithmetic_convergents_</code>). The code structure is basically the same as <code>cf_transform_</code>, except that there is one additional issue to consider: when we work with just one continued fraction, if the Euclidean step fails to determine a quotient, the only thing that we can do is to ingest one more term from the continued fraction. But now we have two continued fractions, so we have to decide which one to use. In terms of the 3D space, the question becomes: should we move the cube left or down? The decision is more or less arbitrary, because the Euclidean step will eventually sort out the result, as long as the terms from the two continued fractions are ingested sequentially. However, for visualization, we want to perform the Euclidean step as soon as possible, to prevent the numbers in the tensor from becoming too big. I use some heuristics from Gospher's paper to make this decision. The implementation (<code>ABQueue</code>) is in the <a href="#org747356c">Appendix</a>.
+Now it's time to combine the Euclidean algorithm (<code>euclid_tensor_</code>) with convergent calculation (<code>arithmetic_convergents_</code>). The code structure is basically the same as <code>cf_transform_</code>, except that there is one additional issue to consider: when we work with just one continued fraction, if the Euclidean step fails to determine a quotient, the only thing that we can do is to ingest one more term from the continued fraction. But now we have two continued fractions, so we have to decide which one to use. In terms of the 3D space, the question becomes: should we move the cube left or down? The decision is more or less arbitrary, because the Euclidean step will eventually sort out the result, as long as the terms from the two continued fractions are ingested sequentially. However, for visualization, we want to perform the Euclidean step as soon as possible, to prevent the numbers in the tensor from becoming too big. I use some heuristics from Gospher's paper to make this decision. The implementation (<code>ABQueue</code>) is in the <a href="#orgd779830">Appendix</a>.
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cf_arithmetic_</span>(cf_a: Iterator[<span class="org-builtin">int</span>], cf_b: Iterator[<span class="org-builtin">int</span>], t0: np.ndarray, finite_term = <span class="org-constant">True</span>) -&gt; Iterator:
@@ -1949,7 +1949,7 @@ Now it's time to combine the Euclidean algorithm (<code>euclid_tensor_</code>) w
 </div>
 
 <p>
-In an earlier <a href="#org59b3321">section</a>, we showed that \(2 * [2, 1, 1, 5, 1] = [5, 13]\). Let's see if we can duplicate this by adding \([2, 1, 1, 5, 1]\) to itself.
+In an earlier <a href="#orge3f4150">section</a>, we showed that \(2 * [2, 1, 1, 5, 1] = [5, 13]\). Let's see if we can duplicate this by adding \([2, 1, 1, 5, 1]\) to itself.
 </p>
 <div class="org-src-container">
 <pre class="src src-python">
@@ -2087,8 +2087,8 @@ We don't have to truncate the inputs to finite terms. If the two continued fract
 </div>
 </div>
 
-<div id="outline-container-orgf38c9da" class="outline-2">
-<h2 id="orgf38c9da"><span class="section-number-2">11.</span> The final section with complex figures</h2>
+<div id="outline-container-org4f8530a" class="outline-2">
+<h2 id="org4f8530a"><span class="section-number-2">11.</span> The final section with complex figures</h2>
 <div class="outline-text-2" id="text-11">
 <p>
 Finally, we'll replicate a complex example in Gospher's paper. This example involves \(a=\frac{e^2+1}{e^2-1} = [1, 3, 5, 7\cdots]\), and \(b=\sqrt{6}=[2, 2, 4, 2, 4, 2\cdots]\). The goal is to calculate \(\frac{2ab+a}{ab+b}\).
@@ -2147,7 +2147,7 @@ Visualizing the process is much more difficult than the 2D cases. The tabulated 
 </pre>
 </div>
 
-<pre class="example" id="orgefea12c">
+<pre class="example" id="org8d03303">
         7    5    3    1          
                        1    0     
              8    2    2    0    2
@@ -2181,8 +2181,8 @@ This rendering should make it easier to understand what is going on:
 </p>
 
 
-<div id="org64c78c7" class="figure">
-<p><img src="../figs/cf_arithmetic_summary.png" alt="cf_arithmetic_summary.png" width="600" />
+<div id="org924087f" class="figure">
+<p><img src="figs/cf_arithmetic_summary.png" alt="cf_arithmetic_summary.png" width="600" />
 </p>
 </div>
 
@@ -2190,19 +2190,19 @@ This rendering should make it easier to understand what is going on:
 These images are fun to look at. Here's another one that I like. This is \(e+e=2e\). I rotated it to give it a horizontal orientation. 
 </p>
 
-<div id="orge450426" class="figure">
-<p><img src="../figs/e2rotated_edit.png" alt="e2rotated_edit.png" width="600" />
+<div id="orgd195b93" class="figure">
+<p><img src="figs/e2rotated_edit.png" alt="e2rotated_edit.png" width="600" />
 </p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org44eaf00" class="outline-2">
-<h2 id="org44eaf00"><span class="section-number-2">12.</span> Appendix: Quotients/remainders for matrices</h2>
+<div id="outline-container-org8bd32ec" class="outline-2">
+<h2 id="org8bd32ec"><span class="section-number-2">12.</span> Appendix: Quotients/remainders for matrices</h2>
 <div class="outline-text-2" id="text-12">
 <p>
 Given a homographic function represented by a 2x2 matrix, determine if the Euclidean step can be performed. If yes, return the quotient.
-<a id="orgd600cb3"></a>
+<a id="orgfe8f93a"></a>
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Simple transformation of continued fraction</span>
@@ -2275,11 +2275,11 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org52a1183" class="outline-2">
-<h2 id="org52a1183"><span class="section-number-2">13.</span> Appendix: Quotients/remainders for tensors</h2>
+<div id="outline-container-orgffd3e77" class="outline-2">
+<h2 id="orgffd3e77"><span class="section-number-2">13.</span> Appendix: Quotients/remainders for tensors</h2>
 <div class="outline-text-2" id="text-13">
 <p>
-<a id="org747356c"></a>
+<a id="orgd779830"></a>
 </p>
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Continued fraction arithmetic - Euclidean algorithmn</span>
@@ -2511,8 +2511,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org8b4e936" class="outline-2">
-<h2 id="org8b4e936"><span class="section-number-2">14.</span> Appendix: Unit tests</h2>
+<div id="outline-container-org55d25f7" class="outline-2">
+<h2 id="org55d25f7"><span class="section-number-2">14.</span> Appendix: Unit tests</h2>
 <div class="outline-text-2" id="text-14">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;TEST_IMPORTS&gt;&gt;
@@ -2526,8 +2526,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org48ccc5c" class="outline-3">
-<h3 id="org48ccc5c"><span class="section-number-3">14.1.</span> Using continued fractions to represent rational numbers</h3>
+<div id="outline-container-org1916acc" class="outline-3">
+<h3 id="org1916acc"><span class="section-number-3">14.1.</span> Using continued fractions to represent rational numbers</h3>
 <div class="outline-text-3" id="text-14-1">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestR2cf</span>(<span class="org-builtin">object</span>):
@@ -2539,8 +2539,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-orgf69e814" class="outline-3">
-<h3 id="orgf69e814"><span class="section-number-3">14.2.</span> Convergents</h3>
+<div id="outline-container-orgc2d662f" class="outline-3">
+<h3 id="orgc2d662f"><span class="section-number-3">14.2.</span> Convergents</h3>
 <div class="outline-text-3" id="text-14-2">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Apply this test to two functions, because they should be equivalent</span>
@@ -2579,8 +2579,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org6f61e29" class="outline-3">
-<h3 id="org6f61e29"><span class="section-number-3">14.3.</span> Symbolic Euclidean algorithm</h3>
+<div id="outline-container-org551c680" class="outline-3">
+<h3 id="org551c680"><span class="section-number-3">14.3.</span> Symbolic Euclidean algorithm</h3>
 <div class="outline-text-3" id="text-14-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestQRMatrix</span>(<span class="org-builtin">object</span>):
@@ -2672,8 +2672,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org9032ac2" class="outline-3">
-<h3 id="org9032ac2"><span class="section-number-3">14.4.</span> Transformations of continued fractions</h3>
+<div id="outline-container-orga401ac1" class="outline-3">
+<h3 id="orga401ac1"><span class="section-number-3">14.4.</span> Transformations of continued fractions</h3>
 <div class="outline-text-3" id="text-14-4">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestCFTransform</span>(<span class="org-builtin">object</span>):
@@ -2695,8 +2695,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org93a7d07" class="outline-3">
-<h3 id="org93a7d07"><span class="section-number-3">14.5.</span> Bihomography</h3>
+<div id="outline-container-org57c309f" class="outline-3">
+<h3 id="org57c309f"><span class="section-number-3">14.5.</span> Bihomography</h3>
 <div class="outline-text-3" id="text-14-5">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">class</span> <span class="org-type">TestBiho</span>(<span class="org-builtin">object</span>):
@@ -2715,8 +2715,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 </div>
-<div id="outline-container-org469d1d3" class="outline-3">
-<h3 id="org469d1d3"><span class="section-number-3">14.6.</span> Imports</h3>
+<div id="outline-container-org81624e7" class="outline-3">
+<h3 id="org81624e7"><span class="section-number-3">14.6.</span> Imports</h3>
 <div class="outline-text-3" id="text-14-6">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
@@ -2727,8 +2727,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 </div>
-<div id="outline-container-orga9667cc" class="outline-2">
-<h2 id="orga9667cc"><span class="section-number-2">15.</span> Appendix: Display utilities</h2>
+<div id="outline-container-org9b4c373" class="outline-2">
+<h2 id="org9b4c373"><span class="section-number-2">15.</span> Appendix: Display utilities</h2>
 <div class="outline-text-2" id="text-15">
 <div class="org-src-container">
 <pre class="src src-python">&lt;&lt;IO_IMPORTS&gt;&gt;
@@ -2741,8 +2741,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org363cbd9" class="outline-3">
-<h3 id="org363cbd9"><span class="section-number-3">15.1.</span> Tabulated display utilities</h3>
+<div id="outline-container-org11a3c52" class="outline-3">
+<h3 id="org11a3c52"><span class="section-number-3">15.1.</span> Tabulated display utilities</h3>
 <div class="outline-text-3" id="text-15-1">
 <p>
 <code>Chart</code> is a class for constructing and exporting tabulated displays. It can be used for 2D (i.e., operations involving one continued fraction) or 3D (operations involving two continued fractions) displays. For 2D displayed, the homographic matrices are converted into bihomographic tensors.
@@ -2784,8 +2784,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org46bdb77" class="outline-4">
-<h4 id="org46bdb77"><span class="section-number-4">15.1.1.</span> Take inputs from continued fractions</h4>
+<div id="outline-container-org06a6689" class="outline-4">
+<h4 id="org06a6689"><span class="section-number-4">15.1.1.</span> Take inputs from continued fractions</h4>
 <div class="outline-text-4" id="text-15-1-1">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">move_left</span>(<span class="org-keyword">self</span>, t: np.ndarray, a: <span class="org-builtin">int</span>):
@@ -2833,8 +2833,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 </div>
 </div>
 
-<div id="outline-container-org4967421" class="outline-4">
-<h4 id="org4967421"><span class="section-number-4">15.1.2.</span> Process output</h4>
+<div id="outline-container-org46fb9db" class="outline-4">
+<h4 id="org46fb9db"><span class="section-number-4">15.1.2.</span> Process output</h4>
 <div class="outline-text-4" id="text-15-1-2">
 <p>
 After an Euclidean step, we "move under" by creating a new board.
@@ -2877,8 +2877,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 
-<div id="outline-container-org67aefed" class="outline-4">
-<h4 id="org67aefed"><span class="section-number-4">15.1.3.</span> Convert to array</h4>
+<div id="outline-container-org06e7601" class="outline-4">
+<h4 id="org06e7601"><span class="section-number-4">15.1.3.</span> Convert to array</h4>
 <div class="outline-text-4" id="text-15-1-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">board_to_array</span>(<span class="org-keyword">self</span>, board: List, b: List, out: Optional[<span class="org-builtin">int</span>], truncate_board = <span class="org-constant">False</span>) -&gt; List:
@@ -2940,8 +2940,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 </div>
-<div id="outline-container-orgc1af8d6" class="outline-4">
-<h4 id="orgc1af8d6"><span class="section-number-4">15.1.4.</span> Display/export</h4>
+<div id="outline-container-org7bdecef" class="outline-4">
+<h4 id="org7bdecef"><span class="section-number-4">15.1.4.</span> Display/export</h4>
 <div class="outline-text-4" id="text-15-1-4">
 <div class="org-src-container">
 <pre class="src src-python">@<span class="org-builtin">staticmethod</span>
@@ -2977,8 +2977,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 
-<div id="outline-container-orgf17db74" class="outline-3">
-<h3 id="orgf17db74"><span class="section-number-3">15.2.</span> Tabulated displays: 2D</h3>
+<div id="outline-container-org26968db" class="outline-3">
+<h3 id="org26968db"><span class="section-number-3">15.2.</span> Tabulated displays: 2D</h3>
 <div class="outline-text-3" id="text-15-2">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Tabulated displays: 2D</span>
@@ -3049,8 +3049,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 
-<div id="outline-container-org211fc1f" class="outline-3">
-<h3 id="org211fc1f"><span class="section-number-3">15.3.</span> Tabulated displays: 3D</h3>
+<div id="outline-container-orgdd6047d" class="outline-3">
+<h3 id="orgdd6047d"><span class="section-number-3">15.3.</span> Tabulated displays: 3D</h3>
 <div class="outline-text-3" id="text-15-3">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Tabulated displays: 3D</span>
@@ -3113,8 +3113,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 
-<div id="outline-container-orge46d0a9" class="outline-3">
-<h3 id="orge46d0a9"><span class="section-number-3">15.4.</span> Pretty printing utilities</h3>
+<div id="outline-container-orgda26c71" class="outline-3">
+<h3 id="orgda26c71"><span class="section-number-3">15.4.</span> Pretty printing utilities</h3>
 <div class="outline-text-3" id="text-15-4">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Pretty printing utilities</span>
@@ -3142,8 +3142,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 
-<div id="outline-container-org47aefcd" class="outline-3">
-<h3 id="org47aefcd"><span class="section-number-3">15.5.</span> LaTeX utilities</h3>
+<div id="outline-container-orgddf905f" class="outline-3">
+<h3 id="orgddf905f"><span class="section-number-3">15.5.</span> LaTeX utilities</h3>
 <div class="outline-text-3" id="text-15-5">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-comment-delimiter"># </span><span class="org-comment">Utilities functions for LaTeX displays</span>
@@ -3177,8 +3177,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 </div>
-<div id="outline-container-org031f2eb" class="outline-3">
-<h3 id="org031f2eb"><span class="section-number-3">15.6.</span> Imports</h3>
+<div id="outline-container-orgcfe8657" class="outline-3">
+<h3 id="orgcfe8657"><span class="section-number-3">15.6.</span> Imports</h3>
 <div class="outline-text-3" id="text-15-6">
 <div class="org-src-container">
 <pre class="src src-python"><span class="org-keyword">from</span> cont_frac <span class="org-keyword">import</span> *
@@ -3191,8 +3191,8 @@ After an Euclidean step, we "move under" by creating a new board.
 </div>
 </div>
 </div>
-<div id="outline-container-org54cd478" class="outline-2">
-<h2 id="org54cd478"><span class="section-number-2">16.</span> Appendix: Imports and outlines</h2>
+<div id="outline-container-org0c64fd0" class="outline-2">
+<h2 id="org0c64fd0"><span class="section-number-2">16.</span> Appendix: Imports and outlines</h2>
 <div class="outline-text-2" id="text-16">
 <p>
 This is the outline of the main code <code>cont_frac.py</code>.
@@ -3236,7 +3236,7 @@ This is the outline of the main code <code>cont_frac.py</code>.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Hsin-Hao Yu</p>
-<p class="date">Created: 2022-05-01 Sun 09:13</p>
+<p class="date">Created: 2022-05-01 Sun 09:22</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
