@@ -1,4 +1,4 @@
-#+EXPORT_FILE_NAME: ../docs/cont_frac.html
+#+EXPORT_FILE_NAME: ../docs/index.html
 #+OPTIONS: broken-links:t
 #+HTML_MATHJAX: align: left
 #+HTML_MATHJAX: scale: 85
