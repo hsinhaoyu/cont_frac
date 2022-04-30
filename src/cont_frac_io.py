@@ -1,4 +1,5 @@
 from cont_frac import *
+from typing import List, Sequence
 from functools import reduce
 import csv
 # Utilities for tabulated displays
@@ -6,6 +7,7 @@ import csv
 
 class Chart(object):
     """Construction and export tabulated displays"""
+
     def __init__(self, m: np.ndarray = tForAddition):
         if len(m.shape) == 2:
             # if initialized with a matrix intead of a tensor
@@ -19,9 +21,9 @@ class Chart(object):
             self.mode2D = False
             self.current_tensor = m.copy()
 
-        self.output = [None]
-        self.a = []
-        self.b = [[]]
+        self.output: List[Optional[int]] = [None]
+        self.a: List = []
+        self.b: List = [[]]
         self.include_a = True
         self.include_out = True
 
@@ -60,10 +62,10 @@ class Chart(object):
         self.current_tensor = t
         new_row_numerator = [None] * len(self.boards[0][0])
         new_row_denominator = [None] * len(self.boards[1][0])
-        new_row_numerator[0] = tensor_ref(t, 'a')
-        new_row_numerator[1] = tensor_ref(t, 'c')
-        new_row_denominator[0] = tensor_ref(t, 'e')
-        new_row_denominator[1] = tensor_ref(t, 'g')
+        new_row_numerator[0] = tensor_ref(t, 'a')  # type: ignore
+        new_row_numerator[1] = tensor_ref(t, 'c')  # type: ignore
+        new_row_denominator[0] = tensor_ref(t, 'e')  # type: ignore
+        new_row_denominator[1] = tensor_ref(t, 'g')  # type: ignore
         self.boards[-2] = self.boards[-2] + [new_row_numerator]
         self.boards[-1] = self.boards[-1] + [new_row_denominator]
         self.b[-1] = self.b[-1] + [b]
@@ -105,11 +107,11 @@ class Chart(object):
         self.output = self.output + [output]
 
     def board_to_array(self,
-                       board: list,
-                       b: list,
-                       out: int,
-                       truncate_board=False) -> list:
-        new_content = []
+                       board: List,
+                       b: List,
+                       out: Optional[int],
+                       truncate_board=False) -> List:
+        new_content: List[List[Optional[int]]] = []
         for i, row in enumerate(board):
             skip = False
             if self.mode2D and i % 2 == 1:
@@ -142,8 +144,8 @@ class Chart(object):
         return new_content
 
     def to_array(self, truncate_board=False) -> list:
-        content = []
-        row = []
+        content: List[List] = []
+        row: List[Optional[int]] = []
         n_rows = len(self.boards[0])
         n_cols = len(self.boards[0][0])
 
@@ -154,7 +156,7 @@ class Chart(object):
             if self.include_out:
                 row = row + [None]
             row = self.a + row
-            row = [None] * (n_cols - len(self.a) - 1) + row
+            row = [None] * (n_cols - len(self.a) - 1) + row  # type: ignore
             content = content + [row]
 
         for i in range(len(self.boards)):
@@ -201,6 +203,7 @@ class Chart(object):
 
 def r2cf_tab(rn: Rational) -> str:
     """Show the prpocess of converting a rational numner to a continued fraction"""
+
     def row(st: str, x: tuple):
         b, q = x
         return st + f"{b : > 5}  {q : < 5}\n"
@@ -337,7 +340,7 @@ def latex_rational(r: Rational) -> str:
     return r"\frac{" + str(r.a) + "}{" + str(r.b) + "}"
 
 
-def show_cf_expansion(r: Rational) -> str:
+def show_cf_expansion(r: Rational):
     print(r"\[")
     print(r"\frac{", r.a, "}{", r.b, "}=")
     nc = list(r2cf(r))
@@ -345,7 +348,7 @@ def show_cf_expansion(r: Rational) -> str:
     print(r"\]")
 
 
-def show_rational_series(itr: Iterator[int]) -> str:
+def show_rational_series(itr: Iterator[int]):
     rLst = list(cf_convergents0(itr))
     s = ""
     for r in rLst:

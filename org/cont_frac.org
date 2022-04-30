@@ -616,8 +616,8 @@ Before we proceed further, there is a small but important point that should be c
 #+begin_src python :tangle no :noweb-ref CF_TRANSFORM
   def cf_transform_func(cf: Iterator[int], m0: np.ndarray) -> Tuple[List[int], np.ndarray]:
       """Given a conitued fraction with finite terms (cf) and a transformation (m0), return a list of terms and a homographic matrix"""
-      outputs = []
-      out_m = None
+      outputs: List[int] = []
+      out_m: Optional[np.ndarray] = None
       for res in cf_transform_(cf, m0, finite_term = False):
           (q, r, m, a, new_a) = res
           if q is not None:
@@ -625,6 +625,7 @@ Before we proceed further, there is a small but important point that should be c
               out_m = r
           else:
               out_m = m
+      assert isinstance(out_m, np.ndarray)
       return outputs, out_m
 #+end_src
 
@@ -802,7 +803,7 @@ $\frac{27xy+9x+6y+2}{4xy+y} = (2 + \frac{1}{4+\frac{1}{x}}) \cdot (3+\frac{1}{y}
 * Arithmetic (Step 3): Calculating convergents using tensors
 By updating the bihomographic function with new terms of $a$ and $b$, we can generate a series of rational numbers that converges to the result. The following code does this by applying a new term of $a$, and then a new term of $b$... and so on. This is not the only way to update the tensors. Any process that applies the terms in sequence will work. You can, for example, update with two terms of $a$, and then two terms of $b$.
 #+begin_src python :tangle no :noweb-ref BIHOMOGRAPHY
-  def arithmetic_convergents_(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[np.ndarray]:
+  def arithmetic_convergents_(a: Iterator[int], b: Iterator[int], t0 = tForAddition) -> Iterator[Tuple[str, int, np.ndarray]]:
       """Given two continued fractions (a and b) and an arithmetic operation (specified by t0), return an iterator of tensors and addional information.
          New terms of the two continued fractions are applied alternately"""
       res = t0.copy()
@@ -825,7 +826,8 @@ By updating the bihomographic function with new terms of $a$ and $b$, we can gen
       c = arithmetic_convergents_(a, b, t0)
       for _, _, res in c:
           r = tensor_ref(res, 'xy')
-          yield Rational(*r)
+          assert isinstance(r, tuple)
+          yield Rational(r[0], r[1])
 #+end_src
 
 We have calculated [[CF_DOUBLE][previously]] that $2*[2, 1, 1, 5, 1] = \frac{66}{13}$. Let's verify it by adding the continued fraction to itself:
@@ -990,6 +992,8 @@ Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with converg
               # cf_a and cf_b are exhausted
               break
           else:
+              assert isinstance(term, int)
+              assert isinstance(label, str)
               t = apply_ab(t, term, label)
               new_term = True
               for (q, r) in euclid_tensor_(t):
@@ -1003,7 +1007,9 @@ Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with converg
       # we will only reach this point if cf_a and cf_b have finite terms
       # If cf has finite term, but it represents the beginning of a longer series, set finite_term to False
       if finite_term and tensor_ref(t, 'e') != 0:
-          for s in r2cf(Rational(*tensor_ref(t, 'xy'))):
+          rxy = tensor_ref(t, 'xy')
+          assert isinstance(rxy, tuple)
+          for s in r2cf(Rational(rxy[0], rxy[1])):
               yield s, None, t, None, None, False
       else:
           # if the 'e' term is 0, that means the quotient is 0.
@@ -1019,8 +1025,8 @@ Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with converg
 
   def cf_arithmetic_func(cf_a: Iterator[int], cf_b: Iterator[int], t0: np.ndarray) -> Tuple[List[int], np.ndarray]:
       """Given two finite-length continued fractions and an operation, return a list of new terms and a bihomographic tensor"""
-      outputs = []
-      out_t = None
+      outputs: List[int] = []
+      out_t: Optional[np.ndarray] = None
       for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term = False):
           q, r, t, term, label, new_term = res
           if q is not None:
@@ -1028,6 +1034,8 @@ Now it's time to combine the Euclidean algorithm (=euclid_tensor_=) with converg
               out_t = r
           else:
               out_t = t
+              
+      assert isinstance(out_t, np.ndarray)
       return outputs, out_t
 #+end_src
 
@@ -1279,8 +1287,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
          if r[0][0] == r[0][1] == r[1][0] == r[1][1]:
              # if the integer parts are all the same, we've got a quotient
              q = r[0][0]
-             r = np.array([t1[1], t1[0] - q * t1[1]])
-             return (q, r)
+             rem = np.array([t1[1], t1[0] - q * t1[1]])
+             return (q, rem)
          else:
              # the range is too big to determine the quotient
              return (None, np.array([identity_m, identity_m]))
@@ -1395,17 +1403,17 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
 #+end_src
 
 #+begin_src python :tangle no :noweb-ref QR_TENSOR
-  def ABQueue(a: Iterator[int], b: Iterator[int]) -> Callable[np.ndarray, Tuple[int, str]]:
+  def ABQueue(a: Iterator[int], b: Iterator[int]) -> Callable[[np.ndarray], Tuple[Optional[int], Optional[str]]]:
       current_a = None
       current_b = None
       last_tie = 'b'
 
-      def ABQueue_(t: np.ndarray) -> Tuple[int, str]:
+      def ABQueue_(t: np.ndarray) -> Tuple[Optional[int], Optional[str]]:
           nonlocal current_a
           nonlocal current_b
           nonlocal last_tie
 
-          def dequeue(label: str) -> Tuple[int, str]:
+          def dequeue(label: str) -> Tuple[Optional[int], Optional[str]]:
               nonlocal current_a
               nonlocal current_b
               nonlocal last_tie
@@ -1418,7 +1426,8 @@ Given a homographic function represented by a 2x2 matrix, determine if the Eucli
                   next_term = current_b
                   current_b = None
                   return next_term, 'b'
-              elif label == 'alt':
+              else:
+                  assert label == 'alt'
                   if last_tie == 'a':
                       next_term = current_b
                       current_b = None
@@ -1488,7 +1497,7 @@ This is the outline of the main code =cont_frac.py=.
 #+begin_src python :tangle no :noweb-ref IMPORTS
   import math
   import numpy as np
-  from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union
+  from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union, List
   from functools import reduce
   from itertools import tee, islice
 #+end_src

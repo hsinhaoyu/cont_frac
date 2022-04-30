@@ -151,7 +151,7 @@
           cf2 = list(r2cf(Rational(66, 13)))
           assert cf1 == cf2
 
-      def test_cf_transform_basic1(self):
+      def test_cf_transform_basic2(self):
           """ 1 / [2, 1, 1, 5, 1] == [0, 2, 1, 1, 5, 1]"""
           m0 = np.array([[0, 1], [1, 0]], int)
           cf1 = list(cf_transform(iter([2, 1, 1, 5, 1]), m0 = m0))

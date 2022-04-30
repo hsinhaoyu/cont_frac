@@ -1,12 +1,13 @@
 import math
 import numpy as np
-from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union
+from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union, List
 from functools import reduce
 from itertools import tee, islice
 
 
 class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
     """Rational(a, b) = a/b"""
+
     def __repr__(self):
         return f'{self.a}/{self.b}'
 
@@ -37,6 +38,7 @@ def r2cf_(rn: Rational) -> Iterator[Tuple[int, int]]:
 def r2cf(rn: Rational) -> Iterator[int]:
     """Represent a rational number as a continued fraction.
     Return an iterator of integers"""
+
     def second(x: tuple):
         return x[1]
 
@@ -71,6 +73,7 @@ def cf2r0(cf: Iterator[int]) -> Rational:
 
 
 def h(a: int) -> np.ndarray:
+    """Homographic matrix for one term of continued fraction"""
     return np.array([[a, 1], [1, 0]])
 
 
@@ -211,9 +214,11 @@ def cf_transform(cf: Iterator[int],
 
             # q can be None, indicating that more terms are needed
             # to continue. It can be ignored
-def cf_transform_func(cf, m0):
-    outputs = []
-    out_m = None
+def cf_transform_func(cf: Iterator[int],
+                      m0: np.ndarray) -> Tuple[List[int], np.ndarray]:
+    """Given a conitued fraction with finite terms (cf) and a transformation (m0), return a list of terms and a homographic matrix"""
+    outputs: List[int] = []
+    out_m: Optional[np.ndarray] = None
     for res in cf_transform_(cf, m0, finite_term=False):
         (q, r, m, a, new_a) = res
         if q is not None:
@@ -221,6 +226,7 @@ def cf_transform_func(cf, m0):
             out_m = r
         else:
             out_m = m
+    assert isinstance(out_m, np.ndarray)
     return outputs, out_m
 
 
@@ -228,16 +234,19 @@ def cf_transform_func(cf, m0):
 
 
 def tFrom2x4(m: np.ndarray) -> np.ndarray:
+    """Translate a bihomographic function from algebraic form to tensor form"""
     ((a, b, c, d), (e, f, g, h)) = m.tolist()
     return np.array([[[b, d], [a, c]], [[f, h], [e, g]]])
 
 
 def tTo2x4(m: np.ndarray) -> np.ndarray:
+    """Translate a bihomographic function from tensor form to algebraic form"""
     (((b, d), (a, c)), ((f, h), (e, g))) = m.tolist()
     return np.array([[a, b, c, d], [e, f, g, h]])
 
 
 def tensor_ref(t: np.ndarray, label: str) -> Union[int, Tuple[int, int]]:
+    """Return elements or pairs of elements in the tensor t"""
     assert t.shape == (2, 2, 2)
     assert label in [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'xy', 'x', 'y', '1'
@@ -259,6 +268,7 @@ def tensor_ref(t: np.ndarray, label: str) -> Union[int, Tuple[int, int]]:
 
 
 def apply_a(t: np.ndarray, a: int) -> np.ndarray:
+    """Move the tensor t to the left"""
     ha = h(a)
     return np.einsum('dyx,xz->dyz', t, ha)
 
@@ -268,11 +278,13 @@ def h_rotated(b: int) -> np.ndarray:
 
 
 def apply_b(t: np.ndarray, b: int) -> np.ndarray:
+    """Move the tensor t downwards"""
     hb = h_rotated(b)
     return np.einsum('zy,dyx->dzx', hb, t)
 
 
 def apply_ab(t: np.ndarray, term: int, label: str) -> np.ndarray:
+    """Given tensor t, apply a new term (term) associated with one of the two continued fractions (specified by label)"""
     assert label in ['a', 'b']
     if label == 'a':
         return apply_a(t, term)
@@ -286,9 +298,10 @@ tForMultiplication = np.array([[[0, 0], [1, 0]], [[0, 1], [0, 0]]])
 tForDivision = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]])
 
 
-def arithmetic_convergents_(a: Iterator[int],
-                            b: Iterator[int],
-                            t0=tForAddition) -> Iterator[np.ndarray]:
+def arithmetic_convergents_(
+        a: Iterator[int],
+        b: Iterator[int],
+        t0=tForAddition) -> Iterator[Tuple[str, int, np.ndarray]]:
     """Given two continued fractions (a and b) and an arithmetic operation (specified by t0), return an iterator of tensors and addional information.
        New terms of the two continued fractions are applied alternately"""
     res = t0.copy()
@@ -314,7 +327,8 @@ def arithmetic_convergents(a: Iterator[int],
     c = arithmetic_convergents_(a, b, t0)
     for _, _, res in c:
         r = tensor_ref(res, 'xy')
-        yield Rational(*r)
+        assert isinstance(r, tuple)
+        yield Rational(r[0], r[1])
 
 
 def qr_tensor(t: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
@@ -325,8 +339,8 @@ def qr_tensor(t: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
         if r[0][0] == r[0][1] == r[1][0] == r[1][1]:
             # if the integer parts are all the same, we've got a quotient
             q = r[0][0]
-            r = np.array([t1[1], t1[0] - q * t1[1]])
-            return (q, r)
+            rem = np.array([t1[1], t1[0] - q * t1[1]])
+            return (q, rem)
         else:
             # the range is too big to determine the quotient
             return (None, np.array([identity_m, identity_m]))
@@ -336,6 +350,7 @@ def qr_tensor(t: np.ndarray) -> Tuple[Optional[int], np.ndarray]:
 
 
 def t_ratios(t: np.ndarray) -> list:
+
     def r(label):
         numerator, denominator = tensor_ref(t, label)
         return [
@@ -361,6 +376,7 @@ def t_ratios(t: np.ndarray) -> list:
 
 
 def score(t):
+
     def r(label):
         numerator, denominator = tensor_ref(t, label)
         return math.floor(numerator / denominator)
@@ -441,18 +457,19 @@ def score(t):
             return 0.0
 
 
-def ABQueue(a: Iterator[int],
-            b: Iterator[int]) -> Callable[np.ndarray, Tuple[int, str]]:
+def ABQueue(
+    a: Iterator[int], b: Iterator[int]
+) -> Callable[[np.ndarray], Tuple[Optional[int], Optional[str]]]:
     current_a = None
     current_b = None
     last_tie = 'b'
 
-    def ABQueue_(t: np.ndarray) -> Tuple[int, str]:
+    def ABQueue_(t: np.ndarray) -> Tuple[Optional[int], Optional[str]]:
         nonlocal current_a
         nonlocal current_b
         nonlocal last_tie
 
-        def dequeue(label: str) -> Tuple[int, str]:
+        def dequeue(label: str) -> Tuple[Optional[int], Optional[str]]:
             nonlocal current_a
             nonlocal current_b
             nonlocal last_tie
@@ -465,7 +482,8 @@ def ABQueue(a: Iterator[int],
                 next_term = current_b
                 current_b = None
                 return next_term, 'b'
-            elif label == 'alt':
+            else:
+                assert label == 'alt'
                 if last_tie == 'a':
                     next_term = current_b
                     current_b = None
@@ -509,6 +527,7 @@ def ABQueue(a: Iterator[int],
 
 
 def euclid_tensor_(t: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
+    """Symbolic Euclidean step for tensor t"""
     while True:
         if np.all(t[0] == 0):
             # if the numerator is all zero, stop
@@ -538,6 +557,8 @@ def cf_arithmetic_(cf_a: Iterator[int],
             # cf_a and cf_b are exhausted
             break
         else:
+            assert isinstance(term, int)
+            assert isinstance(label, str)
             t = apply_ab(t, term, label)
             new_term = True
             for (q, r) in euclid_tensor_(t):
@@ -551,7 +572,9 @@ def cf_arithmetic_(cf_a: Iterator[int],
     # we will only reach this point if cf_a and cf_b have finite terms
     # If cf has finite term, but it represents the beginning of a longer series, set finite_term to False
     if finite_term and tensor_ref(t, 'e') != 0:
-        for s in r2cf(Rational(*tensor_ref(t, 'xy'))):
+        rxy = tensor_ref(t, 'xy')
+        assert isinstance(rxy, tuple)
+        for s in r2cf(Rational(rxy[0], rxy[1])):
             yield s, None, t, None, None, False
     else:
         # if the 'e' term is 0, that means the quotient is 0.
@@ -563,17 +586,18 @@ def cf_arithmetic(cf_a: Iterator[int],
                   cf_b: Iterator[int],
                   t0: np.ndarray,
                   finite_term=True) -> Iterator[int]:
-    """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction.
-    """
+    """Given two continued fraction, cf_a and cf_b, and an initial tensor specifying the operation, return the result as a continued fraction."""
     for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term=finite_term):
         (q, r, t, term, label, new_term) = res
         if q is not None:
             yield q
 
 
-def cf_arithmetic_func(cf_a, cf_b, t0):
-    outputs = []
-    out_t = None
+def cf_arithmetic_func(cf_a: Iterator[int], cf_b: Iterator[int],
+                       t0: np.ndarray) -> Tuple[List[int], np.ndarray]:
+    """Given two finite-length continued fractions and an operation, return a list of new terms and a bihomographic tensor"""
+    outputs: List[int] = []
+    out_t: Optional[np.ndarray] = None
     for res in cf_arithmetic_(cf_a, cf_b, t0, finite_term=False):
         q, r, t, term, label, new_term = res
         if q is not None:
@@ -581,6 +605,8 @@ def cf_arithmetic_func(cf_a, cf_b, t0):
             out_t = r
         else:
             out_t = t
+
+    assert isinstance(out_t, np.ndarray)
     return outputs, out_t
 
 
