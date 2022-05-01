@@ -4,9 +4,14 @@
 #+HTML_MATHJAX: align: left
 #+HTML_MATHJAX: scale: 85
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+HTML_HEAD_EXTRA: <script async src="https://www.googletagmanager.com/gtag/js?id=UA-115187658-1"></script>
+#+HTML_HEAD_EXTRA: <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','UA-115187658-1');</script>
 
 #+TITLE: Understanding Bill Gospher's continued fraction arithmetic (implemented in Python)
+* Introduction
+Continued fractions are very often said to be the most natural or elegant way to represent numbers. Imagine a parallel universe, in which continued fractions are used as the dominant number system. People there use continued fractions for everything. So you'd think they calculate with them, too. But can you calculate with continued fractions? Most presentations on this subject don't talk about arithmetic at all. This gives the impression that you can't really do anything with them, except for looking for patterns in the coefficients when they are used to represent irrational numbers.
 
+In fact, in 1972, mathematician and computer scientist Bill Gospher developed an ingenious method for doing /exact/ arithmetic on continued fractions. Unfortunately, this method was published as an informal memo, which left out many details. I decided to implement the main idea in Python, and explain the reasoning in my own way. You can find Gospher original memo and additional information [[https://perl.plover.com/classes/cftalk/INFO/gosper.html][here]]. The source code is available [[https://github.com/hsinhaoyu/cont_frac][here]].
 
 * Representing rational numbers as continued fractions
 Since we'll use rational numbers a lot, let's define a class:

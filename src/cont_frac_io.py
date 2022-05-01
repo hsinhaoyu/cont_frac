@@ -8,7 +8,6 @@ import csv
 
 class Chart(object):
     """Construction and export tabulated displays"""
-
     def __init__(self, m: np.ndarray = tForAddition):
         if len(m.shape) == 2:
             # if initialized with a matrix intead of a tensor
@@ -209,7 +208,6 @@ def r2cf_tab(rn: Rational) -> str:
     Show the prpocess of converting a rational numner
     to a continued fraction
     """
-
     def row(st: str, x: tuple):
         b, q = x
         return st + f"{b : > 5}  {q : < 5}\n"

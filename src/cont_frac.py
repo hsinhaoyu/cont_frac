@@ -5,7 +5,6 @@ from typing import NamedTuple, Iterator, Tuple, Optional, Callable, Union, List
 
 class Rational(NamedTuple('Rational', [('a', int), ('b', int)])):
     """Rational(a, b) = a/b"""
-
     def __repr__(self):
         return f'{self.a}/{self.b}'
 
@@ -51,7 +50,6 @@ def r2cf(rn: Rational) -> Iterator[int]:
     :param rn: The rational number
     :return: An iterator of integers
     """
-
     def second(x: tuple):
         return x[1]
 
@@ -505,7 +503,6 @@ def t_ratios(t: np.ndarray) -> list:
     :param t: the 2x2x2 tensor
     :return: A 2x2 matrix (as list of lists)
     """
-
     def r(label):
         numerator, denominator = tensor_ref(t, label)
         return [
@@ -540,7 +537,6 @@ def score(t: np.ndarray) -> float:
     A higher number means that the tensor is
     getting closer for a quotient to be determined
     """
-
     def r(label):
         numerator, denominator = tensor_ref(t, label)
         return math.floor(numerator / denominator)
