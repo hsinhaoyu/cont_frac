@@ -406,7 +406,7 @@ Now, we are ready to implement the symbolic form of the Euclidean algorithm by c
       :return: An iterator of the quotient and the remainder.
       """
       while True:
-          if m[0][0] == 0 and [0][1] == 0:
+          if m[0][0] == 0 and m[0][1] == 0:
               # if there is no remain, stop
               break
           else:

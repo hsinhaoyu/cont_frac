@@ -210,7 +210,7 @@ def euclid_matrix_(m: np.ndarray) -> Iterator[Tuple[int, np.ndarray]]:
     :return: An iterator of the quotient and the remainder.
     """
     while True:
-        if m[0][0] == 0 and [0][1] == 0:
+        if m[0][0] == 0 and m[0][1] == 0:
             # if there is no remain, stop
             break
         else:
