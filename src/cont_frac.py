@@ -147,7 +147,7 @@ def flip_remain(m: np.ndarray, q: int) -> np.ndarray:
     :param q: The quotient
     :return: A 2x2 matrix
     """
-    assert q >= 0
+    assert q >= 0, q
     r = m[0] - m[1] * q
     m[0] = r
     return np.matmul(flip_m, m)

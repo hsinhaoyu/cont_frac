@@ -9,7 +9,7 @@ Given the first 3 terms in a continued fraction $[5, 1, 4...]$, let $x$ denote t
 \end{equation*}
 
 \begin{equation*}
-    f_3(x) = 5 + \frac{1}{1 + \frac{1}{4 + \frac{1}{x}}} = f_1(f_2(4 + \frac{1}{x}))
+    f_3(x) = 5 + \frac{1}{1 + \frac{1}{4 + \frac{1}{x}}} = f_2(4 + \frac{1}{x})
 \end{equation*}
 
 Or more compactly, let
